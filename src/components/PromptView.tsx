@@ -1,5 +1,6 @@
 import { Subject } from '@/lib/subjects';
 import CopyButton from './CopyButton';
+import DeepLinkButton from './DeepLinkButton';
 
 interface PromptViewProps {
   promptText: string;
