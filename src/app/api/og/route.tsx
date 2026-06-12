@@ -90,8 +90,9 @@ export async function GET(request: Request) {
         },
       }
     );
-  } catch (e: any) {
-    console.error('OG error:', e);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('OG error:', message);
     return new Response('Failed to generate image', { status: 500 });
   }
 }
