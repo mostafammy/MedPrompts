@@ -40,7 +40,12 @@ export default function RootLayout({
           } as ScriptProps}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans">
+      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans relative overflow-x-hidden">
+        {/* Ambient background glow */}
+        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+          <div className="absolute top-[-25%] left-[-20%] w-[70%] h-[60%] rounded-full bg-blue-400/10 blur-[130px] dark:bg-blue-500/5 dark:blur-[180px]" />
+          <div className="absolute bottom-[-15%] right-[-15%] w-[80%] h-[70%] rounded-full bg-sky-400/10 blur-[150px] dark:bg-sky-500/5 dark:blur-[200px]" />
+        </div>
         {children}
       </body>
     </html>
