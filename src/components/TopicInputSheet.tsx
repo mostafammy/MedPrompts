@@ -55,7 +55,10 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
   if (!subject) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] p-6 sm:relative sm:rounded-2xl sm:p-8 sm:w-full sm:max-w-md mx-auto sm:shadow-2xl border-t sm:border border-zinc-200/80 dark:border-zinc-800/80 transition-all duration-300 animate-scale-in">
+    <div className="fixed inset-x-0 bottom-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.25)] p-6 pt-4 sm:pt-8 sm:relative sm:rounded-3xl sm:p-8 sm:w-full sm:max-w-md mx-auto sm:shadow-2xl border-t sm:border border-zinc-200/85 dark:border-zinc-800/80 transition-all duration-300 animate-sheet-slide-up sm:animate-scale-in">
+      {/* iOS-Style Drag Handle for Mobile Sheets */}
+      <div className="w-12 h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full mx-auto mb-4 sm:hidden select-none" />
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
           {subject.label}
