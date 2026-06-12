@@ -1,8 +1,0 @@
-node_modules/
-dist/
-build/
-coverage/
-.next/
-.open-next/
-.wrangler/
-*.min.js
