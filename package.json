@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --no-turbo && node -e \"if (process.platform !== 'win32') require('child_process').execSync('opennextjs-cloudflare build', { stdio: 'inherit' })\"",
+    "build": "next build && opennextjs-cloudflare build",
     "start": "next start",
     "lint": "eslint"
   },
