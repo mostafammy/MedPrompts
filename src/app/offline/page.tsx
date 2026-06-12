@@ -9,10 +9,10 @@ export default function OfflinePage() {
         </svg>
       </div>
       <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-        You're Offline
+        You&apos;re Offline
       </h1>
       <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-8 max-w-md">
-        It looks like you've lost your internet connection. We couldn't load this prompt because it hasn't been cached yet.
+        It looks like you&apos;ve lost your internet connection. We couldn&apos;t load this prompt because it hasn&apos;t been cached yet.
       </p>
       <Link 
         href="/"
