@@ -86,6 +86,14 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
             disabled={isPending}
             required
           />
+          <div className="flex justify-between items-center mt-2 px-1 text-[11px] font-medium text-zinc-400 dark:text-zinc-500 select-none">
+            <span>Max 120 characters</span>
+            {topic.length > 0 && (
+              <span className={`transition-colors duration-200 ${topic.length > 100 ? 'text-amber-500 dark:text-amber-400 font-bold' : ''}`}>
+                {topic.length}/120
+              </span>
+            )}
+          </div>
         </div>
 
         {error && (
