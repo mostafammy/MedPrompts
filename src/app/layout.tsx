@@ -4,6 +4,7 @@ import PlausibleProvider from "next-plausible";
 import type { ScriptProps } from "next/script";
 import "./globals.css";
 import OfflineBanner from "@/components/OfflineBanner";
+import SoundToggle from "@/components/SoundToggle";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,6 +50,7 @@ export default function RootLayout({
         </div>
         {children}
         <OfflineBanner />
+        <SoundToggle />
       </body>
     </html>
   );
