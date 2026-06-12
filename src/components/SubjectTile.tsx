@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Subject } from '@/lib/subjects';
 import { Bone, Microscope, HeartPulse, Dna, FlaskConical, Bug, BookOpen, LucideIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface SubjectTileProps {
   subject: Subject;
@@ -61,19 +62,22 @@ export default function SubjectTile({ subject }: SubjectTileProps) {
   const IconComponent = style.icon;
 
   return (
-    <Link 
-      href={`/${subject.slug}`}
-      className={`group block bg-white/70 dark:bg-zinc-900/30 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/50 rounded-3xl p-6 sm:p-8 shadow-sm sm:hover:shadow-xl sm:hover:border-zinc-300 sm:dark:hover:border-zinc-700 transition-all duration-500 ease-spring sm:hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] ${style.glow} focus:outline-none focus:ring-4 focus:ring-blue-500/10`}
-      prefetch={true}
-    >
-      <div className="flex flex-col items-center justify-center text-center gap-5 h-full">
-        <div className={`p-4 rounded-2xl ${style.bg} ${style.text} transition-transform duration-500 ease-spring sm:group-hover:scale-110`}>
-          <IconComponent className="w-8 h-8 sm:w-9 sm:h-9 stroke-[1.5]" />
+    <motion.div layoutId={`subject-card-${subject.id}`} className="h-full">
+      <Link 
+        href={`/?subject=${subject.slug}`}
+        scroll={false}
+        className={`group block bg-white/70 dark:bg-zinc-900/30 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/50 rounded-3xl p-6 sm:p-8 shadow-sm sm:hover:shadow-xl sm:hover:border-zinc-300 sm:dark:hover:border-zinc-700 transition-all duration-500 ease-spring sm:hover:-translate-y-1 active:translate-y-0 active:scale-[0.98] ${style.glow} focus:outline-none focus:ring-4 focus:ring-blue-500/10 h-full`}
+        prefetch={true}
+      >
+        <div className="flex flex-col items-center justify-center text-center gap-5 h-full">
+          <div className={`p-4 rounded-2xl ${style.bg} ${style.text} transition-transform duration-500 ease-spring sm:group-hover:scale-110`}>
+            <IconComponent className="w-8 h-8 sm:w-9 sm:h-9 stroke-[1.5]" />
+          </div>
+          <h3 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100 tracking-tight">
+            {subject.label}
+          </h3>
         </div>
-        <h3 className="font-semibold text-lg text-zinc-900 dark:text-zinc-100 tracking-tight">
-          {subject.label}
-        </h3>
-      </div>
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
