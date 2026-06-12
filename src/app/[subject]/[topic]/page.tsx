@@ -63,7 +63,7 @@ export default async function GeneratedPromptPage({ params }: Props) {
   let promptText = '';
   try {
     promptText = generatePrompt(subject.id, displayTopic);
-  } catch (e) {
+  } catch {
     notFound();
   }
 
