@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { SubjectId, SUBJECTS } from '@/lib/subjects';
 import { generatePromptAction } from '@/app/actions';
 import TurnstileWidget from './TurnstileWidget';
+import { X, Sparkles } from 'lucide-react';
 
 interface TopicInputSheetProps {
   subjectId: SubjectId;
@@ -25,7 +26,6 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
     e.preventDefault();
     if (!topic.trim()) return;
     
-    // We only enforce Turnstile if it's configured
     if (requireTurnstile && !turnstileToken) {
       setError('Verifying security... Please wait.');
       return;
@@ -37,7 +37,6 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
       const result = await generatePromptAction(subjectId, topic, turnstileToken || 'dev-bypass');
       
       if (result.success && result.slug) {
-        // Navigate to the generated prompt page
         router.push(`/${subjectId}/${result.slug}`);
       } else {
         setError(result.error || 'Failed to generate prompt.');
@@ -45,28 +44,34 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
     });
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      router.push('/');
+    }
+  };
+
   if (!subject) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-zinc-900 rounded-t-3xl shadow-2xl p-6 sm:relative sm:rounded-2xl sm:p-8 sm:w-full sm:max-w-md mx-auto sm:shadow-xl sm:border border-zinc-200 dark:border-zinc-800 transition-all duration-300">
+    <div className="fixed inset-x-0 bottom-0 z-50 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] p-6 sm:relative sm:rounded-2xl sm:p-8 sm:w-full sm:max-w-md mx-auto sm:shadow-2xl border-t sm:border border-zinc-200/80 dark:border-zinc-800/80 transition-all duration-300 animate-scale-in">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
           {subject.label}
         </h2>
-        {onClose && (
-          <button 
-            onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 p-2 rounded-full transition-colors"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        )}
+        <button 
+          onClick={handleClose}
+          className="text-zinc-400 hover:text-zinc-650 dark:hover:text-zinc-200 bg-zinc-100 hover:bg-zinc-200/80 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 p-1.5 rounded-full transition-all duration-200 active:scale-90"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
-          <label htmlFor="topic" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+          <label htmlFor="topic" className="block text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2.5">
             What topic are you studying?
           </label>
           <input
@@ -77,7 +82,7 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
             placeholder="e.g. Myocardial Infarction"
             maxLength={120}
             autoFocus
-            className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-shadow"
+            className="w-full px-4 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-600 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 dark:focus:border-blue-500 outline-none transition-all duration-300"
             disabled={isPending}
             required
           />
@@ -100,9 +105,19 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
         <button
           type="submit"
           disabled={!topic.trim() || isPending || (requireTurnstile && !turnstileToken)}
-          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-zinc-300 dark:disabled:bg-zinc-700 disabled:text-zinc-500 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-sm disabled:shadow-none"
+          className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-semibold py-3.5 px-6 rounded-2xl transition-all duration-500 ease-spring shadow-lg shadow-blue-500/10 dark:shadow-none active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
         >
-          {isPending ? 'Generating...' : 'Generate Prompt'}
+          {isPending ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              <span>Generating...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              <span>Generate Prompt</span>
+            </>
+          )}
         </button>
       </form>
     </div>
