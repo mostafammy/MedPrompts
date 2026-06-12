@@ -10,7 +10,10 @@
 export type LLMApp = 'chatgpt' | 'gemini';
 
 export function openLLMApp(app: LLMApp, promptText?: string) {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  if (typeof window === 'undefined') return;
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /Macintosh/.test(navigator.userAgent));
   const isAndroid = /android/i.test(navigator.userAgent);
 
   let urlScheme = '';
@@ -28,25 +31,33 @@ export function openLLMApp(app: LLMApp, promptText?: string) {
       : 'https://gemini.google.com/app';
   }
 
-  // Try the deep link first
-  if (urlScheme && (isIOS || isAndroid)) {
-    // We create a hidden iframe to try and launch the scheme
-    // This avoids leaving the current page if it fails
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = urlScheme;
-    document.body.appendChild(iframe);
+  // Handle Android deep linking using the official Intent scheme
+  if (isAndroid) {
+    let intentUrl = '';
+    if (app === 'chatgpt') {
+      intentUrl = `intent://#Intent;scheme=chatgpt;package=com.openai.chatgpt;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end;`;
+    } else if (app === 'gemini') {
+      intentUrl = `intent://#Intent;scheme=googleapp;package=com.google.android.apps.bard;S.browser_fallback_url=${encodeURIComponent(fallbackUrl)};end;`;
+    }
+    
+    if (intentUrl) {
+      window.location.href = intentUrl;
+    }
+  } 
+  // Handle iOS deep linking using custom URL scheme + fallback timer
+  else if (isIOS && urlScheme) {
+    const start = Date.now();
+    window.location.href = urlScheme;
 
-    // If it doesn't open within 1.5s, it probably failed
+    // Fallback to web version in the same window if the app isn't installed
     setTimeout(() => {
-      document.body.removeChild(iframe);
-      // Optional: we can choose NOT to navigate to the web version to avoid losing state,
-      // as the user already has it on their clipboard. The requirements state: 
-      // "silent fail if not installed", so we just do nothing here.
-      // If we wanted to fallback to web, we would check `Date.now() - start < 2000`.
+      if (Date.now() - start < 2000) {
+        window.location.href = fallbackUrl;
+      }
     }, 1500);
-  } else {
-    // If desktop or no scheme, just open the web version in a new tab
+  } 
+  // Desktop fallback (open web version in a new tab)
+  else {
     if (fallbackUrl) {
       window.open(fallbackUrl, '_blank');
     }
