@@ -42,6 +42,9 @@ env.local
 .open-next/
 .wrangler/
 
+# serwist (generated from src/sw.ts)
+public/sw.js
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
