@@ -36,7 +36,7 @@ export async function generatePromptAction(
         }),
       });
 
-      const verifyData = await verifyRes.json();
+      const verifyData = (await verifyRes.json()) as { success?: boolean };
       if (!verifyData.success) {
         return { success: false, error: 'Failed security check. Please try again.' };
       }
@@ -50,8 +50,11 @@ export async function generatePromptAction(
     generatePrompt(subjectId, topic);
 
     return { success: true, slug };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('generatePromptAction error:', error);
-    return { success: false, error: error.message || 'An unexpected error occurred.' };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'An unexpected error occurred.',
+    };
   }
 }
