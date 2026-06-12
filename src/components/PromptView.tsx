@@ -1,8 +1,13 @@
+'use client';
+
 import { Subject } from '@/lib/subjects';
 import CopyButton from './CopyButton';
 import DeepLinkButton from './DeepLinkButton';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface PromptViewProps {
   promptText: string;
@@ -20,10 +25,45 @@ const badgeStyles: Record<string, string> = {
 };
 
 export default function PromptView({ promptText, subject, topic }: PromptViewProps) {
+  const router = useRouter();
   const badgeClass = badgeStyles[subject.id] || 'bg-zinc-100 dark:bg-zinc-850 text-zinc-650 dark:text-zinc-350 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200/50';
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        const buttons = document.querySelectorAll('button');
+        for (let i = 0; i < buttons.length; i++) {
+          const text = buttons[i].textContent || '';
+          if (text.includes('Copy Prompt') || text.includes('Copied!')) {
+            buttons[i].click();
+            break;
+          }
+        }
+      } else if (e.key === 'Escape' || e.key === 'Backspace') {
+        e.preventDefault();
+        router.push('/');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [router]);
+
   return (
-    <div className="flex flex-col h-full w-full max-w-3xl mx-auto px-4 py-8 sm:py-12 animate-fade-in-up">
+    <motion.div 
+      initial={{ opacity: 0, y: 20, scale: 0.99 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 180, damping: 20, mass: 1 }}
+      className="flex flex-col h-full w-full max-w-3xl mx-auto px-4 py-8 sm:py-12"
+    >
       {/* Back button */}
       <Link 
         href="/" 
@@ -98,6 +138,6 @@ export default function PromptView({ promptText, subject, topic }: PromptViewPro
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
