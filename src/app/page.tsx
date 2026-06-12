@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import SubjectGrid from '@/components/SubjectGrid';
+import HistoryTray from '@/components/HistoryTray';
 
 function SubjectGridFallback() {
   return (
@@ -34,6 +35,7 @@ export default function Home() {
         <Suspense fallback={<SubjectGridFallback />}>
           <SubjectGrid />
         </Suspense>
+        <HistoryTray />
       </div>
     </main>
   );
