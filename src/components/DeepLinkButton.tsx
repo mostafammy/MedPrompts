@@ -49,10 +49,10 @@ export default function DeepLinkButton({
     <button
       onClick={handleAction}
       disabled={loading}
-      className="flex-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-semibold py-4 px-6 rounded-2xl shadow-sm transition-all flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-700 disabled:opacity-70"
+      className="flex-1 bg-white/60 hover:bg-white/95 dark:bg-zinc-900/30 dark:hover:bg-zinc-900/70 text-zinc-800 dark:text-zinc-100 font-semibold py-4 px-6 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-none transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 border border-zinc-200/80 dark:border-zinc-800/85 hover:border-zinc-300 dark:hover:border-zinc-700 disabled:opacity-60 disabled:pointer-events-none select-none backdrop-blur-sm"
     >
       {icon}
-      {loading ? 'Opening...' : label}
+      <span>{loading ? 'Opening...' : label}</span>
     </button>
   );
 }
