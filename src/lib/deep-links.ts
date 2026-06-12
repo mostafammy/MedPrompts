@@ -9,7 +9,7 @@
 
 export type LLMApp = 'chatgpt' | 'gemini';
 
-export function openLLMApp(app: LLMApp) {
+export function openLLMApp(app: LLMApp, promptText?: string) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isAndroid = /android/i.test(navigator.userAgent);
 
@@ -18,10 +18,14 @@ export function openLLMApp(app: LLMApp) {
 
   if (app === 'chatgpt') {
     urlScheme = 'chatgpt://';
-    fallbackUrl = 'https://chatgpt.com';
+    fallbackUrl = promptText
+      ? `https://chatgpt.com/?q=${encodeURIComponent(promptText)}`
+      : 'https://chatgpt.com';
   } else if (app === 'gemini') {
     urlScheme = 'googleapp://'; // Generic Google app, but Gemini web is preferred due to scheme instability
-    fallbackUrl = 'https://gemini.google.com';
+    fallbackUrl = promptText
+      ? `https://gemini.google.com/app?q=${encodeURIComponent(promptText)}`
+      : 'https://gemini.google.com/app';
   }
 
   // Try the deep link first
