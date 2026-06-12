@@ -1,24 +1,57 @@
 'use client';
 
+let feedbackEnabled = true;
+
+// Initialize from local storage if running in browser
+if (typeof window !== 'undefined') {
+  try {
+    feedbackEnabled = localStorage.getItem('medprompt_feedback_enabled') !== 'false';
+  } catch {
+    feedbackEnabled = true;
+  }
+}
+
+/**
+ * Gets whether feedback (sound & haptics) is currently enabled.
+ */
+export function isFeedbackEnabled(): boolean {
+  return feedbackEnabled;
+}
+
+/**
+ * Toggles feedback state and persists in local storage.
+ */
+export function setFeedbackEnabled(enabled: boolean) {
+  feedbackEnabled = enabled;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem('medprompt_feedback_enabled', enabled ? 'true' : 'false');
+    } catch {
+      // Ignore storage errors
+    }
+  }
+}
+
 /**
  * Triggers a short vibration (haptic feedback) on supported devices.
  */
 export function triggerHaptic(duration = 15) {
+  if (!feedbackEnabled) return;
+  
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
     try {
       navigator.vibrate(duration);
     } catch {
-      // Ignore security errors (e.g. if iframe or focus restrictions apply)
+      // Ignore security errors
     }
   }
 }
 
 /**
  * Synthesizes a subtle, satisfying click/tick audio feedback using the Web Audio API.
- * This does not load external assets, keeping the page loading fast and 0-byte network footprint.
  */
 export function playClickSound() {
-  if (typeof window === 'undefined') return;
+  if (!feedbackEnabled || typeof window === 'undefined') return;
 
   try {
     const AudioContextClass = window.AudioContext || 
@@ -27,7 +60,6 @@ export function playClickSound() {
 
     const ctx = new AudioContextClass();
     
-    // Resume context if suspended (common in browser autoplay security rules)
     if (ctx.state === 'suspended') {
       ctx.resume();
     }
@@ -35,12 +67,10 @@ export function playClickSound() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    // A subtle high-to-low sweep creates a satisfying soft "tick/pop" sound
     osc.type = 'sine';
     osc.frequency.setValueAtTime(800, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.06);
 
-    // Fade out extremely quickly so it is a micro-click rather than a beep
     gain.gain.setValueAtTime(0.04, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
 
@@ -50,7 +80,7 @@ export function playClickSound() {
     osc.start();
     osc.stop(ctx.currentTime + 0.06);
   } catch {
-    // Ignore context blocked or failed audio initializations
+    // Ignore context blocked
   }
 }
 
