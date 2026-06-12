@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import PlausibleProvider from "next-plausible";
+import type { ScriptProps } from "next/script";
 import "./globals.css";
 
 const inter = Inter({
@@ -36,7 +37,7 @@ export default function RootLayout({
           src="https://plausible.io/js/script.js"
           scriptProps={{
             "data-domain": "medprompts.mostafayaser.earth",
-          } as any}
+          } as ScriptProps}
         />
       </head>
       <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans">
