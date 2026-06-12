@@ -26,8 +26,6 @@ export function openLLMApp(app: LLMApp) {
 
   // Try the deep link first
   if (urlScheme && (isIOS || isAndroid)) {
-    const start = Date.now();
-    
     // We create a hidden iframe to try and launch the scheme
     // This avoids leaving the current page if it fails
     const iframe = document.createElement('iframe');
