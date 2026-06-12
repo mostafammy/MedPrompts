@@ -5,6 +5,7 @@ import { copyToClipboard } from '@/lib/clipboard';
 import { usePlausible } from 'next-plausible';
 import Toast from './Toast';
 import { Copy, Check, AlertCircle } from 'lucide-react';
+import { triggerFeedback } from '@/lib/haptics';
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -18,6 +19,7 @@ export default function CopyButton({ textToCopy, subjectId, topic }: CopyButtonP
   const plausible = usePlausible();
 
   const handleCopy = async () => {
+    triggerFeedback(15);
     const success = await copyToClipboard(textToCopy);
     
     if (success) {
