@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { usePlausible } from 'next-plausible';
 import Toast from './Toast';
+import { Copy, Check, AlertCircle } from 'lucide-react';
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -36,21 +37,17 @@ export default function CopyButton({ textToCopy, subjectId, topic }: CopyButtonP
     <div className="w-full flex flex-col gap-4">
       <button
         onClick={handleCopy}
-        className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2"
+        className={`w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-bold py-4 px-6 rounded-2xl shadow-lg shadow-blue-500/10 dark:shadow-none hover:shadow-xl hover:shadow-blue-500/15 dark:hover:shadow-none transition-all duration-300 active:scale-[0.98] flex items-center justify-center gap-2 select-none`}
       >
         {copied ? (
           <>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-            </svg>
-            Copied!
+            <Check className="w-5 h-5 animate-scale-in" />
+            <span>Copied!</span>
           </>
         ) : (
           <>
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            Copy Prompt
+            <Copy className="w-5 h-5" />
+            <span>Copy Prompt</span>
           </>
         )}
       </button>
@@ -58,15 +55,15 @@ export default function CopyButton({ textToCopy, subjectId, topic }: CopyButtonP
       {copied && <Toast message="Copied to clipboard!" onClose={() => setCopied(false)} duration={2000} />}
 
       {manualFallback && (
-        <div className="mt-4 animate-in fade-in slide-in-from-top-2">
-          <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div className="mt-4 animate-fade-in-up">
+          <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2.5 flex items-center gap-1.5">
+            <AlertCircle className="w-4 h-4" />
             Auto-copy disabled by your browser. Please copy manually below:
           </p>
           <textarea
             readOnly
             value={textToCopy}
-            className="w-full h-32 p-3 text-sm rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 text-zinc-800 dark:text-zinc-200 focus:ring-amber-500"
+            className="w-full h-36 p-4 text-sm font-mono rounded-2xl border border-amber-200 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 text-zinc-850 dark:text-zinc-300 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 transition-all duration-300"
             onFocus={(e) => e.target.select()}
             autoFocus
           />
