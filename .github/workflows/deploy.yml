@@ -61,6 +61,7 @@ jobs:
           path: .open-next
           if-no-files-found: error
           retention-days: 7
+          include-hidden-files: true
 
       - name: Deploy to Cloudflare Workers
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
