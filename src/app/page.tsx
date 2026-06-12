@@ -1,4 +1,15 @@
+import { Suspense } from 'react';
 import SubjectGrid from '@/components/SubjectGrid';
+
+function SubjectGridFallback() {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full max-w-5xl mx-auto px-4 py-8">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="bg-white/70 dark:bg-zinc-900/30 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-800/50 rounded-3xl p-6 sm:p-8 animate-pulse h-40" />
+      ))}
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -20,7 +31,9 @@ export default function Home() {
       </div>
       
       <div className="w-full animate-fade-in delay-200">
-        <SubjectGrid />
+        <Suspense fallback={<SubjectGridFallback />}>
+          <SubjectGrid />
+        </Suspense>
       </div>
     </main>
   );
