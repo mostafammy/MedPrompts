@@ -7,6 +7,8 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === "development" || process.env.CF_PAGES === "1",
 });
 
-const nextConfig: NextConfig = {};
+const nextConfig: NextConfig = {
+  output: "standalone",
+};
 
 export default withSerwist(nextConfig);
