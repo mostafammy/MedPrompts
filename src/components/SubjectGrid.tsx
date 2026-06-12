@@ -15,15 +15,32 @@ export default function SubjectGrid() {
   const selectedSubject = selectedSubjectId ? getSubject(selectedSubjectId) : undefined;
 
   useEffect(() => {
-    if (!selectedSubject) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        router.push('/', { scroll: false });
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      if (selectedSubject) {
+        if (e.key === 'Escape') {
+          router.push('/', { scroll: false });
+        }
+        return;
+      }
+
+      const keyNum = parseInt(e.key, 10);
+      if (keyNum >= 1 && keyNum <= sortedSubjects.length) {
+        e.preventDefault();
+        const targetSubject = sortedSubjects[keyNum - 1];
+        router.push(`/?subject=${targetSubject.slug}`, { scroll: false });
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedSubject, router]);
+  }, [selectedSubject, sortedSubjects, router]);
 
   return (
     <div className="w-full relative">
@@ -34,7 +51,7 @@ export default function SubjectGrid() {
             className="animate-fade-in-up"
             style={{ animationDelay: `${index * 60}ms` }}
           >
-            <SubjectTile subject={subject} />
+            <SubjectTile subject={subject} index={index} />
           </div>
         ))}
       </div>
