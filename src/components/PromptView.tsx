@@ -1,6 +1,8 @@
 import { Subject } from '@/lib/subjects';
 import CopyButton from './CopyButton';
 import DeepLinkButton from './DeepLinkButton';
+import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 
 interface PromptViewProps {
   promptText: string;
@@ -8,47 +10,65 @@ interface PromptViewProps {
   topic: string;
 }
 
+const badgeStyles: Record<string, string> = {
+  anatomy: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/15 hover:bg-orange-500/15',
+  histology: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/15 hover:bg-purple-500/15',
+  physiology: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/15 hover:bg-red-500/15',
+  microbiology: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15 hover:bg-emerald-500/15',
+  pathology: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/15 hover:bg-blue-500/15',
+  parasitology: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/15 hover:bg-amber-500/15',
+};
+
 export default function PromptView({ promptText, subject, topic }: PromptViewProps) {
+  const badgeClass = badgeStyles[subject.id] || 'bg-zinc-100 dark:bg-zinc-850 text-zinc-650 dark:text-zinc-350 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-200/50';
+
   return (
-    <div className="flex flex-col h-full w-full max-w-3xl mx-auto px-4 py-6 sm:py-10">
+    <div className="flex flex-col h-full w-full max-w-3xl mx-auto px-4 py-8 sm:py-12 animate-fade-in-up">
+      {/* Back button */}
+      <Link 
+        href="/" 
+        className="inline-flex items-center gap-1 text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50 transition-colors duration-200 mb-6 group text-sm font-medium self-start"
+      >
+        <ChevronLeft className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" />
+        <span>Back to Dashboard</span>
+      </Link>
+
       <div className="mb-8">
-        <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400 font-medium mb-3">
-          <span className="bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded-full text-xs uppercase tracking-wider">
+        <div className="flex items-center gap-2.5 text-zinc-400 dark:text-zinc-500 text-sm font-medium mb-3 select-none">
+          <Link href={`/${subject.slug}`} className={`px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide uppercase transition-colors duration-200 ${badgeClass}`}>
             {subject.label}
-          </span>
-          <span>/</span>
-          <span className="text-zinc-900 dark:text-zinc-100">{topic}</span>
+          </Link>
+          <span className="text-zinc-300 dark:text-zinc-700">/</span>
+          <span className="text-zinc-750 dark:text-zinc-300 font-semibold">{topic}</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight leading-tight">
+        <h1 className="text-4xl sm:text-5xl font-black text-zinc-950 dark:text-white tracking-tighter leading-none mb-3">
           Your prompt is ready
         </h1>
-        <p className="mt-3 text-zinc-600 dark:text-zinc-300">
+        <p className="text-zinc-500 dark:text-zinc-400 font-light leading-relaxed">
           Copy the prompt below and paste it into ChatGPT, Gemini, or Claude.
         </p>
       </div>
 
-      <div className="flex-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm overflow-hidden flex flex-col mb-6 transition-colors">
-        <div className="bg-zinc-50 dark:bg-zinc-950/50 border-b border-zinc-200 dark:border-zinc-800 px-6 py-4 flex justify-between items-center">
-          <div className="flex gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-400 dark:bg-red-500/80"></div>
-            <div className="w-3 h-3 rounded-full bg-amber-400 dark:bg-amber-500/80"></div>
-            <div className="w-3 h-3 rounded-full bg-green-400 dark:bg-green-500/80"></div>
+      <div className="flex-1 bg-white/70 dark:bg-zinc-900/40 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/85 rounded-3xl shadow-[0_15px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col mb-6 transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div className="bg-zinc-50/50 dark:bg-zinc-950/40 border-b border-zinc-200/80 dark:border-zinc-800/80 px-6 py-4 flex justify-between items-center select-none">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-red-400/80 dark:bg-red-500/70"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-400/80 dark:bg-amber-500/70"></div>
+            <div className="w-2.5 h-2.5 rounded-full bg-green-400/80 dark:bg-green-500/70"></div>
           </div>
-          <span className="text-xs font-mono text-zinc-400 dark:text-zinc-500 select-none">
+          <span className="bg-zinc-100 dark:bg-zinc-950/60 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold tracking-wider text-zinc-400 dark:text-zinc-500 uppercase">
             {promptText.length} chars
           </span>
         </div>
         
         <div className="flex-1 overflow-y-auto p-6 relative">
-          <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-white dark:from-zinc-900 to-transparent z-10 pointer-events-none"></div>
-          <pre className="font-mono text-sm sm:text-base text-zinc-800 dark:text-zinc-200 whitespace-pre-wrap leading-relaxed pb-4">
+          <pre className="font-mono text-sm sm:text-base text-zinc-800 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed pb-4 selection:bg-blue-500/10">
             {promptText}
           </pre>
-          <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent z-10 pointer-events-none"></div>
         </div>
       </div>
 
-      <div className="mt-auto pt-4 flex flex-col sm:flex-row gap-4 items-center">
+      <div className="mt-auto pt-2 flex flex-col sm:flex-row gap-4 items-center">
         <CopyButton textToCopy={promptText} subjectId={subject.id} topic={topic} />
         
         <div className="flex w-full gap-4">
