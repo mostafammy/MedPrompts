@@ -8,6 +8,7 @@ import TurnstileWidget from './TurnstileWidget';
 import { X, Sparkles, WifiOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { triggerFeedback } from '@/lib/haptics';
+import { addHistoryItem } from '@/lib/history';
 
 interface TopicInputSheetProps {
   subjectId: SubjectId;
@@ -32,6 +33,33 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
   const [isOffline, setIsOffline] = useState(() => 
     typeof navigator !== 'undefined' ? !navigator.onLine : false
   );
+  
+  interface Sparkle {
+    id: number;
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    size: number;
+    color: string;
+    rotation: number;
+  }
+  const [sparkles, setSparkles] = useState<Sparkle[]>([]);
+
+  const triggerSparkles = () => {
+    const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#06b6d4'];
+    const newSparkles = Array.from({ length: 18 }).map((_, i) => ({
+      id: Date.now() + i,
+      startX: (Math.random() - 0.5) * 160,
+      startY: (Math.random() - 0.5) * 20,
+      endX: (Math.random() - 0.5) * 85,
+      endY: -130 - Math.random() * 55,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 6,
+      rotation: Math.random() * 360,
+    }));
+    setSparkles(newSparkles);
+  };
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -54,6 +82,7 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
     if (!topic.trim() || isOffline) return;
     
     triggerFeedback(20);
+    triggerSparkles();
     
     if (requireTurnstile && !turnstileToken) {
       setError('Verifying security... Please wait.');
@@ -65,7 +94,13 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
     startTransition(async () => {
       const result = await generatePromptAction(subjectId, topic, turnstileToken || 'dev-bypass');
       
-      if (result.success && result.slug) {
+      if (result.success && result.slug && subject) {
+        addHistoryItem({
+          subjectId,
+          subjectLabel: subject.label,
+          topic: topic.trim(),
+          slug: result.slug,
+        });
         router.push(`/${subjectId}/${result.slug}`);
       } else {
         setError(result.error || 'Failed to generate prompt.');
@@ -166,28 +201,54 @@ export default function TopicInputSheet({ subjectId, onClose }: TopicInputSheetP
           />
         )}
 
-        <button
-          type="submit"
-          disabled={!topic.trim() || isPending || isOffline || (requireTurnstile && !turnstileToken)}
-          className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-semibold py-3.5 px-6 rounded-2xl transition-all duration-500 ease-spring shadow-lg shadow-blue-500/10 dark:shadow-none active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
-        >
-          {isPending ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              <span>Generating...</span>
-            </>
-          ) : isOffline ? (
-            <>
-              <WifiOff className="w-4.5 h-4.5" />
-              <span>Offline — Connection Required</span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              <span>Generate Prompt</span>
-            </>
-          )}
-        </button>
+        <div className="relative w-full mt-2">
+          {sparkles.map((sp) => (
+            <motion.div
+              key={sp.id}
+              initial={{ x: sp.startX, y: sp.startY, scale: 0, opacity: 1 }}
+              animate={{
+                y: sp.endY,
+                x: sp.startX + sp.endX,
+                scale: [0, 1.3, 0.9, 0],
+                opacity: [1, 1, 0.4, 0],
+                rotate: sp.rotation,
+              }}
+              transition={{ duration: 0.9, ease: 'easeOut' }}
+              className="absolute pointer-events-none z-50 rounded-full"
+              style={{
+                width: sp.size,
+                height: sp.size,
+                left: '50%',
+                top: '50%',
+                backgroundColor: sp.color,
+                boxShadow: `0 0 12px ${sp.color}`,
+              }}
+            />
+          ))}
+
+          <button
+            type="submit"
+            disabled={!topic.trim() || isPending || isOffline || (requireTurnstile && !turnstileToken)}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-semibold py-3.5 px-6 rounded-2xl transition-all duration-500 ease-spring shadow-lg shadow-blue-500/10 dark:shadow-none active:scale-[0.98] disabled:scale-100 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isPending ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Generating...</span>
+              </>
+            ) : isOffline ? (
+              <>
+                <WifiOff className="w-4.5 h-4.5" />
+                <span>Offline — Connection Required</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Generate Prompt</span>
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </motion.div>
   );
