@@ -36,7 +36,7 @@ export default function DeepLinkButton({
     if (success) {
       // Small delay to let the user see the button active state
       setTimeout(() => {
-        openLLMApp(targetApp);
+        openLLMApp(targetApp, textToCopy);
         setLoading(false);
       }, 300);
     } else {
