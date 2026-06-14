@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { executeWaterfall } from '../../../lib/ai/waterfall';
 import { sanitizeTopic } from '../../../lib/ai/sanitize';
-
-export const runtime = 'edge';
 import {
   registry,
   budgetManager,
@@ -20,6 +18,7 @@ import {
   releaseSlot
 } from './state';
 
+export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
