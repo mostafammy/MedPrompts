@@ -243,32 +243,32 @@
 
 ### Layer 2: I/O Wrappers
 
-- [ ] T028 Implement Drizzle database schema — `src/lib/db/schema.ts`:
+- [x] T028 Implement Drizzle database schema — `src/lib/db/schema.ts`:
   - Tables: `subjects`, `prompt_templates`, `topics_seed`, `prompt_events`
   - All indexes defined inline: `activeSubjectIdx`, `sortIdx`, `uniqueSubjectSlug`, `highYieldIdx`, `copiedAtIdx`
   - All types exported: `Subject`, `PromptTemplate`, `TopicSeed`, `PromptEvent`
   - Done when `pnpm db:generate` produces a valid `.sql` migration file with all 4 tables and all indexes
 
-- [ ] T029 Implement Turso DB client factory — `src/lib/db/client.ts`:
+- [x] T029 Implement Turso DB client factory — `src/lib/db/client.ts`:
   - `createDb(env: { TURSO_DATABASE_URL: string; TURSO_AUTH_TOKEN: string }): Database`
   - `type Database = ReturnType<typeof createDb>`
   - MUST NOT use module-level singleton
   - Done when unit test creates two separate instances and verifies they are independent
 
-- [ ] T030 [P] Implement `getActiveTemplate()` loader — `src/lib/prompts/loader.ts`:
+- [x] T030 [P] Implement `getActiveTemplate()` loader — `src/lib/prompts/loader.ts`:
   - Signature: `getActiveTemplate(db: Database, subjectId: SubjectId): Promise<PromptTemplate | null>`
   - Uses `activeSubjectIdx` (composite index on `subject_id` + `is_active`)
   - Returns `null` when no active template found (caller maps to `SUBJECT_NOT_FOUND`)
   - Done when integration test with in-memory SQLite seed returns the active template and `null` for unknown subject
 
-- [ ] T031 [P] Implement KV-backed `PromptCache` — `src/lib/prompts/cache.ts`:
+- [x] T031 [P] Implement KV-backed `PromptCache` — `src/lib/prompts/cache.ts`:
   - Implements `PromptCache` interface: `get(subjectId, slug): Promise<string | null>`, `set(subjectId, slug, prompt, ttl): Promise<void>`, `delete(subjectId): Promise<void>`
   - KV key format: `prompt:{subjectId}:{slug}`
   - Returns `null` on corrupt/missing entry (never throws)
   - `createInMemoryCache()` factory for tests (Map-backed, in-process)
   - Done when unit test: cache miss → set → cache hit → verify value → delete → cache miss again
 
-- [ ] T032 [P] Implement KV-backed `NormalizerCache` — `src/lib/prompts/normalizer/cache.ts`:
+- [x] T032 [P] Implement KV-backed `NormalizerCache` — `src/lib/prompts/normalizer/cache.ts`:
   - Key: `norm:{subjectId}:{fnv1a(raw.toLowerCase().trim())}`
   - TTL: 7 days (604800 seconds)
   - `NormalizerCacheStore` interface: `get(key)`, `put(key, value, { expirationTtl })`
@@ -276,7 +276,7 @@
   - Returns `null` on JSON.parse failure (corrupt entry treated as cache miss)
   - Done when unit test verifies cache hit on second normalize call with same input
 
-- [ ] T033 [P] Implement `activateTemplate()` repository — `src/lib/prompts/repository.ts`:
+- [x] T033 [P] Implement `activateTemplate()` repository — `src/lib/prompts/repository.ts`:
   - Signature: `activateTemplate(db: Database, templateId: PromptId): Promise<Result<void, ActivationError>>`
   - Uses DB transaction: deactivate old → activate new (atomic)
   - Returns `err({ code: 'NOT_FOUND', templateId })` if template doesn't exist
