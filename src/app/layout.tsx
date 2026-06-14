@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import PlausibleProvider from "next-plausible";
 import type { ScriptProps } from "next/script";
 import "./globals.css";
+import OfflineBanner from "@/components/OfflineBanner";
+import SoundToggle from "@/components/SoundToggle";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -47,6 +49,8 @@ export default function RootLayout({
           <div className="absolute bottom-[-15%] right-[-15%] w-[80%] h-[70%] rounded-full bg-sky-400/10 blur-[150px] dark:bg-sky-500/5 dark:blur-[200px]" />
         </div>
         {children}
+        <OfflineBanner />
+        <SoundToggle />
       </body>
     </html>
   );

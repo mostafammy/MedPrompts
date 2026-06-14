@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { copyToClipboard } from '@/lib/clipboard';
 import { usePlausible } from 'next-plausible';
 import { LLMApp, openLLMApp } from '@/lib/deep-links';
+import { triggerFeedback } from '@/lib/haptics';
 
 interface DeepLinkButtonProps {
   textToCopy: string;
@@ -26,6 +27,7 @@ export default function DeepLinkButton({
   const plausible = usePlausible();
 
   const handleAction = async () => {
+    triggerFeedback(15);
     setLoading(true);
     const success = await copyToClipboard(textToCopy);
     

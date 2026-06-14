@@ -5,6 +5,8 @@ import { copyToClipboard } from '@/lib/clipboard';
 import { usePlausible } from 'next-plausible';
 import Toast from './Toast';
 import { Copy, Check, AlertCircle } from 'lucide-react';
+import { triggerFeedback } from '@/lib/haptics';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface CopyButtonProps {
   textToCopy: string;
@@ -18,6 +20,7 @@ export default function CopyButton({ textToCopy, subjectId, topic }: CopyButtonP
   const plausible = usePlausible();
 
   const handleCopy = async () => {
+    triggerFeedback(15);
     const success = await copyToClipboard(textToCopy);
     
     if (success) {
@@ -54,21 +57,29 @@ export default function CopyButton({ textToCopy, subjectId, topic }: CopyButtonP
 
       {copied && <Toast message="Copied to clipboard!" onClose={() => setCopied(false)} duration={2000} />}
 
-      {manualFallback && (
-        <div className="mt-4 animate-fade-in-up">
-          <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2.5 flex items-center gap-1.5">
-            <AlertCircle className="w-4 h-4" />
-            Auto-copy disabled by your browser. Please copy manually below:
-          </p>
-          <textarea
-            readOnly
-            value={textToCopy}
-            className="w-full h-36 p-4 text-sm font-mono rounded-2xl border border-amber-200 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 text-zinc-850 dark:text-zinc-300 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 transition-all duration-300"
-            onFocus={(e) => e.target.select()}
-            autoFocus
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {manualFallback && (
+          <motion.div
+            initial={{ height: 0, opacity: 0, marginTop: 0 }}
+            animate={{ height: 'auto', opacity: 1, marginTop: 16 }}
+            exit={{ height: 0, opacity: 0, marginTop: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+            className="overflow-hidden"
+          >
+            <p className="text-sm font-medium text-amber-600 dark:text-amber-400 mb-2.5 flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4" />
+              Auto-copy disabled by your browser. Please copy manually below:
+            </p>
+            <textarea
+              readOnly
+              value={textToCopy}
+              className="w-full h-36 p-4 text-sm font-mono rounded-2xl border border-amber-200 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-950/20 text-zinc-850 dark:text-zinc-300 focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 transition-all duration-300"
+              onFocus={(e) => e.target.select()}
+              autoFocus
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -3,15 +3,44 @@
 import { SUBJECTS, getSubject } from '@/lib/subjects';
 import SubjectTile from './SubjectTile';
 import TopicInputSheet from './TopicInputSheet';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { AnimatePresence } from 'framer-motion';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 export default function SubjectGrid() {
   const sortedSubjects = [...SUBJECTS].sort((a, b) => a.sortOrder - b.sortOrder);
   const searchParams = useSearchParams();
+  const router = useRouter();
   const selectedSubjectId = searchParams.get('subject');
   const selectedSubject = selectedSubjectId ? getSubject(selectedSubjectId) : undefined;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return;
+      }
+
+      if (selectedSubject) {
+        if (e.key === 'Escape') {
+          router.push('/', { scroll: false });
+        }
+        return;
+      }
+
+      const keyNum = parseInt(e.key, 10);
+      if (keyNum >= 1 && keyNum <= sortedSubjects.length) {
+        e.preventDefault();
+        const targetSubject = sortedSubjects[keyNum - 1];
+        router.push(`/?subject=${targetSubject.slug}`, { scroll: false });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSubject, sortedSubjects, router]);
 
   return (
     <div className="w-full relative">
@@ -22,24 +51,29 @@ export default function SubjectGrid() {
             className="animate-fade-in-up"
             style={{ animationDelay: `${index * 60}ms` }}
           >
-            <SubjectTile subject={subject} />
+            <SubjectTile subject={subject} index={index} />
           </div>
         ))}
       </div>
 
       <AnimatePresence>
         {selectedSubject && (
-          <div className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/60 backdrop-blur-xs flex items-end sm:items-center sm:justify-center p-4">
-            <Link 
-              href="/" 
-              scroll={false} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="fixed inset-0 z-40 bg-zinc-950/40 dark:bg-zinc-950/60 backdrop-blur-xs flex items-end sm:items-center sm:justify-center p-4"
+          >
+            <div 
+              onClick={() => router.push('/', { scroll: false })} 
               className="absolute inset-0 cursor-default" 
               aria-label="Close modal" 
             />
             <div className="relative z-50 w-full max-w-md">
               <TopicInputSheet subjectId={selectedSubject.id} />
             </div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
