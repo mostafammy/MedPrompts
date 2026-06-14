@@ -47,6 +47,9 @@ export function triggerHaptic(duration = 15) {
   }
 }
 
+let sharedCtx: AudioContext | undefined;
+let idleTimeout: ReturnType<typeof setTimeout> | undefined;
+
 /**
  * Synthesizes a subtle, satisfying click/tick audio feedback using the Web Audio API.
  */
@@ -54,31 +57,47 @@ export function playClickSound() {
   if (!feedbackEnabled || typeof window === 'undefined') return;
 
   try {
-    const AudioContextClass = window.AudioContext || 
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
+    if (!sharedCtx) {
+      const AudioContextClass = window.AudioContext || 
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) return;
 
-    const ctx = new AudioContextClass();
+      sharedCtx = new AudioContextClass();
+    }
     
-    if (ctx.state === 'suspended') {
-      ctx.resume();
+    if (sharedCtx.state === 'suspended') {
+      sharedCtx.resume();
     }
 
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    const osc = sharedCtx.createOscillator();
+    const gain = sharedCtx.createGain();
 
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + 0.06);
+    osc.frequency.setValueAtTime(800, sharedCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(250, sharedCtx.currentTime + 0.06);
 
-    gain.gain.setValueAtTime(0.04, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    gain.gain.setValueAtTime(0.04, sharedCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, sharedCtx.currentTime + 0.06);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(sharedCtx.destination);
+
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
 
     osc.start();
-    osc.stop(ctx.currentTime + 0.06);
+    osc.stop(sharedCtx.currentTime + 0.06);
+
+    // Close sharedCtx after 10 seconds of inactivity to save battery/resources
+    if (idleTimeout) clearTimeout(idleTimeout);
+    idleTimeout = setTimeout(() => {
+      if (sharedCtx && sharedCtx.state !== 'closed') {
+        sharedCtx.close().catch(() => {});
+        sharedCtx = undefined;
+      }
+    }, 10000);
   } catch {
     // Ignore context blocked
   }
