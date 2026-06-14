@@ -283,27 +283,27 @@
   - Calls `invalidateSubjectCache()` after activation
   - Done when integration test: seed 2 templates → activate second → verify only second is_active=true
 
-- [ ] T034 [P] Implement atomic rate limiter — `src/lib/security/rateLimit.ts`:
+- [x] T034 [P] Implement atomic rate limiter — `src/lib/security/rateLimit.ts`:
   - Signature: `rateLimit(request: Request, env: { RATE_LIMITER: RateLimit }): Promise<Response | null>`
   - Uses `env.RATE_LIMITER.limit({ key: ip })` (CF binding — atomic, no TOCTOU)
   - Returns `new Response('Too Many Requests', { status: 429, headers: { 'Retry-After': '60' } })` on limit
   - Returns `null` when request is allowed
   - Done when unit test with a mock `RateLimit` binding verifies 429 on `success: false`
 
-- [ ] T035 [P] Implement security headers middleware — `src/lib/security/headers.ts`:
+- [x] T035 [P] Implement security headers middleware — `src/lib/security/headers.ts`:
   - Signature: `securityHeaders(response: Response): Response`
   - Sets: `X-Content-Type-Options`, `X-Frame-Options: DENY`, `HSTS`, `Referrer-Policy`, `Permissions-Policy`, full CSP
   - CSP: no `unsafe-inline` in `style-src`, no `unsafe-eval` in `script-src`
   - Done when unit test verifies all 6 headers are present on the returned response
 
-- [ ] T036 [P] Implement Plausible analytics tracker — `src/lib/analytics.ts`:
+- [x] T036 [P] Implement Plausible analytics tracker — `src/lib/analytics.ts`:
   - `trackPromptGenerated(subject, slug, latencyMs)` → `window.plausible?.('Prompt Generated', ...)`
   - `trackPromptCopied(subject, method)` → `window.plausible?.('Prompt Copied', ...)`
   - `trackSharedUrlVisited(subject, source)` → `window.plausible?.('Shared URL Visited', ...)`
   - Noop `Analytics` interface implementation for testing
   - Done when unit test with `window.plausible` spy verifies correct event name and props on each call
 
-- [ ] T037 [P] Implement `copyToClipboard()` 3-level fallback — `src/lib/clipboard.ts`:
+- [x] T037 [P] Implement `copyToClipboard()` 3-level fallback — `src/lib/clipboard.ts`:
   - Level 1: `navigator.clipboard.writeText()` with 3s timeout
   - Level 2: `document.execCommand('copy')` via hidden textarea
   - Level 3: Returns `{ ok: true, method: 'manual' }` (caller shows `ManualCopySheet`)
