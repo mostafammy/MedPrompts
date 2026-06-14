@@ -18,8 +18,6 @@ import {
   releaseSlot
 } from './state';
 
-export const runtime = 'edge';
-
 export async function POST(req: Request) {
   try {
     // 1. Per-IP Rate Limiting (before parsing body)
