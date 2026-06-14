@@ -201,7 +201,7 @@
   - `fnv1a(s: string): string` — internal helper, non-exported
   - Done when 10 unit tests + 4 property tests (idempotent, url-safe, ≤74, collision-resistance) all pass
 
-- [ ] T023 [P] Implement `validateTemplate()` quality gate — `src/lib/prompts/evaluator.ts`:
+- [x] T023 [P] Implement `validateTemplate()` quality gate — `src/lib/prompts/evaluator.ts`:
   - Validates template has required structural sections (min 3 `##` headers)
   - Validates contains `⚠️ Verify` or `verify` disclaimer
   - Validates `{{TOPIC}}` placeholder present
@@ -209,7 +209,7 @@
   - Returns `Result<void, ValidationError[]>` — all violations collected, not fail-fast
   - Done when unit test with a malformed template (no disclaimer, no headers) returns `ok: false` with 2 errors
 
-- [ ] T024 [P] Implement `abbreviationNormalizer` — `src/lib/prompts/normalizer/abbreviation.ts`:
+- [x] T024 [P] Implement `abbreviationNormalizer` — `src/lib/prompts/normalizer/abbreviation.ts`:
   - `ABBREVIATION_MAP`: min 20 medical abbreviations (MI, ACS, AFIB, COPD, PE, DVT, UTI, CKD, SLE, RA, TB, HIV, ARF, ARDS, SIDS, IBS, GERD, CAD, CHF, DM)
   - `TYPO_MAP`: min 10 common typos (alzhimers, parkinsins, brcal, mycardl, etc.)
   - Conforms to `TopicNormalizer` interface
@@ -217,13 +217,13 @@
   - Confidence: 0.95 for abbreviation match, 0.85 for typo correction, 1.0 for no change
   - Done when `normalizer.normalize('mi', ctx)` returns `{ cleaned: 'Myocardial Infarction', confidence: 0.95, strategy: 'abbreviation' }`
 
-- [ ] T025 [P] Implement `identityNormalizer` — `src/lib/prompts/normalizer/identity.ts`:
+- [x] T025 [P] Implement `identityNormalizer` — `src/lib/prompts/normalizer/identity.ts`:
   - Trims whitespace, no other change
   - Confidence: 1.0, strategy: 'unchanged'
   - Always `isEnabled(): true`
   - Done when unit test verifies `normalize('  Myocardial  ')` returns `{ cleaned: 'Myocardial', confidence: 1.0 }`
 
-- [ ] T026 [P] Implement `TopicNormalizer` contract interface — `src/lib/prompts/normalizer/contract.ts`:
+- [x] T026 [P] Implement `TopicNormalizer` contract interface — `src/lib/prompts/normalizer/contract.ts`:
   - `TopicNormalizer` interface with `name`, `requiresNetwork`, `normalize()`, `isEnabled()`
   - `NormalizationResult` type: `{ cleaned, corrections, confidence, strategy }`
   - `Correction` type: `{ from, to, reason }`
@@ -233,7 +233,7 @@
 
 ### Layer 1: i18n
 
-- [ ] T027 [P] Implement i18n message system — `src/lib/i18n/messages.ts`:
+- [x] T027 [P] Implement i18n message system — `src/lib/i18n/messages.ts`:
   - `MessageKey` union type (all UI string keys)
   - `Messages` type: `Readonly<Record<MessageKey, string>>`
   - `en` messages object (all English strings)
