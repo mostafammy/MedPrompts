@@ -42,7 +42,7 @@ export class TopicNormalizationPipeline {
       cleaned: current,
       confidence: finalConfidence,
       strategy: strategiesUsed.length > 0 ? strategiesUsed.join('+') : 'unchanged',
-      corrections: allCorrections.length > 0 ? allCorrections : undefined
+      ...(allCorrections.length > 0 ? { corrections: allCorrections } : {})
     };
 
     await this.cache.set(ctx.subjectId, raw, finalResult);
