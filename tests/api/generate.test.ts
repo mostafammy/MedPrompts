@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { POST, GET, budgetManager, resetRequestDefensesState } from '../../src/app/api/generate/route';
+import { POST, GET } from '../../src/app/api/generate/route';
+import { budgetManager, resetRequestDefensesState } from '../../src/app/api/generate/state';
 
 vi.mock('ai', async (importOriginal) => {
   const actual = await importOriginal<typeof import('ai')>();
