@@ -1,10 +1,10 @@
 import './setup';
 
 import { describe, it, expect } from 'vitest';
-import { ProviderRegistry, PROVIDERS } from '../../src/lib/ai/providers';
+import { ProviderRegistry } from '../../src/lib/ai/providers';
 import { BudgetManager } from '../../src/lib/ai/budget-manager';
 import { executeWaterfall } from '../../src/lib/ai/waterfall';
-import { generateText } from 'ai';
+import { generateText, LanguageModel } from 'ai';
 import { ProviderName } from '../../src/lib/ai/types';
 
 describe('Live AI Providers Connectivity & Integration', () => {
@@ -17,7 +17,6 @@ describe('Live AI Providers Connectivity & Integration', () => {
     return typeof key === 'string' && key.trim().length > 0 && !key.includes('placeholder');
   };
 
-  const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 
   describe('Individual Provider Smoke Tests', () => {
     // 1. Groq
@@ -109,7 +108,7 @@ describe('Live AI Providers Connectivity & Integration', () => {
               doGenerate: async () => {
                 throw new Error('Simulated mock failure for live waterfall integration test');
               }
-            } as any;
+            } as Partial<LanguageModel> as LanguageModel;
           }
           return super.getModel(provider);
         }
