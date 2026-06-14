@@ -37,7 +37,7 @@ export default function PromptView({ promptText, subject, topic }: PromptViewPro
         return;
       }
 
-      if (e.key.toLowerCase() === 'c') {
+      if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         const buttons = document.querySelectorAll('button');
         for (let i = 0; i < buttons.length; i++) {
