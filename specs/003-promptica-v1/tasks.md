@@ -350,31 +350,31 @@
 
 ### Database Seed
 
-- [ ] T040 [US1] Create database migration — `drizzle/0001_initial.sql`:
+- [x] T040 [US1] Create database migration — `drizzle/0001_initial.sql`:
   - All 4 tables with all indexes
   - Done when `pnpm drizzle-kit push` against a local SQLite file creates all tables
 
-- [ ] T041 [US1] Seed `subjects` table with 6 initial subjects — `scripts/seed.ts`:
+- [x] T041 [US1] Seed `subjects` table with 6 initial subjects — `scripts/seed.ts`:
   ```
   pathology, anatomy, physiology, pharmacology, microbiology, biochemistry
   ```
   Each with `label`, `icon` (lucide-react name), `sortOrder`, `isActive: true`
   — Done when `pnpm tsx scripts/seed.ts` inserts 6 rows and `SELECT count(*) FROM subjects` returns 6
 
-- [ ] T042 [US1] Seed `prompt_templates` with initial pathology template — `scripts/seed.ts`:
+- [x] T042 [US1] Seed `prompt_templates` with initial pathology template — `scripts/seed.ts`:
   - Full pathology prompt with `{{TOPIC}}` placeholder, ≥7 `##` sections, `⚠️ Verify` disclaimer
   - `is_active: true`, `version: 1`
   - Template passes `validateTemplate()` quality gate
   - Done when `pnpm tsx scripts/seed.ts` inserts template and `validateTemplate()` returns `ok: true`
 
-- [ ] T043 [P] [US1] Seed `topics_seed` with 20 high-yield pathology topics — `scripts/seed.ts`:
+- [x] T043 [P] [US1] Seed `topics_seed` with 20 high-yield pathology topics — `scripts/seed.ts`:
   - Topics: `Myocardial Infarction`, `Pneumonia`, `Cirrhosis`, `Glomerulonephritis`, `Stroke`, etc.
   - Each with `slug`, `isHighYield: true`
   - Done when autocomplete query returns matching suggestions for `"myocard"`
 
 ### API Layer (Edge Runtime)
 
-- [ ] T044 [US1] Implement POST `/api/generate` route — `src/app/api/generate/route.ts`:
+- [x] T044 [US1] Implement POST `/api/generate` route — `src/app/api/generate/route.ts`:
   - Edge runtime: `export const runtime = 'edge'`
   - Request body: `{ subjectId: string, topic: string }`
   - Parse with `SubjectIdSchema` + `TopicSchema` → 400 on failure
@@ -385,20 +385,20 @@
 
 ### Home Page (Subject Grid)
 
-- [ ] T045 [P] [US1] Implement `SubjectGrid` RSC — `src/components/SubjectGrid/SubjectGrid.tsx`:
+- [x] T045 [P] [US1] Implement `SubjectGrid` RSC — `src/components/SubjectGrid/SubjectGrid.tsx`:
   - Fetches subjects from DB via `createDb(env)` (no client JS)
   - Renders `SubjectCard` per subject
   - `aria-label="Select a medical subject"` on the grid container
   - Done when visiting `/` renders 6 subject cards without any client JS
 
-- [ ] T046 [P] [US1] Implement `SubjectCard` client component — `src/components/SubjectGrid/SubjectCard.tsx`:
+- [x] T046 [P] [US1] Implement `SubjectCard` client component — `src/components/SubjectGrid/SubjectCard.tsx`:
   - Props: `{ id: SubjectId, label: string, icon: string, isSelected: boolean, onSelect: () => void }`
   - `role="button"`, `aria-pressed={isSelected}`, `tabIndex={0}`, keyboard: `Enter` and `Space` trigger `onSelect`
   - Hover state via CSS (not JS)
   - Touch target ≥ 44×44px
   - Done when keyboard navigation selects a card and `aria-pressed` toggles
 
-- [ ] T047 [US1] Implement Home page — `src/app/page.tsx`:
+- [x] T047 [US1] Implement Home page — `src/app/page.tsx`:
   - Server component renders `<SubjectGrid>` with pre-fetched subjects
   - `<TopicInput>` renders below grid (client component island)
   - Page `<title>`: "MedPrompts — Medical Prompt Library for Students"
@@ -408,7 +408,7 @@
 
 ### Topic Input
 
-- [ ] T048 [P] [US1] Implement `TopicInput` client component — `src/components/TopicInput/TopicInput.tsx`:
+- [x] T048 [P] [US1] Implement `TopicInput` client component — `src/components/TopicInput/TopicInput.tsx`:
   - Props: `{ subjectId: SubjectId | null, onGenerate: (topic: string) => void }`
   - Debounced abbreviation check (300ms) — calls `abbreviationNormalizer.normalize()` client-side
   - Shows inline hint "Did you mean: [expansion]?" when confidence ≥ 0.9
@@ -418,14 +418,14 @@
   - Error state: red border + `role="alert"` on validation failure
   - Done when typing "MI" shows "Myocardial Infarction" hint within 300ms
 
-- [ ] T049 [P] [US1] Implement `TopicInput` reducer — `src/components/TopicInput/TopicInput.reducer.ts`:
+- [x] T049 [P] [US1] Implement `TopicInput` reducer — `src/components/TopicInput/TopicInput.reducer.ts`:
   - States: `{ status: 'idle' } | { status: 'typing'; value: string } | { status: 'validating' } | { status: 'error'; reason: string } | { status: 'ready'; topic: string }`
   - Actions: `INPUT_CHANGED`, `VALIDATION_STARTED`, `VALIDATION_PASSED`, `VALIDATION_FAILED`, `RESET`
   - Done when unit test: `INPUT_CHANGED → VALIDATION_STARTED → VALIDATION_PASSED` sequence reaches `ready` state
 
 ### Prompt Display
 
-- [ ] T050 [P] [US1] Implement `PromptDisplay` RSC — `src/components/PromptDisplay/PromptDisplay.tsx`:
+- [x] T050 [P] [US1] Implement `PromptDisplay` RSC — `src/components/PromptDisplay/PromptDisplay.tsx`:
   - Props: `{ prompt: string; subject: string; topic: string; wordCount: number; fromCache: boolean }`
   - Renders `<pre><code>{prompt}</code></pre>` — NEVER `dangerouslySetInnerHTML`
   - Shows word count badge, subject + topic breadcrumb
@@ -434,7 +434,7 @@
 
 ### Copy Engine
 
-- [ ] T051 [P] [US1] Implement `CopyButton` client component — `src/components/CopyEngine/CopyButton.tsx`:
+- [x] T051 [P] [US1] Implement `CopyButton` client component — `src/components/CopyEngine/CopyButton.tsx`:
   - Uses `useReducer(copyReducer, { status: 'idle' })` from `CopyButton.reducer.ts`
   - On click: dispatch `COPY_STARTED` → call `copyToClipboard()` → dispatch `COPY_SUCCESS` or `COPY_MANUAL` or `COPY_ERROR`
   - Auto-reset to `idle` after 2s on success
@@ -442,14 +442,14 @@
   - `aria-live="polite"` on status label (screen reader announces "Copied!")
   - Done when E2E test: click → clipboard contains full prompt → "Copied!" is announced
 
-- [ ] T052 [P] [US1] Implement `ManualCopySheet` component — `src/components/ManualCopySheet/ManualCopySheet.tsx`:
+- [x] T052 [P] [US1] Implement `ManualCopySheet` component — `src/components/ManualCopySheet/ManualCopySheet.tsx`:
   - Bottom sheet modal with `role="dialog"`, `aria-modal="true"`, `aria-label="Copy prompt manually"`
   - Full prompt in `<pre>` with `user-select: all` CSS — user can triple-click to select all
   - `useFocusTrap` hook active when sheet is open
   - Close on Escape key
   - Done when WCAG focus trap test: Tab cycles within sheet, Escape closes and returns focus to trigger
 
-- [ ] T053 [P] [US1] Implement `useFocusTrap` hook — `src/components/ManualCopySheet/useFocusTrap.ts`:
+- [x] T053 [P] [US1] Implement `useFocusTrap` hook — `src/components/ManualCopySheet/useFocusTrap.ts`:
   - Saves previously focused element on activate
   - Moves focus to first focusable element inside container
   - Tab wraps at boundaries (first/last focusable)
@@ -458,7 +458,7 @@
 
 ### Middleware & Edge Worker
 
-- [ ] T054 [US1] Implement Edge middleware — `src/middleware.ts`:
+- [x] T054 [US1] Implement Edge middleware — `src/middleware.ts`:
   - Rate limit via `rateLimit(request, env)` — return 429 if hit
   - `X-Cache` header injection
   - Security headers via `securityHeaders(response)`
