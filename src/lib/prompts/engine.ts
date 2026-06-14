@@ -63,11 +63,11 @@ export class PromptEngine {
     }
 
     // injectTopic() -> if error, return INJECTION_FAILED
-    const injectionResult = injectTopic(template.template, safeTopic);
+    const injectionResult = injectTopic(template.template, safeTopic as unknown as import('../types/branded').Topic);
     if (!injectionResult.ok) {
       return err({ code: 'INJECTION_FAILED', details: injectionResult.error.code });
     }
-    const finalPrompt = injectionResult.value.prompt;
+    const finalPrompt = injectionResult.value.output;
 
     // Generate slug via slugifyTopic()
     const finalSlug = slugifyTopic(safeTopic);
