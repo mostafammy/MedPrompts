@@ -22,7 +22,7 @@ export const PROVIDERS: Record<ProviderName, ProviderConfig> = {
     tpd: 0,
     p50LatencyMs: 400,
     defaultCooldownMs: 10000,
-    createModel: () => groq('llama3-8b-8192'),
+    createModel: () => groq('llama-3.1-8b-instant'),
   },
   cerebras: {
     name: 'cerebras',
@@ -31,7 +31,7 @@ export const PROVIDERS: Record<ProviderName, ProviderConfig> = {
     tpd: 0,
     p50LatencyMs: 300,
     defaultCooldownMs: 10000,
-    createModel: () => cerebras('llama3.1-8b'),
+    createModel: () => cerebras('zai-glm-4.7'),
   },
   deepinfra: {
     name: 'deepinfra',
@@ -67,7 +67,7 @@ export const PROVIDERS: Record<ProviderName, ProviderConfig> = {
     tpd: 0,
     p50LatencyMs: 1000,
     defaultCooldownMs: 10000,
-    createModel: () => google('gemini-1.5-flash'),
+    createModel: () => google('gemini-2.5-flash'),
   },
 };
 
