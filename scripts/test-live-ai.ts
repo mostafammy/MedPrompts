@@ -36,7 +36,7 @@ if (process.env.GOOGLE_API_KEY && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
 }
 
 // Now we can import the project providers and waterfall
-import { ProviderRegistry, PROVIDERS } from '../src/lib/ai/providers';
+import { ProviderRegistry } from '../src/lib/ai/providers';
 import { BudgetManager } from '../src/lib/ai/budget-manager';
 import { executeWaterfall } from '../src/lib/ai/waterfall';
 import { ProviderName } from '../src/lib/ai/types';
@@ -48,7 +48,6 @@ const GREEN = '\x1b[32m';
 const RED = '\x1b[31m';
 const YELLOW = '\x1b[33m';
 const CYAN = '\x1b[36m';
-const MAGENTA = '\x1b[35m';
 const WHITE_ON_BLUE = '\x1b[37;44m';
 
 async function runDiagnostics() {
@@ -134,8 +133,8 @@ async function runDiagnostics() {
         status: `${GREEN}CONNECTED${RESET}`,
         latency: `${latency}ms`,
       });
-    } catch (err: any) {
-      const errMsg = err.message || String(err);
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
       console.log(`${RED}Failed${RESET} -> ${errMsg.substring(0, 60)}...`);
       tableData.push({
         provider: provider.toUpperCase(),
