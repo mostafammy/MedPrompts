@@ -102,14 +102,14 @@ async function runDiagnostics() {
     if (!hasKey) {
       tableData.push({
         provider: provider.toUpperCase(),
-        model: config.createModel().modelId,
+        model: (config.createModel() as unknown as { modelId: string }).modelId,
         status: `${YELLOW}NO KEY${RESET}`,
         latency: 'N/A',
       });
       continue;
     }
 
-    process.stdout.write(`  Testing ${BOLD}${provider.toUpperCase()}${RESET} (${config.createModel().modelId})... `);
+    process.stdout.write(`  Testing ${BOLD}${provider.toUpperCase()}${RESET} (${(config.createModel() as unknown as { modelId: string }).modelId})... `);
     
     try {
       const model = registry.getModel(provider);
@@ -119,7 +119,6 @@ async function runDiagnostics() {
       const res = await generateText({
         model,
         prompt: 'Hi, respond with only the word "OK"',
-        maxTokens: 5,
       });
 
       const latency = Date.now() - startTime;
@@ -129,7 +128,7 @@ async function runDiagnostics() {
       
       tableData.push({
         provider: provider.toUpperCase(),
-        model: config.createModel().modelId,
+        model: (config.createModel() as unknown as { modelId: string }).modelId,
         status: `${GREEN}CONNECTED${RESET}`,
         latency: `${latency}ms`,
       });
@@ -138,7 +137,7 @@ async function runDiagnostics() {
       console.log(`${RED}Failed${RESET} -> ${errMsg.substring(0, 60)}...`);
       tableData.push({
         provider: provider.toUpperCase(),
-        model: config.createModel().modelId,
+        model: (config.createModel() as unknown as { modelId: string }).modelId,
         status: `${RED}ERROR${RESET}`,
         latency: 'FAIL',
         error: errMsg,
