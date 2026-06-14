@@ -19,7 +19,7 @@ export async function activateTemplate(
       return err({ code: 'NOT_FOUND', templateId });
     }
 
-    const subjectId = template[0].subjectId as SubjectId;
+    const subjectId = template[0]!.subjectId as SubjectId;
 
     await tx.update(promptTemplates)
       .set({ isActive: false })
