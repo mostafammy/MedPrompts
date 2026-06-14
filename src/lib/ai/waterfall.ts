@@ -32,13 +32,16 @@ export async function executeWaterfall(
       logger.info('Attempting inference', { provider, tier: i + 1 });
       
       const startTime = Date.now();
-      const result = await generateText({
-        model,
-        prompt,
-        abortSignal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
+      let result;
+      try {
+        result = await generateText({
+          model,
+          prompt,
+          abortSignal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       budgetManager.recordSuccess(provider);
       const latencyMs = Date.now() - startTime;
@@ -63,13 +66,10 @@ export async function executeWaterfall(
       let isRateLimit = false;
       const isTimeout = error instanceof Error && (error.name === 'AbortError' || error.message.includes('Timeout'));
       
-      const err = error as Record<string, unknown>;
-      if (err && typeof err === 'object') {
-        if (err.statusCode === 429) {
-          isRateLimit = true;
-        } else if (error instanceof APICallError && error.statusCode === 429) {
-          isRateLimit = true;
-        }
+      if (error instanceof APICallError && error.statusCode === 429) {
+        isRateLimit = true;
+      } else if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 429) {
+        isRateLimit = true;
       }
 
       logger.warn('Provider failed', { 
@@ -80,13 +80,16 @@ export async function executeWaterfall(
       });
 
       if (isRateLimit) {
-        const headers = err.responseHeaders as Record<string, string> | undefined;
-        const retryAfter = headers?.['retry-after'];
-        const retryAfterSeconds = retryAfter ? parseInt(retryAfter, 10) : undefined;
-        budgetManager.recordRateLimit(
-          provider, 
-          !retryAfterSeconds || isNaN(retryAfterSeconds) ? undefined : retryAfterSeconds
-        );
+        let retryAfterSeconds: number | undefined;
+        
+        if (error instanceof APICallError) {
+          const headers = error.responseHeaders;
+          const retryAfter = headers?.['retry-after'];
+          const parsed = retryAfter ? parseInt(retryAfter, 10) : undefined;
+          retryAfterSeconds = parsed && !isNaN(parsed) ? parsed : undefined;
+        }
+
+        budgetManager.recordRateLimit(provider, retryAfterSeconds);
       } else {
         budgetManager.recordError(provider);
       }
