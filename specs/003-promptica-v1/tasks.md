@@ -312,7 +312,7 @@
 
 ### Layer 3: Orchestration
 
-- [ ] T038 Implement `NormalizerPipeline` — `src/lib/prompts/normalizer/pipeline.ts`:
+- [x] T038 Implement `NormalizerPipeline` — `src/lib/prompts/normalizer/pipeline.ts`:
   - Signature: `class NormalizerPipeline { constructor(stages: TopicNormalizer[], logger?: Logger) }`
   - `run(raw: string, ctx: NormalizerContext): Promise<NormalizationResult>`
   - Per-stage 2s timeout via `Promise.race()`
@@ -321,7 +321,7 @@
   - Final fallback: if all stages fail, return `{ cleaned: raw.trim(), confidence: 1.0, strategy: 'unchanged' }`
   - Done when integration test: abbreviation stage short-circuits (MI → Myocardial Infarction, skips identity), and a timing-out stage does not block the result
 
-- [ ] T039 Implement `PromptEngine` orchestrator — `src/lib/prompts/service.ts`:
+- [x] T039 Implement `PromptEngine` orchestrator — `src/lib/prompts/service.ts`:
   - Class `PromptEngine { constructor(deps: PromptEngineDeps) }`
   - `generate(input: PromptEngineInput): Promise<Result<PromptEngineOutput, PromptEngineError>>`
   - 7-step pipeline: sanitize → slugify → cache check → load template → inject → cache write → track
