@@ -48,6 +48,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Validate wrangler config (no placeholder KV IDs)
+        run: |
+          if grep -q '"PLACEHOLDER"' wrangler.jsonc; then
+            echo "ERROR: wrangler.jsonc contains placeholder KV namespace IDs."
+            echo "Replace every \"id\": \"PLACEHOLDER\" with a real Turso/Cloudflare KV ID before deploying."
+            exit 1
+          fi
+
       - name: Lint
         run: pnpm run lint
 
