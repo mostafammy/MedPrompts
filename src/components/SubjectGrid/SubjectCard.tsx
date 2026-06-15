@@ -12,10 +12,10 @@ export interface SubjectCardProps {
   onSelect: () => void;
 }
 
-export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCardProps) {
+export function SubjectCard({ label, icon, isSelected, onSelect }: SubjectCardProps) {
   // We dynamically render the icon based on the icon name
   const iconName = icon.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
-  const IconComponent = (Icons as any)[iconName] || Icons.CircleHelp;
+  const IconComponent = (Icons as Record<string, React.ComponentType<{ className?: string }>>)[iconName] || Icons.CircleHelp;
 
   return (
     <div
