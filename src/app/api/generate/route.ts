@@ -10,7 +10,6 @@ import { createInMemoryCache } from '@/lib/prompts/cache';
 import { NormalizerCache, createInMemoryCacheStore } from '@/lib/prompts/normalizer/cache';
 import { plausibleAnalytics } from '@/lib/analytics';
 
-export const runtime = 'edge';
 
 const GenerateRequestSchema = z.object({
   subjectId: z.string() as unknown as z.ZodType<SubjectId>,
