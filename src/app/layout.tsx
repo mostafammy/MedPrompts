@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { SkipToContent } from "@/components/ui/SkipToContent";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,7 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} antialiased h-full dark:bg-zinc-950`}>
       <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans relative overflow-x-hidden">
-        {children}
+        <SkipToContent />
+        <main id="main-content" className="flex-1 flex flex-col">
+          {children}
+        </main>
       </body>
     </html>
   );
