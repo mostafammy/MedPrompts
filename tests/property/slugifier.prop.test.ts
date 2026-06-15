@@ -32,6 +32,15 @@ describe('slugifyTopic property tests', () => {
   });
 
   it('should have collision resistance for long topics with different endings', () => {
+    // Mirrors slugifyTopic's normalization to derive the canonical body oracle.
+    const normalize = (s: string) =>
+      s.toLowerCase().normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+
     fc.assert(
       fc.property(fc.string({ minLength: 80 }), fc.string({ minLength: 1, maxLength: 5 }), fc.string({ minLength: 1, maxLength: 5 }), (base, ending1, ending2) => {
         if (ending1 !== ending2) {
@@ -39,17 +48,19 @@ describe('slugifyTopic property tests', () => {
           const topic2 = base + ending2;
           const slug1 = slugifyTopic(topic1);
           const slug2 = slugifyTopic(topic2);
-          // Slugs are legitimately equal when normalization collapses different
-          // raw suffixes (e.g. ' ' vs '!') to the same body string.
-          // Only assert distinct slugs when both topics exceed the body limit,
-          // since the hash is only appended in that branch.
+
           if (slug1 !== 'unknown' && slug2 !== 'unknown' && slug1 !== slug2) {
-            // Positive case: slugs already differ — property holds.
+            // Different slugs must originate from different normalized bodies —
+            // verifies the hash is doing real collision-resistance work.
+            const body1 = normalize(topic1);
+            const body2 = normalize(topic2);
+            expect(body1).not.toBe(body2);
           } else if (slug1 !== 'unknown' && slug2 !== 'unknown' && slug1 === slug2) {
-            // Acceptable only when both hashed slugs would use the same body.
-            // Verify they don't both carry hashes with different bodies.
-            const body1 = slug1.replace(/-[a-z0-9]{6}$/, '');
-            const body2 = slug2.replace(/-[a-z0-9]{6}$/, '');
+            // Equal slugs are only valid when normalization collapsed the raw
+            // inputs to the same body (e.g. ' ' vs '!' both strip away).
+            // Compare the source bodies directly — NOT re-extracted from equal slugs.
+            const body1 = normalize(topic1);
+            const body2 = normalize(topic2);
             expect(body1).toBe(body2);
           }
         }
