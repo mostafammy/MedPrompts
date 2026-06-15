@@ -12,7 +12,7 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
   const subjectId = (searchParams.subject as SubjectId) || null;
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-4xl text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
           Find Your Medical Study Prompt
@@ -27,6 +27,6 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
       </div>
 
       <GenerateContainer subjectId={subjectId} />
-    </main>
+    </div>
   );
 }
