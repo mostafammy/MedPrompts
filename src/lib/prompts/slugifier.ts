@@ -3,35 +3,29 @@ import { Slug, Topic } from '../types/branded';
 const MAX_SLUG_BODY = 67;
 
 export function fnv1a(s: string): string {
-  let hash = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    hash ^= s.charCodeAt(i);
-    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-  }
-  return (hash >>> 0).toString(16).padStart(8, '0');
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36).padStart(6, '0').slice(-6);
 }
 
 /**
  * @pure
  */
 export function slugifyTopic(topic: Topic | string): Slug {
-  const normalized = topic.normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
+  const body = (topic as string)
+    .toLowerCase().normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')  // Remove diacritics
+    .replace(/[^a-z0-9\s-]/g, '')     // Remove non-alphanumeric
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
 
-  if (normalized.length === 0) return 'unknown' as Slug;
+  if (body.length === 0) return 'unknown' as Slug;
 
-  if (normalized.length > MAX_SLUG_BODY) {
-    const truncated = normalized.substring(0, MAX_SLUG_BODY).replace(/-$/, '');
-    const hash = fnv1a(topic as string).substring(0, 6);
-    return `${truncated}-${hash}` as Slug;
-  }
+  if (body.length <= MAX_SLUG_BODY) return body as Slug;  // Common case: no hash needed
 
-  return normalized as Slug;
+  const truncated = body.slice(0, MAX_SLUG_BODY).replace(/-[^-]*$/, '');
+  return `${truncated}-${fnv1a(body)}` as Slug;  // hash of FULL body — collision-resistant
 }
 
 /**
