@@ -28,7 +28,10 @@ function getEngine() {
     throw new Error('TURSO_DATABASE_URL environment variable is required');
   }
 
-  const client = createClient({ url, authToken });
+  const client = createClient({
+    url,
+    ...(authToken ? { authToken } : {}),
+  });
   const db = drizzle(client, { schema });
 
   // In a real edge deployment we'd wire this to KV bindings
