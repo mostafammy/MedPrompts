@@ -1,4 +1,4 @@
-import { SubjectId, Slug } from '../types/branded';
+import { SubjectId } from '../types/branded';
 import { Result, ok, err } from '../types/result';
 import { Database } from '../db/client';
 import { PromptCache } from './cache';
@@ -6,14 +6,14 @@ import { Analytics } from '../analytics';
 import { TopicNormalizationPipeline } from './pipeline';
 import { sanitizeTopic } from './sanitizer';
 import { getActiveTemplate } from './loader';
-import { validateTemplate } from './evaluator';
+import { validateTemplate, TemplateValidationError } from './evaluator';
 import { injectTopic } from './injector';
 import { slugifyTopic } from './slugifier';
 
 export type EngineError = 
   | { code: 'TOPIC_INVALID'; details: string }
   | { code: 'SUBJECT_NOT_FOUND' }
-  | { code: 'TEMPLATE_MALFORMED'; errors: any[] }
+  | { code: 'TEMPLATE_MALFORMED'; errors: TemplateValidationError[] }
   | { code: 'INJECTION_FAILED'; details: string };
 
 export type EngineEnv = {
