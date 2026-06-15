@@ -3,7 +3,8 @@
 import React from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
+import Link from 'next/link';
 
 export interface Subject {
   id: string;
@@ -16,33 +17,42 @@ export interface SubjectGridClientProps {
 }
 
 export function SubjectGridClient({ subjects }: SubjectGridClientProps) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const selectedId = searchParams.get('subject');
 
-  const handleSelect = (id: string) => {
+  const getHref = (id: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('subject', id);
-    router.push(pathname + '?' + params.toString());
+    return pathname + '?' + params.toString();
   };
 
   return (
     <div 
-      className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-2xl mx-auto"
+      className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 w-full max-w-4xl mx-auto"
       aria-label="Select a medical subject"
     >
-      {subjects.map((subject) => (
-        <SubjectCard
-          key={subject.id}
-          id={subject.id as SubjectId}
-          label={subject.label}
-          icon={subject.icon}
-          isSelected={selectedId === subject.id}
-          onSelect={() => handleSelect(subject.id)}
-        />
-      ))}
+      {subjects.map((subject) => {
+        const isSelected = selectedId === subject.id;
+        const href = getHref(subject.id);
+
+        return (
+          <Link
+            key={subject.id}
+            href={href}
+            scroll={false}
+            className="block no-underline"
+          >
+            <SubjectCard
+              id={subject.id as SubjectId}
+              label={subject.label}
+              icon={subject.icon}
+              isSelected={isSelected}
+            />
+          </Link>
+        );
+      })}
     </div>
   );
 }
