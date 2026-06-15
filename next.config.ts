@@ -9,6 +9,7 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  serverExternalPackages: ["@libsql/isomorphic-ws"],
   turbopack: {}
 };
 
