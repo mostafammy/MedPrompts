@@ -98,6 +98,13 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install
+      - name: Validate wrangler config (no placeholder KV IDs)
+        run: |
+          if grep -q '"PLACEHOLDER"' wrangler.jsonc; then
+            echo "ERROR: wrangler.jsonc contains placeholder KV namespace IDs."
+            echo "Replace every \"id\": \"PLACEHOLDER\" with a real Cloudflare KV ID before deploying."
+            exit 1
+          fi
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
