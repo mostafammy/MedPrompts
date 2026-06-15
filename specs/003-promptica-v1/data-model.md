@@ -23,7 +23,7 @@ Versioned text strings associated with a Subject, containing `{{TOPIC}}` placeho
 
 ### `topics_seed`
 High-yield medical topics pre-populated to enable autocomplete and static SEO landing pages.
-- `id` (integer, PK)
+- `id` (text, PK)
 - `subjectId` (text, FK -> subjects.id)
 - `topic` (text): Raw topic string (e.g., 'Myocardial Infarction')
 - `slug` (text): URL-safe slug (e.g., 'myocardial-infarction')
@@ -31,11 +31,10 @@ High-yield medical topics pre-populated to enable autocomplete and static SEO la
 
 ### `prompt_events`
 Anonymous tracking record for usage analytics.
-- `id` (integer, PK)
+- `id` (text, PK)
 - `subjectId` (text)
-- `topicSlug` (text)
+- `slug` (text)
 - `copyMethod` (text): 'clipboard-api' | 'exec-command' | 'manual'
-- `uaClass` (text): 'mobile' | 'desktop' | 'tablet'
 - `copiedAt` (timestamp)
 
 ## Type Safety
