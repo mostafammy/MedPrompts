@@ -17,13 +17,12 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
 
   useEffect(() => {
     dispatch({ type: 'INPUT_CHANGED', value: inputValue });
-    
-    if (inputValue.trim() === '') {
-      setHint(null);
-      return;
-    }
 
     const timer = setTimeout(async () => {
+      if (inputValue.trim() === '') {
+        setHint(null);
+        return;
+      }
       if (!subjectId) return;
       
       const result = await abbreviationNormalizer.normalize(inputValue, { subjectId, raw: inputValue });

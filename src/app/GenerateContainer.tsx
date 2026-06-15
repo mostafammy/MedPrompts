@@ -31,15 +31,16 @@ export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }
         body: JSON.stringify({ subjectId, topic }),
       });
 
-      const data = await res.json() as any;
+      const data = await res.json() as { error?: { message?: string } | string; prompt?: typeof result };
 
       if (!res.ok) {
-        throw new Error(data.error?.message || data.error || 'Failed to generate prompt');
+        const errMsg = typeof data.error === 'object' ? data.error?.message : data.error;
+        throw new Error(errMsg || 'Failed to generate prompt');
       }
 
-      setResult(data.prompt); // Note: backend returns { prompt: { prompt: "...", slug: "...", wordCount: ... } }
-    } catch (err: any) {
-      setError(err.message);
+      setResult(data.prompt ?? null); // Note: backend returns { prompt: { prompt: "...", slug: "...", wordCount: ... } }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }

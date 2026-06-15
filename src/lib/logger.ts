@@ -7,6 +7,7 @@ export interface Logger {
 
 export const ConsoleLogger: Logger = {
   info: (msg, ctx) => {
+    // eslint-disable-next-line no-restricted-syntax
     console.log(JSON.stringify({ level: 'info', message: msg, ...ctx }));
   },
   error: (msg, err, ctx) => {
