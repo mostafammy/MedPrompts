@@ -1,13 +1,14 @@
-import { createClient } from '@libsql/client';
+import { createClient } from '@libsql/client/web';
 import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { SubjectGridClient } from './SubjectGridClient';
 
 function getDb() {
-  const url = process.env.TURSO_DATABASE_URL || 'file:./local.db';
+  const url = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
-  const client = createClient(authToken ? { url, authToken } : { url });
+  if (!url) throw new Error('TURSO_DATABASE_URL environment variable is required');
+  const client = createClient({ url, authToken });
   return drizzle(client, { schema });
 }
 

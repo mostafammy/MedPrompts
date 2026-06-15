@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { SubjectId, Topic } from '@/lib/types/branded';
 import { PromptEngine } from '@/lib/prompts/engine';
 import { TopicNormalizationPipeline } from '@/lib/prompts/pipeline';
-import { createClient } from '@libsql/client';
+import { createClient } from '@libsql/client/web';
 import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from '@/lib/db/schema';
 import { createInMemoryCache } from '@/lib/prompts/cache';
@@ -21,10 +21,14 @@ let engine: PromptEngine | null = null;
 function getEngine() {
   if (engine) return engine;
 
-  const url = process.env.TURSO_DATABASE_URL || 'file:./local.db';
+  const url = process.env.TURSO_DATABASE_URL;
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
-  const client = createClient(authToken ? { url, authToken } : { url });
+  if (!url) {
+    throw new Error('TURSO_DATABASE_URL environment variable is required');
+  }
+
+  const client = createClient({ url, authToken });
   const db = drizzle(client, { schema });
 
   // In a real edge deployment we'd wire this to KV bindings
