@@ -31,14 +31,29 @@ export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }
         body: JSON.stringify({ subjectId, topic }),
       });
 
-      const data = await res.json() as { error?: { message?: string } | string; prompt?: typeof result };
+      const data = await res.json() as { error?: { message?: string } | string; prompt?: typeof result | string };
 
       if (!res.ok) {
         const errMsg = typeof data.error === 'object' ? data.error?.message : data.error;
         throw new Error(errMsg || 'Failed to generate prompt');
       }
 
-      setResult(data.prompt ?? null); // Note: backend returns { prompt: { prompt: "...", slug: "...", wordCount: ... } }
+      if (data.prompt) {
+        if (typeof data.prompt === 'string') {
+          const promptText = data.prompt;
+          setResult({
+            prompt: promptText,
+            slug: topic.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            topic: topic,
+            wordCount: promptText.split(/\s+/).filter(Boolean).length,
+            fromCache: false,
+          });
+        } else {
+          setResult(data.prompt);
+        }
+      } else {
+        setResult(null);
+      } // Note: backend returns { prompt: { prompt: "...", slug: "...", wordCount: ... } }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
