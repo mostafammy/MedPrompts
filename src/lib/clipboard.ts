@@ -1,47 +1,46 @@
-/**
- * Clipboard fallback engine to support all browser contexts.
- * 
- * Strategy:
- * 1. navigator.clipboard.writeText (Modern, requires Secure Context)
- * 2. document.execCommand('copy') (Legacy fallback)
- * 3. Textarea selection (Manual fallback)
- */
+export type CopyMethod = 'navigator' | 'execCommand' | 'manual';
 
-export async function copyToClipboard(text: string): Promise<boolean> {
-  // Level 1: Modern Async Clipboard API
-  if (typeof navigator !== 'undefined' && navigator.clipboard && window.isSecureContext) {
+export type CopyResult = 
+  | { ok: true; method: CopyMethod }
+  | { ok: false; method: CopyMethod; error: Error };
+
+export async function copyToClipboard(text: string): Promise<CopyResult> {
+  // Level 1: navigator.clipboard with 3s timeout
+  if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
     try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch (e) {
-      console.warn('Clipboard API failed, falling back to execCommand', e);
-      // Fall through to level 2
+      await Promise.race([
+        navigator.clipboard.writeText(text),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+      ]);
+      return { ok: true, method: 'navigator' };
+    } catch {
+      // Fall through to Level 2
     }
   }
 
-  // Level 2: Legacy execCommand
-  try {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    
-    // Move off-screen to avoid scroll jumps
-    textArea.style.position = 'fixed';
-    textArea.style.left = '-999999px';
-    textArea.style.top = '-999999px';
-    
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    
-    const successful = document.execCommand('copy');
-    document.body.removeChild(textArea);
-    
-    if (successful) return true;
-  } catch (e) {
-    console.warn('execCommand failed', e);
-    // Fall through to level 3
+  // Level 2: document.execCommand
+  if (typeof document !== 'undefined' && document.queryCommandSupported && document.queryCommandSupported('copy')) {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      
+      if (successful) {
+        return { ok: true, method: 'execCommand' };
+      }
+    } catch {
+      // Fall through to Level 3
+    }
   }
 
-  // Level 3: Failure, handled by UI (e.g., showing a textarea)
-  return false;
+  // Level 3: Manual fallback
+  return { ok: true, method: 'manual' };
 }

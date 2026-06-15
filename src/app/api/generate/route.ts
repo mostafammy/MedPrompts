@@ -1,159 +1,72 @@
 import { NextResponse } from 'next/server';
-import { executeWaterfall } from '../../../lib/ai/waterfall';
-import { sanitizeTopic } from '../../../lib/ai/sanitize';
-import {
-  registry,
-  budgetManager,
-  ipLimits,
-  RATE_LIMIT_WINDOW_MS,
-  RATE_LIMIT_MAX_REQUESTS,
-  MAX_EXHAUSTED_PROVIDERS_THRESHOLD,
-  MAX_CONCURRENCY,
-  MAX_QUEUE_SIZE,
-  activeExecutions,
-  executionQueue,
-  getClientIp,
-  areProvidersExhausted,
-  acquireSlot,
-  releaseSlot
-} from './state';
+import { z } from 'zod';
+import { SubjectId, Topic } from '@/lib/types/branded';
+import { PromptEngine } from '@/lib/prompts/engine';
+import { TopicNormalizationPipeline } from '@/lib/prompts/pipeline';
+import { createClient } from '@libsql/client';
+import { drizzle } from 'drizzle-orm/libsql';
+import * as schema from '@/lib/db/schema';
+import { createInMemoryCache } from '@/lib/prompts/cache';
+import { NormalizerCache, createInMemoryCacheStore } from '@/lib/prompts/normalizer/cache';
+import { plausibleAnalytics } from '@/lib/analytics';
+
+export const runtime = 'edge';
+
+const GenerateRequestSchema = z.object({
+  subjectId: z.string() as unknown as z.ZodType<SubjectId>,
+  topic: z.string() as unknown as z.ZodType<Topic>
+});
+
+let engine: PromptEngine | null = null;
+
+function getEngine() {
+  if (engine) return engine;
+
+  const url = process.env.TURSO_DATABASE_URL || 'file:./local.db';
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+
+  const client = createClient(authToken ? { url, authToken } : { url });
+  const db = drizzle(client, { schema });
+
+  // In a real edge deployment we'd wire this to KV bindings
+  const promptCache = createInMemoryCache();
+  const normCache = new NormalizerCache(createInMemoryCacheStore());
+
+  const pipeline = new TopicNormalizationPipeline([], normCache);
+  
+  engine = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
+  return engine;
+}
 
 export async function POST(req: Request) {
   try {
-    // 1. Per-IP Rate Limiting (before parsing body)
-    const ip = getClientIp(req);
-    const now = Date.now();
-    let limit = ipLimits.get(ip);
-
-    if (!limit || now >= limit.resetAt) {
-      limit = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS };
-      ipLimits.set(ip, limit);
-    } else {
-      if (limit.count >= RATE_LIMIT_MAX_REQUESTS) {
-        return NextResponse.json(
-          { error: 'Too many requests. Please try again in 60 seconds.' },
-          { status: 429 }
-        );
-      }
-      limit.count++;
-    }
-
-    // 2. Early-Exit for Provider Exhaustion
-    const { exhausted, exhaustedProviders } = areProvidersExhausted(
-      budgetManager,
-      registry,
-      MAX_EXHAUSTED_PROVIDERS_THRESHOLD
-    );
-    if (exhausted) {
-      return NextResponse.json(
-        {
-          error: 'Service temporarily overloaded. Please try again in 60 seconds.',
-          exhaustedProviders
-        },
-        { status: 429 }
-      );
-    }
-
     const body = await req.json();
-    const { topic, subject } = body;
+    const parsed = GenerateRequestSchema.safeParse(body);
 
-    if (!topic || !subject || typeof subject !== 'string' || subject.trim() === '') {
-      return NextResponse.json(
-        { error: 'Request must include non-empty `topic` and `subject` fields.' },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const sanitizedTopic = sanitizeTopic(topic);
-    if (!sanitizedTopic.isValid) {
-      return NextResponse.json(
-        { error: sanitizedTopic.error || 'Invalid topic' },
-        { status: 400 }
-      );
+    const { subjectId, topic } = parsed.data;
+
+    const e = getEngine();
+    
+    const env = { hasApiKey: false, userPlan: 'free' as const };
+    
+    const result = await e.generatePrompt(subjectId, topic, env);
+
+    if (!result.ok) {
+      let status = 500;
+      if (result.error.code === 'TOPIC_INVALID') status = 400;
+      if (result.error.code === 'SUBJECT_NOT_FOUND') status = 404;
+
+      return NextResponse.json({ error: result.error }, { status });
     }
 
-    const sanitizedSubject = sanitizeTopic(subject);
-    if (!sanitizedSubject.isValid) {
-      return NextResponse.json(
-        { error: sanitizedSubject.error ? sanitizedSubject.error.replace('Topic', 'Subject') : 'Invalid subject' },
-        { status: 400 }
-      );
-    }
+    return NextResponse.json({ prompt: result.value });
 
-    const prompt = `You are an expert medical AI assistant.\nCreate a comprehensive study prompt for the subject "${sanitizedSubject.sanitized}" focusing on the topic "${sanitizedTopic.sanitized}".\nPlease output the study prompt in Markdown format.`;
-
-    // 3. Concurrency Limiter: reject if queue and concurrency are both full
-    if (activeExecutions >= MAX_CONCURRENCY && executionQueue.length >= MAX_QUEUE_SIZE) {
-      return NextResponse.json(
-        { error: 'Service is busy. Please try again in 60 seconds.' },
-        { status: 429 }
-      );
-    }
-
-    await acquireSlot();
-
-    try {
-      const result = await executeWaterfall(prompt, budgetManager, registry);
-
-      if (!result.success) {
-        return NextResponse.json(
-          { 
-            error: 'Service temporarily overloaded. Please try again in 60 seconds.',
-            exhaustedProviders: result.exhaustedProviders
-          },
-          { status: 429 }
-        );
-      }
-
-      return NextResponse.json(
-        { data: result.text },
-        { 
-          status: 200,
-          headers: {
-            'X-Provider': result.provider,
-            'X-Provider-Tier': String(result.tier),
-            'X-Latency-Ms': String(result.latencyMs),
-            'Cache-Control': 'no-store'
-          }
-        }
-      );
-    } finally {
-      releaseSlot();
-    }
-
-  } catch {
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error('Generate error:', err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-}
-
-export async function GET(req: Request) {
-  const secret = req.headers.get('x-health-secret');
-  const validSecret = process.env.HEALTH_CHECK_SECRET;
-
-  const isAuthorized = validSecret && secret === validSecret;
-  
-  // Calculate if overall status is degraded (e.g. if any provider is not READY)
-  // For simplicity, if tier 1 (groq) is not READY, we can say degraded, or just operational by default.
-  let status = 'operational';
-  
-  const statuses = budgetManager.getStatuses();
-  if (statuses['groq'].state !== 'READY') {
-    status = 'degraded';
-  }
-
-  if (isAuthorized) {
-    return NextResponse.json({
-      status,
-      timestamp: new Date().toISOString(),
-      providers: statuses
-    }, { status: 200 });
-  }
-
-  return NextResponse.json({
-    status,
-    timestamp: new Date().toISOString()
-  }, { status: 200 });
 }
