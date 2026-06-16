@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { SubjectId } from '@/lib/types/branded';
 import { abbreviationNormalizer } from '@/lib/prompts/normalizer/abbreviation';
 import * as Icons from 'lucide-react';
@@ -15,6 +15,15 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [hint, setHint] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (subjectId && textareaRef.current) {
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    }
+  }, [subjectId]);
 
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 0);
@@ -135,6 +144,7 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
             )}
 
             <textarea
+              ref={textareaRef}
               id="topic-input"
               value={inputValue}
               onChange={(e) => {
