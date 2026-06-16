@@ -6,6 +6,7 @@ import { DeepLinkButton } from './DeepLinkButton';
 import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Spotlight } from '@/components/ui/Spotlight';
 
 export interface PromptDisplayProps {
   prompt: string;
@@ -24,8 +25,10 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
       aria-label={`${subject} prompt for ${topic}`} 
       className="w-full max-w-4xl mx-auto mt-12 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl saturate-150 rounded-3xl shadow-2xl shadow-zinc-200/50 dark:shadow-none border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden relative"
     >
-      {/* Terminal Mock Header */}
-      <div className="bg-zinc-950/90 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-900/50">
+      <Spotlight className="h-full w-full">
+        <div className="relative z-10">
+          {/* Terminal Mock Header */}
+          <div className="bg-zinc-950/90 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-900/50">
         <div className="flex items-center gap-3">
           {/* Window Control Dots */}
           <div className="flex gap-1.5 shrink-0">
@@ -102,10 +105,11 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
                 </svg>
               }
             />
-
           </div>
         </div>
       </div>
+      </div>
+      </Spotlight>
     </motion.article>
   );
 }
