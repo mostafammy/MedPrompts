@@ -5,6 +5,7 @@ import { SubjectId } from '@/lib/types/branded';
 import { abbreviationNormalizer } from '@/lib/prompts/normalizer/abbreviation';
 import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Spotlight } from '@/components/ui/Spotlight';
 import { useRouter } from 'next/navigation';
 
 export interface TopicInputProps {
@@ -179,12 +180,12 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
             </button>
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6">
-          <div className="flex flex-col gap-1.5 sm:gap-2">
-            <label htmlFor="topic-input" className="hidden sm:block text-sm sm:text-base font-semibold text-zinc-700 dark:text-zinc-300 ml-1 sm:ml-2">
-              Specify Topic
-            </label>
+        <Spotlight className="rounded-[2rem] rounded-b-none sm:rounded-[2rem] h-full w-full">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6 relative z-10">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
+              <label htmlFor="topic-input" className="hidden sm:block text-sm sm:text-base font-semibold text-zinc-700 dark:text-zinc-300 ml-1 sm:ml-2">
+                Specify Topic
+              </label>
             <div className="relative group">
             {/* pointer-events-none prevents overlays from blocking focus clicks */}
             <div className="pointer-events-none absolute left-4 sm:left-6 top-[1.1rem] sm:top-[1.65rem] text-zinc-400 dark:text-zinc-500 group-focus-within:text-blue-500 transition-colors duration-300">
@@ -275,12 +276,13 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
               </>
             ) : (
               <>
-                <Icons.Sparkles className="w-6 h-6 sm:w-6 sm:h-6 shrink-0" />
+                <Icons.Sparkles className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
                 Generate Prompt
               </>
             )}
           </motion.button>
-        </form>
+          </form>
+        </Spotlight>
       </motion.div>
     </>
   );
