@@ -5,6 +5,7 @@ import { SubjectId } from '@/lib/types/branded';
 import { abbreviationNormalizer } from '@/lib/prompts/normalizer/abbreviation';
 import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export interface TopicInputProps {
   subjectId: SubjectId | null;
@@ -12,16 +13,22 @@ export interface TopicInputProps {
 }
 
 export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
+  const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [hint, setHint] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const handleClose = () => {
+    router.push('/');
+  };
+
   useEffect(() => {
     if (subjectId && textareaRef.current) {
       setTimeout(() => {
+        textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         textareaRef.current?.focus();
-      }, 100);
+      }, 150);
     }
   }, [subjectId]);
 
@@ -63,6 +70,15 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   const ghostSuggestion = getGhostSuggestion();
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Submit on Enter (without Shift)
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (subjectId && inputValue.trim() !== '') {
+        onGenerate(inputValue);
+      }
+      return;
+    }
+
     // Autocomplete on Tab or on ArrowRight (only if cursor is at the end)
     if (
       (e.key === 'Tab' || (e.key === 'ArrowRight' && e.currentTarget.selectionStart === inputValue.length)) &&
@@ -113,27 +129,48 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className="w-full max-w-2xl mx-auto mt-4 bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/80 backdrop-blur-xl saturate-150 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-zinc-200/50 dark:shadow-none transition-all duration-300"
-    >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="topic-input" className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 ml-1">
-            Specify Topic
-          </label>
-          <div className="relative group">
+    <>
+      {/* Mobile Backdrop */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="sm:hidden fixed inset-0 z-[60] bg-zinc-900/60 dark:bg-black/60 backdrop-blur-sm"
+        onClick={handleClose}
+      />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 40, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 250, damping: 25 }}
+        className="max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-[70] max-sm:mt-0 max-sm:mb-0 max-sm:rounded-t-[2.5rem] max-sm:rounded-b-none max-sm:p-6 max-sm:shadow-[0_-20px_40px_rgba(0,0,0,0.2)] max-sm:border-x-0 max-sm:border-b-0 max-sm:bg-white dark:max-sm:bg-zinc-950 relative z-20 w-full max-w-3xl mx-auto -mt-10 sm:-mt-20 mb-8 bg-white/80 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800/80 backdrop-blur-3xl saturate-200 rounded-3xl sm:rounded-[2rem] p-4 sm:p-10 shadow-[0_0_40px_-10px_rgba(0,0,0,0.15)] sm:shadow-[0_0_60px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_0_40px_-10px_rgba(0,0,0,0.6)] sm:dark:shadow-[0_0_60px_-15px_rgba(0,0,0,0.6)] transition-all duration-500"
+      >
+        {/* Mobile Header / Drag Indicator */}
+        <div className="sm:hidden flex flex-col items-center mb-6">
+          <div className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-full mb-5" />
+          <div className="w-full flex justify-between items-center">
+            <span className="text-xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Specify Topic</span>
+            <button type="button" onClick={handleClose} className="p-2.5 bg-zinc-100 dark:bg-zinc-800/80 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-50 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">
+              <Icons.X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
+            <label htmlFor="topic-input" className="hidden sm:block text-sm sm:text-base font-semibold text-zinc-700 dark:text-zinc-300 ml-1 sm:ml-2">
+              Specify Topic
+            </label>
+            <div className="relative group">
             {/* pointer-events-none prevents overlays from blocking focus clicks */}
-            <div className="pointer-events-none absolute left-4 top-4 text-zinc-400 dark:text-zinc-500 group-focus-within:text-blue-500 transition-colors duration-300">
-              <Icons.BookOpen className="w-5 h-5" />
+            <div className="pointer-events-none absolute left-4 sm:left-6 top-[1.1rem] sm:top-[1.65rem] text-zinc-400 dark:text-zinc-500 group-focus-within:text-blue-500 transition-colors duration-300">
+              <Icons.BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             
             {/* Ghost text autocomplete overlay */}
             {ghostSuggestion && (
               <div 
-                className="absolute inset-0 pointer-events-none pl-12 pr-20 py-4 font-sans text-base leading-normal text-zinc-300 dark:text-zinc-700 whitespace-pre-wrap select-none overflow-hidden"
+                className="absolute inset-0 pointer-events-none pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 font-sans text-lg sm:text-2xl leading-relaxed text-zinc-300 dark:text-zinc-700 whitespace-pre-wrap select-none overflow-hidden"
                 aria-hidden="true"
               >
                 {/* Mirror typed text transparently */}
@@ -157,12 +194,12 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
               }}
               onKeyDown={handleKeyDown}
               aria-describedby="topic-hint"
-              rows={3}
-              className="w-full pl-12 pr-20 py-4 rounded-2xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-base leading-normal outline-none transition-all duration-300 border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-blue-500/10 resize-none shadow-inner font-sans"
-              placeholder="e.g. Myocardial Infarction, MI, Asthma"
+              rows={2}
+              className="w-full pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 rounded-2xl sm:rounded-3xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-lg sm:text-2xl leading-relaxed outline-none transition-all duration-300 border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20 resize-none shadow-inner font-sans"
+              placeholder="e.g. Myocardial Infarction..."
             />
             
-            <div className="pointer-events-none absolute right-4 top-4 text-xs font-semibold text-zinc-400 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 py-1 rounded-md backdrop-blur-sm">
+            <div className="pointer-events-none absolute right-3 sm:right-6 top-4 sm:top-[1.65rem] text-xs sm:text-sm font-semibold text-zinc-400 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg backdrop-blur-sm">
               {inputValue.length}/120
             </div>
           </div>
@@ -178,11 +215,11 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
               transition={{ type: 'spring', stiffness: 350, damping: 25 }}
               className="overflow-hidden"
             >
-              <div className="flex items-center gap-3 p-3.5 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/30 rounded-2xl shadow-inner backdrop-blur-md">
-                <div className="p-1.5 bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 rounded-lg shrink-0">
-                  <Icons.Lightbulb className="w-4 h-4" />
+              <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/50 dark:border-blue-900/30 rounded-xl sm:rounded-2xl shadow-inner backdrop-blur-md">
+                <div className="p-1.5 sm:p-2 bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 rounded-lg sm:rounded-xl shrink-0">
+                  <Icons.Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
-                <div className="flex-1 text-sm text-zinc-700 dark:text-zinc-300 font-medium leading-tight">
+                <div className="flex-1 text-sm sm:text-base text-zinc-700 dark:text-zinc-300 font-medium leading-tight">
                   Did you mean <span className="font-bold text-blue-600 dark:text-blue-400">{hint}</span>?
                 </div>
                 <motion.button 
@@ -190,9 +227,9 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
                   whileTap={{ scale: 0.97 }}
                   type="button" 
                   onClick={() => handleApplyHint(hint)} 
-                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/10 cursor-pointer select-none transition-colors duration-300 flex items-center gap-1 shrink-0"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-lg sm:rounded-xl shadow-md shadow-blue-500/20 cursor-pointer select-none transition-colors duration-300 flex items-center gap-1 sm:gap-1.5 shrink-0"
                 >
-                  <Icons.Check className="w-3.5 h-3.5" />
+                  <Icons.Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   Apply
                 </motion.button>
               </div>
@@ -200,16 +237,17 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
           )}
         </AnimatePresence>
 
-        <motion.button
-          whileTap={{ scale: inputValue.trim() === '' ? 1 : 0.98 }}
-          type="submit"
-          disabled={inputValue.trim() === ''}
-          className="mt-2 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-zinc-200 disabled:to-zinc-200 dark:disabled:from-zinc-800 dark:disabled:to-zinc-800 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/20 disabled:shadow-none hover:shadow-blue-500/30 flex items-center justify-center gap-2"
-        >
-          <Icons.Sparkles className="w-5 h-5 shrink-0" />
-          Generate Prompt
-        </motion.button>
-      </form>
-    </motion.div>
+          <motion.button
+            whileTap={{ scale: inputValue.trim() === '' ? 1 : 0.98 }}
+            type="submit"
+            disabled={inputValue.trim() === ''}
+            className="mt-2 sm:mt-2 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-zinc-200 disabled:to-zinc-200 dark:disabled:from-zinc-800 dark:disabled:to-zinc-800 disabled:cursor-not-allowed text-white font-bold py-5 sm:py-5 px-6 sm:px-8 rounded-2xl sm:rounded-2xl transition-all duration-300 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.4)] disabled:shadow-none hover:shadow-[0_10px_40px_-10px_rgba(37,99,235,0.5)] flex items-center justify-center gap-3 sm:gap-3 text-lg sm:text-lg"
+          >
+            <Icons.Sparkles className="w-6 h-6 sm:w-6 sm:h-6 shrink-0" />
+            Generate Prompt
+          </motion.button>
+        </form>
+      </motion.div>
+    </>
   );
 }
