@@ -56,7 +56,7 @@ export function CompactSubjectGridClient({ subjects }: CompactSubjectGridClientP
       >
         <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider hidden sm:block">Change Subject</span>
         <div className="flex -space-x-2">
-          {subjects.slice(0, 4).map((subject, i) => {
+          {subjects.slice(0, 4).map((subject, _i) => {
              const iconName = subject.icon.split('-').map((p:string) => p.charAt(0).toUpperCase() + p.slice(1)).join('');
              const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName] || Icons.CircleHelp;
              return (
