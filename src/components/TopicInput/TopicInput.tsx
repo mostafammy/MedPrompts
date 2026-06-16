@@ -193,6 +193,12 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
                 setInputValue(val);
               }}
               onKeyDown={handleKeyDown}
+              onDoubleClick={(e) => {
+                if (subjectId && inputValue.trim() !== '') {
+                  e.preventDefault();
+                  onGenerate(inputValue);
+                }
+              }}
               aria-describedby="topic-hint"
               rows={2}
               className="w-full pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 rounded-2xl sm:rounded-3xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-lg sm:text-2xl leading-relaxed outline-none transition-all duration-300 border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20 resize-none shadow-inner font-sans"
