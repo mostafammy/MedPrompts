@@ -15,16 +15,16 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Decorative Glow Blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-400/10 dark:bg-blue-600/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-400/10 dark:bg-emerald-600/5 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-400/10 dark:bg-blue-600/5 blur-[120px] pointer-events-none animate-blob-float-1" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-400/10 dark:bg-emerald-600/5 blur-[120px] pointer-events-none animate-blob-float-2" />
       
       <div className="w-full max-w-4xl flex flex-col items-center relative z-10">
         {/* Brand Header */}
-        <header className="flex items-center gap-2 mb-8 animate-fade-in">
-          <div className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl text-white shadow-lg shadow-blue-500/20">
+        <header className="flex items-center gap-2.5 mb-8 animate-fade-in group cursor-pointer select-none">
+          <div className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl text-white shadow-lg shadow-blue-500/20 transform group-hover:scale-110 group-hover:rotate-[-8deg] transition-transform duration-500 ease-spring">
             <Icons.Stethoscope className="w-6 h-6" />
           </div>
-          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 bg-clip-text text-transparent">
+          <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-zinc-100 dark:to-zinc-300 bg-clip-text text-transparent group-hover:text-zinc-950 dark:group-hover:text-white transition-colors duration-300">
             MedPrompts<span className="text-blue-600 font-extrabold text-xs align-super ml-0.5">V1</span>
           </span>
         </header>
