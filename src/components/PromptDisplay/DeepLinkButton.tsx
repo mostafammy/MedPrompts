@@ -6,6 +6,8 @@ import { copyToClipboard } from '@/lib/clipboard';
 import { plausibleAnalytics } from '@/lib/analytics';
 import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
+import { toast } from 'sonner';
+import { soundEngine } from '@/lib/audio';
 
 interface DeepLinkButtonProps {
   textToCopy: string;
@@ -20,10 +22,13 @@ export function DeepLinkButton({ textToCopy, subjectId, targetApp, label, icon, 
   const [status, setStatus] = useState<'idle' | 'copied'>('idle');
 
   const handleAction = async () => {
+    soundEngine.playClick();
     setStatus('copied');
     
     // Copy the text
     await copyToClipboard(textToCopy);
+    soundEngine.playSuccess();
+    toast.success(`Copied! Opening ${label}...`);
     
     // Track plausible event
     plausibleAnalytics.trackPromptCopied(subjectId, targetApp);
