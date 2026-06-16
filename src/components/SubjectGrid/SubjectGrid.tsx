@@ -3,7 +3,12 @@ import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { SubjectGridClient } from './SubjectGridClient';
+import { CompactSubjectGridClient } from './CompactSubjectGridClient';
 import { Suspense } from 'react';
+
+export interface SubjectGridProps {
+  variant?: 'full' | 'compact';
+}
 
 function getDb() {
   const url = process.env.TURSO_DATABASE_URL;
@@ -16,7 +21,7 @@ function getDb() {
   return drizzle(client, { schema });
 }
 
-export async function SubjectGrid() {
+export async function SubjectGrid({ variant = 'full' }: SubjectGridProps = {}) {
   const db = getDb();
   
   // Fetch active subjects ordered by sortOrder
@@ -27,7 +32,11 @@ export async function SubjectGrid() {
 
   return (
     <Suspense fallback={<div className="h-24 bg-zinc-100 dark:bg-zinc-900 rounded-3xl animate-pulse w-full max-w-4xl mx-auto" />}>
-      <SubjectGridClient subjects={subjects} />
+      {variant === 'compact' ? (
+        <CompactSubjectGridClient subjects={subjects} />
+      ) : (
+        <SubjectGridClient subjects={subjects} />
+      )}
     </Suspense>
   );
 }
