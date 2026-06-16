@@ -43,7 +43,7 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
         </div>
 
         {/* Subjects Selector Grid */}
-        <section className="w-full mb-10 animate-fade-in-up delay-100">
+        <section className={`w-full mb-10 transition-all duration-700 ease-in-out ${subjectId ? 'scale-[0.97] opacity-60 blur-[1px] translate-y-[-1rem]' : 'animate-fade-in-up delay-100'}`}>
           <div className="text-center mb-5">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
               1. Choose a Subject
