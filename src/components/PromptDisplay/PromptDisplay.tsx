@@ -25,7 +25,7 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
       className="w-full max-w-4xl mx-auto mt-12 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl saturate-150 rounded-3xl shadow-2xl shadow-zinc-200/50 dark:shadow-none border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden relative"
     >
       {/* Terminal Mock Header */}
-      <div className="bg-zinc-950/90 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-900/50">
+      <div className="bg-zinc-950/90 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-zinc-900/50">
         <div className="flex items-center gap-3">
           {/* Window Control Dots */}
           <div className="flex gap-1.5 shrink-0">
@@ -50,8 +50,8 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
             </span>
           </div>
           
-          {/* Desktop header actions: ChatGPT Deep Link & Copy Button */}
-          <div className="hidden sm:flex items-center gap-2">
+          {/* Header actions: ChatGPT Deep Link & Copy Button */}
+          <div className="flex items-center gap-2">
             <div className="relative h-9">
               <DeepLinkButton
                 textToCopy={prompt}
@@ -66,32 +66,27 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
                 }
               />
             </div>
-            <div className="relative h-9 w-24">
+            <div className="relative h-9 sm:w-24">
               <CopyButton textToCopy={prompt} isHeaderInline={true} />
             </div>
           </div>
         </div>
       </div>
       
-      {/* Mobile Copy Button (Absolute inside content body) */}
-      <div className="sm:hidden absolute top-[72px] right-4 z-20">
-        <CopyButton textToCopy={prompt} isHeaderInline={false} />
-      </div>
-      
       {/* Code / Prompt Body */}
-      <div className="p-8 bg-zinc-50/50 dark:bg-zinc-950/50 max-h-[600px] overflow-y-auto relative selection:bg-blue-200 dark:selection:bg-blue-900/50 custom-scrollbar">
+      <div className="p-4 sm:p-8 bg-zinc-50/50 dark:bg-zinc-950/50 max-h-[600px] overflow-y-auto relative selection:bg-blue-200 dark:selection:bg-blue-900/50 custom-scrollbar">
         <pre className="whitespace-pre-wrap font-mono text-sm md:text-[15px] text-zinc-800 dark:text-zinc-300 leading-relaxed select-text">
           <code>{prompt}</code>
         </pre>
       </div>
 
       {/* Action Footer */}
-      <div className="bg-zinc-100/30 dark:bg-zinc-950/30 px-6 py-5 border-t border-zinc-200/80 dark:border-zinc-800/80 flex flex-col sm:flex-row gap-4 items-center justify-between backdrop-blur-md">
-        <div className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+      <div className="hidden sm:flex bg-zinc-100/30 dark:bg-zinc-950/30 px-4 sm:px-6 py-5 border-t border-zinc-200/80 dark:border-zinc-800/80 flex-col sm:flex-row gap-4 items-center justify-between backdrop-blur-md">
+        <div className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 text-center sm:text-left">
           Ready to study? Copy the prompt or open it directly:
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-          <div className="w-full sm:w-auto hidden sm:block">
+          <div className="w-full sm:w-auto">
             <CopyButton textToCopy={prompt} isHeaderInline={false} />
           </div>
           
