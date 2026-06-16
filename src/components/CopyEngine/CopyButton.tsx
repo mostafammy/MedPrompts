@@ -6,6 +6,8 @@ import { copyToClipboard } from '@/lib/clipboard';
 import { ManualCopySheet } from '../ManualCopySheet/ManualCopySheet';
 import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+import { soundEngine } from '@/lib/audio';
 
 export interface CopyButtonProps {
   textToCopy: string;
@@ -39,10 +41,13 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
   }, [state.status]);
 
   const handleCopy = async () => {
+    soundEngine.playClick();
     dispatch({ type: 'COPY_STARTED' });
     const success = await copyToClipboard(textToCopy);
     if (success) {
       dispatch({ type: 'COPY_SUCCESS' });
+      soundEngine.playSuccess();
+      toast.success('Prompt copied to clipboard!');
     } else {
       dispatch({ type: 'COPY_MANUAL' });
     }
