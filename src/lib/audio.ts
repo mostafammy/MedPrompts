@@ -1,5 +1,9 @@
 'use client';
 
+interface WindowWithWebkit extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 class SoundEngine {
   private ctx: AudioContext | null = null;
   private isEnabled = true;
@@ -11,7 +15,7 @@ class SoundEngine {
   private initCtx() {
     if (typeof window === 'undefined') return false;
     if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as WindowWithWebkit).webkitAudioContext;
       if (AudioContextClass) {
         this.ctx = new AudioContextClass();
       }
