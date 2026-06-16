@@ -17,18 +17,25 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   const [inputValue, setInputValue] = useState('');
   const [hint, setHint] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTapTimeRef = useRef<number>(0);
 
-  const handleTap = (e: React.MouseEvent<HTMLTextAreaElement> | React.TouchEvent<HTMLTextAreaElement>) => {
+  const handleTap = (e: React.MouseEvent<HTMLTextAreaElement>) => {
     const now = Date.now();
     const lastTap = lastTapTimeRef.current;
-    if (now - lastTap < 350) {
-      if (subjectId && inputValue.trim() !== '') {
+    
+    // Check if it's a valid double tap (prevent 0ms duplicate events)
+    if (lastTap > 0 && now - lastTap < 400) {
+      if (subjectId && inputValue.trim() !== '' && !isSubmitting) {
         e.preventDefault();
+        // Clear the ref to prevent further triggers
+        lastTapTimeRef.current = 0;
+        setIsSubmitting(true);
+        // Instantly blur to dismiss mobile keyboard and prevent native scroll-to-selection
+        textareaRef.current?.blur();
         onGenerate(inputValue);
       }
-      lastTapTimeRef.current = 0;
     } else {
       lastTapTimeRef.current = now;
     }
@@ -88,7 +95,8 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
     // Submit on Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (subjectId && inputValue.trim() !== '') {
+      if (subjectId && inputValue.trim() !== '' && !isSubmitting) {
+        setIsSubmitting(true);
         onGenerate(inputValue);
       }
       return;
@@ -107,7 +115,8 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!subjectId || inputValue.trim() === '') return;
+    if (!subjectId || inputValue.trim() === '' || isSubmitting) return;
+    setIsSubmitting(true);
     onGenerate(inputValue);
   };
 
@@ -209,10 +218,9 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
               }}
               onKeyDown={handleKeyDown}
               onClick={handleTap}
-              onTouchEnd={handleTap}
               aria-describedby="topic-hint"
               rows={2}
-              className="w-full pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 rounded-2xl sm:rounded-3xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-lg sm:text-2xl leading-relaxed outline-none transition-all duration-300 border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20 resize-none shadow-inner font-sans"
+              className="w-full touch-manipulation pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 rounded-2xl sm:rounded-3xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-lg sm:text-2xl leading-relaxed outline-none transition-all duration-300 border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20 resize-none shadow-inner font-sans"
               placeholder="e.g. Myocardial Infarction..."
             />
             
@@ -255,13 +263,22 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
         </AnimatePresence>
 
           <motion.button
-            whileTap={{ scale: inputValue.trim() === '' ? 1 : 0.98 }}
+            whileTap={{ scale: (inputValue.trim() === '' || isSubmitting) ? 1 : 0.98 }}
             type="submit"
-            disabled={inputValue.trim() === ''}
+            disabled={inputValue.trim() === '' || isSubmitting}
             className="mt-2 sm:mt-2 w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-zinc-200 disabled:to-zinc-200 dark:disabled:from-zinc-800 dark:disabled:to-zinc-800 disabled:cursor-not-allowed text-white font-bold py-5 sm:py-5 px-6 sm:px-8 rounded-2xl sm:rounded-2xl transition-all duration-300 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.4)] disabled:shadow-none hover:shadow-[0_10px_40px_-10px_rgba(37,99,235,0.5)] flex items-center justify-center gap-3 sm:gap-3 text-lg sm:text-lg"
           >
-            <Icons.Sparkles className="w-6 h-6 sm:w-6 sm:h-6 shrink-0" />
-            Generate Prompt
+            {isSubmitting ? (
+              <>
+                <Icons.Loader2 className="w-6 h-6 sm:w-6 sm:h-6 shrink-0 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Icons.Sparkles className="w-6 h-6 sm:w-6 sm:h-6 shrink-0" />
+                Generate Prompt
+              </>
+            )}
           </motion.button>
         </form>
       </motion.div>
