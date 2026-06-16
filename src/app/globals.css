@@ -7,10 +7,42 @@
   --animate-fade-in: fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-scale-in: scale-in 0.6s cubic-bezier(0.34, 1.6, 0.64, 1) both;
   --animate-sheet-slide-up: sheet-slide-up 0.5s cubic-bezier(0.32, 0.94, 0.6, 1) both;
+  --animate-blob-float-1: float-blob-1 25s infinite alternate ease-in-out;
+  --animate-blob-float-2: float-blob-2 30s infinite alternate ease-in-out;
   
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-spring-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   
+  @keyframes float-blob-1 {
+    0% {
+      transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.08);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.95);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1);
+    }
+  }
+
+  @keyframes float-blob-2 {
+    0% {
+      transform: translate(0px, 0px) scale(1.05);
+    }
+    33% {
+      transform: translate(-40px, 30px) scale(0.95);
+    }
+    66% {
+      transform: translate(25px, -40px) scale(1.08);
+    }
+    100% {
+      transform: translate(0px, 0px) scale(1.05);
+    }
+  }
+
   @keyframes fade-in-up {
     from {
       opacity: 0;
@@ -69,21 +101,36 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Soft scrollbar for code elements */
-pre::-webkit-scrollbar {
+/* Soft scrollbar for code elements and custom scrollbars */
+pre::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-pre::-webkit-scrollbar-track {
+pre::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-pre::-webkit-scrollbar-thumb {
+pre::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.25);
   border-radius: 9999px;
 }
-.dark pre::-webkit-scrollbar-thumb {
-  background: rgba(75, 85, 99, 0.3);
+.dark pre::-webkit-scrollbar-thumb,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.35);
 }
-pre::-webkit-scrollbar-thumb:hover {
+pre::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.45);
+}
+.dark pre::-webkit-scrollbar-thumb:hover,
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.55);
+}
+
+pre,
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.25) transparent;
 }
