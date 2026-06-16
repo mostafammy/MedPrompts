@@ -1,91 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useTransition } from 'react';
 import { SubjectId } from '@/lib/types/branded';
 import { TopicInput } from '@/components/TopicInput/TopicInput';
-import { PromptDisplay } from '@/components/PromptDisplay/PromptDisplay';
+import { useRouter } from 'next/navigation';
+import { slugifyTopic } from '@/lib/prompts/slugifier';
 
 export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }) {
-  const [result, setResult] = useState<{
-    prompt: string;
-    slug: string;
-    topic: string;
-    wordCount: number;
-    fromCache: boolean;
-  } | null>(null);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleGenerate = async (topic: string) => {
+  const handleGenerate = (topic: string) => {
     if (!subjectId) return;
     
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
-
-    try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subjectId, topic }),
-      });
-
-      const data = await res.json() as { error?: { message?: string } | string; prompt?: typeof result | string };
-
-      if (!res.ok) {
-        const errMsg = typeof data.error === 'object' ? data.error?.message : data.error;
-        throw new Error(errMsg || 'Failed to generate prompt');
-      }
-
-      if (data.prompt) {
-        if (typeof data.prompt === 'string') {
-          const promptText = data.prompt;
-          setResult({
-            prompt: promptText,
-            slug: topic.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-            topic: topic,
-            wordCount: promptText.split(/\s+/).filter(Boolean).length,
-            fromCache: false,
-          });
-        } else {
-          setResult(data.prompt);
-        }
-      } else {
-        setResult(null);
-      } // Note: backend returns { prompt: { prompt: "...", slug: "...", wordCount: ... } }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
-    }
+    const slug = slugifyTopic(topic);
+    
+    startTransition(() => {
+      router.push(`/${subjectId}/${slug}`);
+    });
   };
 
   return (
     <div className="w-full flex flex-col items-center">
-      <TopicInput subjectId={subjectId} onGenerate={handleGenerate} />
+      <TopicInput key={subjectId || 'none'} subjectId={subjectId} onGenerate={handleGenerate} />
       
-      {isLoading && (
-        <div className="mt-8 p-8 flex flex-col items-center justify-center space-y-4">
+      {isPending && (
+        <div className="mt-8 p-8 flex flex-col items-center justify-center space-y-4 animate-fade-in">
           <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-slate-500 font-medium">Generating your comprehensive study prompt...</p>
+          <p className="text-slate-500 font-medium">Loading your comprehensive study prompt...</p>
         </div>
-      )}
-
-      {error && (
-        <div className="mt-8 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl max-w-2xl w-full text-center">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {result && !isLoading && (
-        <PromptDisplay
-          prompt={result.prompt}
-          subject={subjectId!}
-          topic={result.topic}
-          wordCount={result.wordCount}
-          fromCache={result.fromCache}
-        />
       )}
     </div>
   );
