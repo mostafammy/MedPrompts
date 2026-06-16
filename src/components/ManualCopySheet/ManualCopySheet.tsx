@@ -101,8 +101,8 @@ export function ManualCopySheet({ isOpen, onClose, textToCopy }: ManualCopySheet
         </div>
         
         <div className="p-6 flex-1 overflow-y-auto">
-          <p className="text-sm text-zinc-650 dark:text-zinc-350 mb-4 leading-relaxed">
-            Your browser prevented automatic copying. Please select all the text below and copy it manually (e.g., using <kbd className="bg-zinc-100 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 rounded px-1.5 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-250">Ctrl/Cmd + C</kbd>).
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4 leading-relaxed">
+            Your browser prevented automatic copying. Please select all the text below and copy it manually (e.g., using <kbd className="bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded px-1.5 py-0.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200">Ctrl/Cmd + C</kbd>).
           </p>
           <pre className="bg-zinc-50 dark:bg-zinc-950 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto whitespace-pre-wrap font-mono text-sm text-zinc-800 dark:text-zinc-200 select-all max-h-[400px] custom-scrollbar">
             <code>{textToCopy}</code>
