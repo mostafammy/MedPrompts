@@ -64,12 +64,12 @@ export function DeepLinkButton({ textToCopy, subjectId, targetApp, label, icon, 
       {status === 'copied' ? (
         <>
           <Icons.Check className={`${isHeaderInline ? 'w-3.5 h-3.5' : 'w-4 h-4'} shrink-0 text-emerald-300 animate-pulse`} />
-          <span className="text-zinc-100">{isHeaderInline ? 'Opening...' : 'Copied & Opening...'}</span>
+          <span className={`text-zinc-100 ${isHeaderInline ? 'hidden sm:inline-block' : ''}`}>{isHeaderInline ? 'Opening...' : 'Copied & Opening...'}</span>
         </>
       ) : (
         <>
           {icon}
-          <span>{isHeaderInline ? label : `Open in ${label}`}</span>
+          <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>{isHeaderInline ? label : `Open in ${label}`}</span>
         </>
       )}
     </motion.button>
