@@ -7,13 +7,19 @@ export function securityHeaders(response: Response): Response {
   headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   
+  const isDev = process.env.NODE_ENV === 'development';
+  
   const csp = [
     "default-src 'self'",
-    "script-src 'self'", // no unsafe-eval
-    "style-src 'self'", // no unsafe-inline
+    isDev 
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io" 
+      : "script-src 'self' https://plausible.io",
+    "style-src 'self' 'unsafe-inline'", // Framer Motion updates inline element style attributes on the fly
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://plausible.io"
+    isDev
+      ? "connect-src 'self' https://plausible.io ws://* http://*"
+      : "connect-src 'self' https://plausible.io"
   ].join('; ');
   
   headers.set('Content-Security-Policy', csp);
