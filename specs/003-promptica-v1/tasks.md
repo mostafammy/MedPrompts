@@ -518,7 +518,7 @@
 
 ### Dynamic Prompt Route
 
-- [ ] T062 [P] [US2] Implement dynamic prompt page — `src/app/[subject]/[topic]/page.tsx`:
+- [x] T062 [P] [US2] Implement dynamic prompt page — `src/app/[subject]/[topic]/page.tsx`:
   - `export const runtime = 'edge'`
   - Parse `params.subject` with `SubjectIdSchema`, `params.topic` with `Slug.parse()` — `notFound()` on failure
   - Call `PromptEngine.generate()` → render `<PromptDisplay>` with result
@@ -526,14 +526,14 @@
   - `generateMetadata()`: title = `${titleCaseTopic} | ${subject} — MedPrompts`
   - Done when `curl /pathology/myocardial-infarction` returns 200 with `Cache-Control` header set
 
-- [ ] T063 [P] [US2] Implement OG image generation route — `src/app/api/og/route.tsx`:
+- [x] T063 [P] [US2] Implement OG image generation route — `src/app/api/og/route.tsx`:
   - Query params: `?subject=pathology&topic=myocardial-infarction`
   - Uses `@vercel/og` (Satori) — renders `<div>` to PNG at 1200×630
   - OG card design: MedPrompts logo, subject icon, topic name in large type, "medprompts.mostafayaser.earth" in footer
   - Returns `new ImageResponse(...)` with `max-age=86400`
   - Done when `curl "/api/og?subject=pathology&topic=myocardial-infarction"` returns `image/png` content-type
 
-- [ ] T064 [US2] Implement `generateMetadata()` for dynamic route — inside `src/app/[subject]/[topic]/page.tsx`:
+- [x] T064 [US2] Implement `generateMetadata()` for dynamic route — inside `src/app/[subject]/[topic]/page.tsx`:
   ```typescript
   export async function generateMetadata({ params }): Promise<Metadata> {
     return {
@@ -546,13 +546,13 @@
   ```
   — Done when `<meta property="og:image">` is correct on the rendered page
 
-- [ ] T065 [P] [US2] Implement `generateStaticParams()` for top 100 high-yield topics — `src/app/[subject]/[topic]/page.tsx`:
+- [x] T065 [P] [US2] Implement `generateStaticParams()` for top 100 high-yield topics — `src/app/[subject]/[topic]/page.tsx`:
   - Queries `topics_seed WHERE is_high_yield = true LIMIT 100`
   - Returns `[{ subject: string, topic: string }]` array
   - These routes are pre-rendered at build time — zero Worker roundtrip on first load
   - Done when `pnpm build` output shows 100 static pages generated for prompt routes
 
-- [ ] T066 [US2] Update URL history when prompt is generated from home flow — `src/app/page.tsx` + `TopicInput`:
+- [x] T066 [US2] Update URL history when prompt is generated from home flow — `src/app/page.tsx` + `TopicInput`:
   - After generate, call `router.push(`/${subjectId}/${slug}`)` — standard Next.js navigation
   - On back-navigation: URL remains `/`, state is cleared
   - Done when browser Back button works correctly after navigating to a prompt page
