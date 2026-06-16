@@ -14,7 +14,8 @@ import { Metadata } from 'next';
 import { slugToTopic } from '@/lib/prompts/slugifier';
 import { SubjectGrid } from '@/components/SubjectGrid/SubjectGrid';
 
-export const runtime = 'edge';
+export const dynamic = 'force-static';
+export const revalidate = 3600; // ISR: revalidate every 1 hour
 
 function getEngine() {
   const url = process.env.TURSO_DATABASE_URL;
