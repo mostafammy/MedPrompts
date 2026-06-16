@@ -8,6 +8,7 @@ import { useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
+import { soundEngine } from '@/lib/audio';
 
 export interface CompactSubjectGridClientProps {
   subjects: Subject[];
@@ -33,9 +34,15 @@ export function CompactSubjectGridClient({ subjects }: CompactSubjectGridClientP
   return (
     <div 
       className="relative z-50 flex justify-center w-full my-4 sm:my-6"
-      onMouseEnter={() => setIsOpen(true)}
+      onMouseEnter={() => {
+        if (!isOpen) soundEngine.playSwoop();
+        setIsOpen(true);
+      }}
       onMouseLeave={() => setIsOpen(false)}
-      onFocus={() => setIsOpen(true)}
+      onFocus={() => {
+        if (!isOpen) soundEngine.playSwoop();
+        setIsOpen(true);
+      }}
       onBlur={() => setIsOpen(false)}
       ref={containerRef}
     >
