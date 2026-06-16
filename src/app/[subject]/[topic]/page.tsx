@@ -38,7 +38,7 @@ function getEngine() {
   return new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
 }
 
-export async function generateMetadata({ params }: { params: { subject: string; topic: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ subject: string; topic: string }> }): Promise<Metadata> {
   const { subject, topic } = await params;
   const decodedTopic = slugToTopic(topic as Slug);
   const titleCaseTopic = decodedTopic.charAt(0).toUpperCase() + decodedTopic.slice(1);
@@ -89,7 +89,7 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function DynamicPromptPage({ params }: { params: { subject: string; topic: string } }) {
+export default async function DynamicPromptPage({ params }: { params: Promise<{ subject: string; topic: string }> }) {
   const { subject, topic } = await params;
   
   const parsedSubject = SubjectId.parse(subject);
