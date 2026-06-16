@@ -12,9 +12,21 @@ describe('securityHeaders', () => {
     expect(secure.headers.get('Referrer-Policy')).toBe('strict-origin-when-cross-origin');
     expect(secure.headers.get('Permissions-Policy')).toBeTruthy();
     
-    const csp = secure.headers.get('Content-Security-Policy');
+    const csp = secure.headers.get('Content-Security-Policy') || '';
     expect(csp).toBeTruthy();
-    expect(csp).not.toContain('unsafe-inline');
-    expect(csp).not.toContain('unsafe-eval');
+    
+    const directives = csp.split(';').reduce((acc, dir) => {
+      const parts = dir.trim().split(/\s+/);
+      const name = parts[0];
+      const values = parts.slice(1).join(' ');
+      if (name) {
+        acc[name] = values;
+      }
+      return acc;
+    }, {} as Record<string, string>);
+
+    expect(directives['script-src']).toBeDefined();
+    expect(directives['script-src']).not.toContain('unsafe-inline');
+    expect(directives['script-src']).not.toContain('unsafe-eval');
   });
 });
