@@ -85,7 +85,7 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
               className="flex items-center gap-1.5"
             >
               <Icons.Check className={isHeaderInline ? "w-3.5 h-3.5" : "w-4 h-4"} />
-              Copied
+              <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>Copied</span>
             </motion.span>
           ) : (
             <motion.span
@@ -97,7 +97,7 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
               className="flex items-center gap-1.5"
             >
               <Icons.Copy className={isHeaderInline ? "w-3.5 h-3.5" : "w-4 h-4"} />
-              {isHeaderInline ? 'Copy' : 'Copy Master Prompt'}
+              <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>{isHeaderInline ? 'Copy' : 'Copy Master Prompt'}</span>
             </motion.span>
           )}
         </AnimatePresence>
