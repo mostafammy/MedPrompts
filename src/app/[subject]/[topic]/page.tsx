@@ -132,7 +132,7 @@ export default async function DynamicPromptPage({ params }: { params: { subject:
         </p>
       </div>
 
-      <SubjectGrid />
+      <SubjectGrid variant="compact" />
 
       <div className="w-full">
         <PromptDisplay
