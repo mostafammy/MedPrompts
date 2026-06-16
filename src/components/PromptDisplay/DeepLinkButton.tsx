@@ -50,7 +50,7 @@ export function DeepLinkButton({ textToCopy, subjectId, targetApp, label, icon, 
 
   const colorClass = targetApp === 'chatgpt'
     ? isHeaderInline
-      ? 'bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-850 text-white border-zinc-800 dark:border-zinc-800/50 shadow-sm'
+      ? 'bg-emerald-950/40 hover:bg-emerald-900/40 text-emerald-400 border-emerald-500/20 hover:border-emerald-500/40 shadow-sm shadow-emerald-950/25'
       : 'bg-zinc-900 hover:bg-zinc-850 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-white border-zinc-950 dark:border-zinc-700/80 shadow-zinc-950/20 dark:shadow-none'
     : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-500/30 shadow-blue-500/10';
 
