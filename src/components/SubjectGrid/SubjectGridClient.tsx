@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 
@@ -45,7 +45,7 @@ const itemVariants: Variants = {
 
 export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: SubjectGridClientProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [clientSelectedId, setClientSelectedId] = useState<string | null>(serverSelectedId || null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -53,16 +53,29 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const syncUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      setClientSelectedId(params.get('subject') || serverSelectedId || null);
+    };
+    syncUrl();
+    window.addEventListener('popstate', syncUrl);
+    return () => window.removeEventListener('popstate', syncUrl);
+  }, [serverSelectedId]);
+
   const segments = pathname.split('/').filter(Boolean);
-  const clientSelectedId = searchParams.get('subject') || serverSelectedId || null;
   const selectedId = clientSelectedId;
 
   const getHref = (id: string) => {
     const isTopicPage = segments.length >= 2;
     const targetPathname = isTopicPage ? '/' : pathname;
-    
-    // Instead of useSearchParams which suspends, just use ?subject=id
     return targetPathname + '?subject=' + encodeURIComponent(id);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    window.history.pushState(null, '', href);
+    window.dispatchEvent(new Event('popstate'));
   };
 
   // SSR / Progressive Fallback: Return a static visible grid before client hydration.
@@ -77,10 +90,10 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
           const href = getHref(subject.id);
 
           return (
-            <Link
+            <a
               key={subject.id}
               href={href}
-              scroll={false}
+              onClick={(e) => handleClick(e, href)}
               className="block no-underline"
             >
               <SubjectCard
@@ -115,9 +128,9 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
             variants={itemVariants}
             className="block"
           >
-            <Link
+            <a
               href={href}
-              scroll={false}
+              onClick={(e) => handleClick(e, href)}
               className="block no-underline"
             >
               <SubjectCard
