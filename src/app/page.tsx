@@ -13,7 +13,7 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
   const subjectId = (searchParams.subject as SubjectId) || null;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background Decorative Glow Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-400/10 dark:bg-blue-600/5 blur-[120px] pointer-events-none animate-blob-float-1" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-400/10 dark:bg-emerald-600/5 blur-[120px] pointer-events-none animate-blob-float-2" />
