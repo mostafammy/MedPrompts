@@ -18,5 +18,6 @@ export interface Env {
  * getCloudflareContext().env is fully typed — no casting required.
  */
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface CloudflareEnv extends Env {}
 }
