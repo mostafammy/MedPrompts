@@ -8,6 +8,7 @@ import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { soundEngine } from '@/lib/audio';
+import { haptics } from '@/lib/haptics';
 
 export interface CopyButtonProps {
   textToCopy: string;
@@ -42,11 +43,13 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
 
   const handleCopy = async () => {
     soundEngine.playClick();
+    haptics.tap();
     dispatch({ type: 'COPY_STARTED' });
     const success = await copyToClipboard(textToCopy);
     if (success) {
       dispatch({ type: 'COPY_SUCCESS' });
       soundEngine.playSuccess();
+      haptics.success();
       toast.success('Prompt copied to clipboard!');
     } else {
       dispatch({ type: 'COPY_MANUAL' });
