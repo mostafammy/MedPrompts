@@ -1,7 +1,7 @@
 'use client';
 
 import * as Icons from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { soundEngine } from '@/lib/audio';
 import { haptics } from '@/lib/haptics';
@@ -13,15 +13,14 @@ interface ShareButtonProps {
 }
 
 export function ShareButton({ subject, topic, isHeaderInline = false }: ShareButtonProps) {
-  const [canShare, setCanShare] = useState(false);
-  const [url, setUrl] = useState('');
-
-  useEffect(() => {
-    setUrl(window.location.href);
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      setCanShare(true);
-    }
-  }, []);
+  // Lazy initialisers run once on mount — browser APIs are safe here
+  // because this is a 'use client' component and never runs on the server.
+  const [url] = useState(() =>
+    typeof window !== 'undefined' ? window.location.href : ''
+  );
+  const [canShare] = useState(() =>
+    typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  );
 
   const handleShare = async () => {
     soundEngine.playClick();
@@ -39,9 +38,9 @@ export function ShareButton({ subject, topic, isHeaderInline = false }: ShareBut
         });
         soundEngine.playSuccess();
         haptics.success();
-      } catch (err: any) {
+      } catch (err: unknown) {
         // User aborted share or it failed
-        if (err.name !== 'AbortError') {
+        if (err instanceof Error && err.name !== 'AbortError') {
           console.error('Share failed', err);
         }
       }
