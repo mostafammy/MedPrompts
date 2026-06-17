@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { useSearchParams, usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 
@@ -15,6 +15,7 @@ export interface Subject {
 
 export interface SubjectGridClientProps {
   subjects: Subject[];
+  selectedId?: string | null;
 }
 
 const containerVariants: Variants = {
@@ -42,9 +43,9 @@ const itemVariants: Variants = {
   },
 };
 
-export function SubjectGridClient({ subjects }: SubjectGridClientProps) {
+export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: SubjectGridClientProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -53,15 +54,14 @@ export function SubjectGridClient({ subjects }: SubjectGridClientProps) {
   }, []);
 
   const segments = pathname.split('/').filter(Boolean);
-  const selectedId = searchParams.get('subject') || segments[0] || null;
+  const selectedId = serverSelectedId || null;
 
   const getHref = (id: string) => {
     const isTopicPage = segments.length >= 2;
     const targetPathname = isTopicPage ? '/' : pathname;
     
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('subject', id);
-    return targetPathname + '?' + params.toString();
+    // Instead of useSearchParams which suspends, just use ?subject=id
+    return targetPathname + '?subject=' + encodeURIComponent(id);
   };
 
   // SSR / Progressive Fallback: Return a static visible grid before client hydration.
