@@ -49,7 +49,7 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
               1. Choose a Subject
             </h2>
           </div>
-          <SubjectGrid />
+          <SubjectGrid selectedId={subjectId} />
         </section>
 
         {/* Topic Input & Generation Container */}
