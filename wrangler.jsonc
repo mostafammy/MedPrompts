@@ -10,7 +10,9 @@
 		"binding": "ASSETS"
 	},
 	"vars": {
-		"HEALTH_CHECK_SECRET": ""
+		"HEALTH_CHECK_SECRET": "",
+		"TURSO_DATABASE_URL": "",
+		"TURSO_AUTH_TOKEN": ""
 	},
 	"kv_namespaces": [
 		{
@@ -36,5 +38,14 @@
 				}
 			}
 		]
+	},
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": true
+		}
 	}
 }
