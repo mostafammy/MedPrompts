@@ -24,7 +24,7 @@ export default function OfflinePage() {
         </h1>
         
         <p className="text-zinc-600 dark:text-zinc-400 mb-8 leading-relaxed">
-          It looks like you've lost your connection. We cannot generate new prompts while you are offline, but you can still access cached pages if you previously visited them.
+          It looks like you&apos;ve lost your connection. We cannot generate new prompts while you are offline, but you can still access cached pages if you previously visited them.
         </p>
 
         <Link
