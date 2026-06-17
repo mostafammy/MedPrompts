@@ -3,9 +3,7 @@ import { z } from 'zod';
 import { SubjectId, Topic } from '@/lib/types/branded';
 import { PromptEngine } from '@/lib/prompts/engine';
 import { TopicNormalizationPipeline } from '@/lib/prompts/pipeline';
-import { createClient } from '@libsql/client/web';
-import { drizzle } from 'drizzle-orm/libsql';
-import * as schema from '@/lib/db/schema';
+import { getDb } from '@/lib/db/get-db';
 import { createInMemoryCache } from '@/lib/prompts/cache';
 import { NormalizerCache, createInMemoryCacheStore } from '@/lib/prompts/normalizer/cache';
 import { plausibleAnalytics } from '@/lib/analytics';
@@ -16,32 +14,12 @@ const GenerateRequestSchema = z.object({
   topic: z.string() as unknown as z.ZodType<Topic>
 });
 
-let engine: PromptEngine | null = null;
-
 function getEngine() {
-  if (engine) return engine;
-
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-
-  if (!url) {
-    throw new Error('TURSO_DATABASE_URL environment variable is required');
-  }
-
-  const client = createClient({
-    url,
-    ...(authToken ? { authToken } : {}),
-  });
-  const db = drizzle(client, { schema });
-
-  // In a real edge deployment we'd wire this to KV bindings
+  const db = getDb();
   const promptCache = createInMemoryCache();
   const normCache = new NormalizerCache(createInMemoryCacheStore());
-
   const pipeline = new TopicNormalizationPipeline([], normCache);
-  
-  engine = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
-  return engine;
+  return new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
 }
 
 export async function POST(req: Request) {
