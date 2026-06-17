@@ -79,6 +79,15 @@ jobs:
           retention-days: 7
           include-hidden-files: true
 
+      - name: Push secrets to Cloudflare Worker
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.TURSO_DATABASE_URL }}" | pnpm exec wrangler secret put TURSO_DATABASE_URL
+          echo "${{ secrets.TURSO_AUTH_TOKEN }}"   | pnpm exec wrangler secret put TURSO_AUTH_TOKEN
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
       - name: Deploy to Cloudflare Workers
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: pnpm exec opennextjs-cloudflare deploy
