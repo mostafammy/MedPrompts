@@ -22,7 +22,7 @@ export function SwipeableContainer({ children, subjects, currentSubjectId }: Swi
       const currentIndex = subjects.findIndex(s => s.id === currentSubjectId);
       if (currentIndex >= 0 && currentIndex < subjects.length - 1) {
         const nextSubject = subjects[currentIndex + 1];
-        router.push(`/${nextSubject.id}`);
+        if (nextSubject) router.push(`/${nextSubject.id}`);
       }
     }
     // Swipe right (previous)
@@ -30,7 +30,7 @@ export function SwipeableContainer({ children, subjects, currentSubjectId }: Swi
       const currentIndex = subjects.findIndex(s => s.id === currentSubjectId);
       if (currentIndex > 0) {
         const prevSubject = subjects[currentIndex - 1];
-        router.push(`/${prevSubject.id}`);
+        if (prevSubject) router.push(`/${prevSubject.id}`);
       }
     }
   };
