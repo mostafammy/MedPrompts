@@ -42,8 +42,12 @@ function getTursoCredentials(): { url: string; authToken?: string } {
   );
 }
 
+function normalizeUrl(url: string) {
+  return url.replace(/^libsql:\/\//, 'https://');
+}
+
 export function getDb() {
   const { url, authToken } = getTursoCredentials();
-  const client = createClient({ url, ...(authToken ? { authToken } : {}) });
+  const client = createClient({ url: normalizeUrl(url), ...(authToken ? { authToken } : {}) });
   return drizzle(client, { schema });
 }
