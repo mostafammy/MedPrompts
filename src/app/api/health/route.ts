@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const db = getDb();
     // Use Drizzle's underlying client to run a raw ping
-    await db.execute('SELECT 1');
+    await db.$client.execute('SELECT 1');
     return NextResponse.json({ status: 'ok', db: 'ok', ts: Date.now() });
   } catch {
     return NextResponse.json(
