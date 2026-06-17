@@ -4,6 +4,7 @@ import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
 import React from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { haptics } from '@/lib/haptics';
 
 export interface SubjectCardProps {
   id: SubjectId;
@@ -141,6 +142,7 @@ export function SubjectCard({ id, label, icon, isSelected }: SubjectCardProps) {
     <motion.div
       whileHover={{ scale: theme.hoverScale }}
       whileTap={{ scale: 0.97 }}
+      onClick={() => haptics.tap()}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
