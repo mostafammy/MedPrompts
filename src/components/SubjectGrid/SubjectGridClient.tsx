@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 
 export interface Subject {
@@ -102,7 +101,7 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
                 icon={subject.icon}
                 isSelected={isSelected}
               />
-            </Link>
+              </a>
           );
         })}
       </div>
@@ -139,7 +138,7 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
                 icon={subject.icon}
                 isSelected={isSelected}
               />
-            </Link>
+              </a>
           </motion.div>
         );
       })}
