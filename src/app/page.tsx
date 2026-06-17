@@ -8,6 +8,8 @@ export const metadata = {
   description: 'Generate comprehensive, evidence-based medical study prompts for pathology, anatomy, pharmacology, and more.',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage(props: { searchParams: Promise<{ subject?: string }> }) {
   const searchParams = await props.searchParams;
   const subjectId = (searchParams.subject as SubjectId) || null;
