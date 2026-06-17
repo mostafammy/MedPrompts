@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { Subject } from './SubjectGridClient';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { useSearchParams, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
@@ -12,23 +12,21 @@ import { soundEngine } from '@/lib/audio';
 
 export interface CompactSubjectGridClientProps {
   subjects: Subject[];
+  selectedId?: string | null;
 }
 
-export function CompactSubjectGridClient({ subjects }: CompactSubjectGridClientProps) {
+export function CompactSubjectGridClient({ subjects, selectedId: serverSelectedId }: CompactSubjectGridClientProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const segments = pathname.split('/').filter(Boolean);
-  const selectedId = searchParams.get('subject') || segments[0] || null;
+  const selectedId = serverSelectedId || null;
 
   const getHref = (id: string) => {
     const isTopicPage = segments.length >= 2;
     const targetPathname = isTopicPage ? '/' : pathname;
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('subject', id);
-    return targetPathname + '?' + params.toString();
+    return targetPathname + '?subject=' + encodeURIComponent(id);
   };
 
   return (
