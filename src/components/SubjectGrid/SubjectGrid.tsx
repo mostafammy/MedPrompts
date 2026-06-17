@@ -30,7 +30,7 @@ export async function SubjectGrid({ variant = 'full', selectedId = null }: Subje
   }
 
   return (
-    <>
+    <Suspense fallback={<div className="h-24 bg-zinc-100 dark:bg-zinc-900 rounded-3xl animate-pulse w-full max-w-4xl mx-auto flex items-center justify-center text-zinc-500">Loading subjects...</div>}>
       {subjects.length === 0 ? (
         <div className="w-full text-center p-8 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl text-zinc-500">
           No subjects found in the database. 
@@ -42,6 +42,6 @@ export async function SubjectGrid({ variant = 'full', selectedId = null }: Subje
       ) : (
         <SubjectGridClient subjects={subjects} selectedId={selectedId} />
       )}
-    </>
+    </Suspense>
   );
 }
