@@ -8,6 +8,7 @@ import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
 import { toast } from 'sonner';
 import { soundEngine } from '@/lib/audio';
+import { haptics } from '@/lib/haptics';
 
 interface DeepLinkButtonProps {
   textToCopy: string;
@@ -23,11 +24,13 @@ export function DeepLinkButton({ textToCopy, subjectId, targetApp, label, icon, 
 
   const handleAction = async () => {
     soundEngine.playClick();
+    haptics.tap();
     setStatus('copied');
     
     // Copy the text
     await copyToClipboard(textToCopy);
     soundEngine.playSuccess();
+    haptics.success();
     toast.success(`Copied! Opening ${label}...`);
     
     // Track plausible event
