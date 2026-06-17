@@ -7,6 +7,7 @@ import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Spotlight } from '@/components/ui/Spotlight';
 import { useRouter } from 'next/navigation';
+import { haptics } from '@/lib/haptics';
 
 export interface TopicInputProps {
   subjectId: SubjectId | null;
@@ -97,6 +98,7 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (subjectId && inputValue.trim() !== '' && !isSubmitting) {
+        haptics.success();
         setIsSubmitting(true);
         onGenerate(inputValue);
       }
@@ -117,6 +119,7 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!subjectId || inputValue.trim() === '' || isSubmitting) return;
+    haptics.success();
     setIsSubmitting(true);
     onGenerate(inputValue);
   };
