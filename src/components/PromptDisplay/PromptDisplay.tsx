@@ -3,6 +3,7 @@
 import React from 'react';
 import { CopyButton } from '../CopyEngine/CopyButton';
 import { DeepLinkButton } from './DeepLinkButton';
+import { ShareButton } from './ShareButton';
 import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -69,6 +70,9 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
                   </svg>
                 }
               />
+            </div>
+            <div className="relative h-9 sm:w-24">
+              <ShareButton subject={subject} topic={topic} isHeaderInline={true} />
             </div>
             <div className="relative h-9 sm:w-24">
               <CopyButton textToCopy={prompt} isHeaderInline={true} />
@@ -138,6 +142,12 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
               </svg>
             }
           />
+        </div>
+        
+        <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
+        
+        <div className="flex-1 max-w-[120px]">
+          <ShareButton subject={subject} topic={topic} isHeaderInline={true} />
         </div>
       </div>
     </div>
