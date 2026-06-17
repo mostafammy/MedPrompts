@@ -19,7 +19,7 @@ export function GenerateContainer({ subjectId: serverSubjectId }: { subjectId: S
     const slug = slugifyTopic(topic);
     
     startTransition(() => {
-      router.push(`/${subjectId}/${slug}`);
+      router.push(`/${clientSubjectId}/${slug}`);
     });
   };
 
