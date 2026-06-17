@@ -45,7 +45,6 @@ const itemVariants: Variants = {
 
 export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: SubjectGridClientProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
