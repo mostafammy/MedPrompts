@@ -1,5 +1,4 @@
-import { createClient } from '@libsql/client/web';
-import { drizzle } from 'drizzle-orm/libsql';
+import { getDb } from '@/lib/db/get-db';
 import * as schema from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { SubjectGridClient } from './SubjectGridClient';
@@ -8,17 +7,6 @@ import { Suspense } from 'react';
 
 export interface SubjectGridProps {
   variant?: 'full' | 'compact';
-}
-
-function getDb() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  if (!url) throw new Error('TURSO_DATABASE_URL environment variable is required');
-  const client = createClient({
-    url,
-    ...(authToken ? { authToken } : {}),
-  });
-  return drizzle(client, { schema });
 }
 
 export async function SubjectGrid({ variant = 'full' }: SubjectGridProps = {}) {
