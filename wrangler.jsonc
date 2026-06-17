@@ -10,13 +10,9 @@
 		"binding": "ASSETS"
 	},
 	"vars": {
-		"HEALTH_CHECK_SECRET": ""
-		// TURSO_DATABASE_URL and TURSO_AUTH_TOKEN are Cloudflare Secrets.
-		// Set them once via: wrangler secret put TURSO_DATABASE_URL
-		//                    wrangler secret put TURSO_AUTH_TOKEN
-		// OR via the Cloudflare dashboard → Workers → promptica → Settings → Variables and Secrets → Add Secret.
-		// Do NOT add them here as vars — vars are deployed as plain text from this file
-		// and would overwrite the real secret with an empty string on every deploy.
+		"HEALTH_CHECK_SECRET": "",
+		"TURSO_DATABASE_URL": "",
+		"TURSO_AUTH_TOKEN": ""
 	},
 	"kv_namespaces": [
 		{
