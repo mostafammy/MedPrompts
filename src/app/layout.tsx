@@ -22,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} antialiased h-full dark:bg-zinc-950`}>
-      <body className="min-h-full flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans relative overflow-x-hidden">
+      <body
+        className="min-h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans relative overflow-x-hidden selection:bg-blue-200 dark:selection:bg-blue-900/50"
+      >
         <SkipToContent />
         <main id="main-content" className="flex-1 flex flex-col">
           {children}
