@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 
