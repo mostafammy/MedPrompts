@@ -16,14 +16,13 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { createClient } from '@libsql/client/web';
 import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from '@/lib/db/schema';
-import type { Env } from '@/lib/types/env';
 
 function getTursoCredentials(): { url: string; authToken?: string } {
   // Primary: Cloudflare Worker env (runtime — secrets, vars, KV bindings).
   // getCloudflareContext() reads from the AsyncLocalStorage that OpenNext
   // populates at the start of every Worker request.
   try {
-    const { env } = getCloudflareContext() as { env: Env & { TURSO_DATABASE_URL?: string; TURSO_AUTH_TOKEN?: string } };
+    const { env } = getCloudflareContext();
     const url = env.TURSO_DATABASE_URL;
     const authToken = env.TURSO_AUTH_TOKEN;
     if (url) return { url, ...(authToken ? { authToken } : {}) };
