@@ -7,4 +7,6 @@ export interface Env {
     limit(key: string): Promise<{ success: boolean }>;
   };
   HEALTH_CHECK_SECRET: string;
+  TURSO_DATABASE_URL: string;
+  TURSO_AUTH_TOKEN: string;
 }
