@@ -13,6 +13,7 @@ import { plausibleAnalytics } from '@/lib/analytics';
 import { Metadata } from 'next';
 import { slugToTopic } from '@/lib/prompts/slugifier';
 import { SubjectGrid } from '@/components/SubjectGrid/SubjectGrid';
+import { SwipeableContainer } from '@/components/SwipeableContainer';
 
 export const dynamic = 'force-static';
 export const revalidate = 3600; // ISR: revalidate every 1 hour
@@ -105,6 +106,17 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
 
   const engine = getEngine();
 
+  // Fetch subjects for swipeable container
+  const url = process.env.TURSO_DATABASE_URL!;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const client = createClient({ url, ...(authToken ? { authToken } : {}) });
+  const db = drizzle(client, { schema });
+  
+  const subjects = await db.query.subjects.findMany({
+    where: eq(schema.subjects.isActive, true),
+    orderBy: schema.subjects.sortOrder,
+  });
+
   const env = { hasApiKey: false, userPlan: 'free' as const };
   const result = await engine.generatePrompt(subjectId, topicName, env);
 
@@ -121,7 +133,7 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
   const fromCache = false;
 
   return (
-    <main className="min-h-screen p-4 sm:p-8 md:p-24 pt-12 max-w-7xl mx-auto flex flex-col items-center overflow-x-hidden">
+    <main className="min-h-[100dvh] p-4 sm:p-8 md:p-24 pt-12 max-w-7xl mx-auto flex flex-col items-center overflow-x-hidden">
       <div className="text-center mb-8 sm:mb-12">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-900 dark:text-white mb-4 transition-colors">
           <span className="bg-gradient-to-br from-blue-600 to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">
@@ -136,13 +148,15 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
       <SubjectGrid variant="compact" />
 
       <div className="w-full">
-        <PromptDisplay
-          prompt={promptText}
-          subject={subjectId}
-          topic={slugToTopic(slug)}
-          wordCount={wordCount}
-          fromCache={fromCache}
-        />
+        <SwipeableContainer subjects={subjects} currentSubjectId={subjectId}>
+          <PromptDisplay
+            prompt={promptText}
+            subject={subjectId}
+            topic={slugToTopic(slug)}
+            wordCount={wordCount}
+            fromCache={fromCache}
+          />
+        </SwipeableContainer>
       </div>
     </main>
   );
