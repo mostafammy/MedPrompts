@@ -3,16 +3,18 @@
 import React, { useTransition } from 'react';
 import { SubjectId } from '@/lib/types/branded';
 import { TopicInput } from '@/components/TopicInput/TopicInput';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { slugifyTopic } from '@/lib/prompts/slugifier';
 import { motion } from 'framer-motion';
 
-export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }) {
+export function GenerateContainer({ subjectId: serverSubjectId }: { subjectId: SubjectId | null }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const clientSubjectId = (searchParams.get('subject') as SubjectId) || serverSubjectId;
   const [isPending, startTransition] = useTransition();
 
   const handleGenerate = (topic: string) => {
-    if (!subjectId) return;
+    if (!clientSubjectId) return;
     
     const slug = slugifyTopic(topic);
     
@@ -23,7 +25,7 @@ export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }
 
   return (
     <div className="w-full flex flex-col items-center">
-      <TopicInput key={subjectId || 'none'} subjectId={subjectId} onGenerate={handleGenerate} />
+      <TopicInput key={clientSubjectId || 'none'} subjectId={clientSubjectId} onGenerate={handleGenerate} />
       
       {isPending && (
         <motion.div 
