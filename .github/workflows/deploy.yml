@@ -79,14 +79,19 @@ jobs:
           retention-days: 7
           include-hidden-files: true
 
-      - name: Push secrets to Cloudflare Worker
+      - name: Inject secrets into wrangler.jsonc
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
-          echo "${{ secrets.TURSO_DATABASE_URL }}" | pnpm exec wrangler secret put TURSO_DATABASE_URL
-          echo "${{ secrets.TURSO_AUTH_TOKEN }}"   | pnpm exec wrangler secret put TURSO_AUTH_TOKEN
+          node -e "
+            const fs = require('fs');
+            let content = fs.readFileSync('wrangler.jsonc', 'utf8');
+            content = content.replace(/\"TURSO_DATABASE_URL\":\s*\"\"/, '\"TURSO_DATABASE_URL\": \"' + process.env.TURSO_DATABASE_URL + '\"');
+            content = content.replace(/\"TURSO_AUTH_TOKEN\":\s*\"\"/, '\"TURSO_AUTH_TOKEN\": \"' + process.env.TURSO_AUTH_TOKEN + '\"');
+            fs.writeFileSync('wrangler.jsonc', content);
+          "
         env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
 
       - name: Deploy to Cloudflare Workers
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
