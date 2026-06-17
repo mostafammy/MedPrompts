@@ -2,8 +2,7 @@ import { SubjectId, Slug, Topic } from '@/lib/types/branded';
 import { PromptEngine } from '@/lib/prompts/engine';
 import { notFound } from 'next/navigation';
 import { PromptDisplay } from '@/components/PromptDisplay/PromptDisplay';
-import { createClient } from '@libsql/client/web';
-import { drizzle } from 'drizzle-orm/libsql';
+import { getDb } from '@/lib/db/get-db';
 import * as schema from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { createInMemoryCache } from '@/lib/prompts/cache';
@@ -19,23 +18,10 @@ export const dynamic = 'force-static';
 export const revalidate = 3600; // ISR: revalidate every 1 hour
 
 function getEngine() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-
-  if (!url) {
-    throw new Error('TURSO_DATABASE_URL environment variable is required');
-  }
-
-  const client = createClient({
-    url,
-    ...(authToken ? { authToken } : {}),
-  });
-  const db = drizzle(client, { schema });
-
+  const db = getDb();
   const promptCache = createInMemoryCache();
   const normCache = new NormalizerCache(createInMemoryCacheStore());
   const pipeline = new TopicNormalizationPipeline([], normCache);
-  
   return new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
 }
 
@@ -67,19 +53,12 @@ export async function generateMetadata({ params }: { params: Promise<{ subject: 
 }
 
 export async function generateStaticParams() {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  if (!url) return [];
-
-  const client = createClient({ url, ...(authToken ? { authToken } : {}) });
-  const db = drizzle(client, { schema });
-
   try {
+    const db = getDb();
     const highYieldTopics = await db.query.topicsSeed.findMany({
       where: eq(schema.topicsSeed.isHighYield, true),
       limit: 100,
     });
-
     return highYieldTopics.map((topicItem) => ({
       subject: topicItem.subjectId,
       topic: topicItem.slug,
@@ -107,11 +86,7 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
   const engine = getEngine();
 
   // Fetch subjects for swipeable container
-  const url = process.env.TURSO_DATABASE_URL!;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  const client = createClient({ url, ...(authToken ? { authToken } : {}) });
-  const db = drizzle(client, { schema });
-  
+  const db = getDb();
   const subjects = await db.query.subjects.findMany({
     where: eq(schema.subjects.isActive, true),
     orderBy: schema.subjects.sortOrder,
