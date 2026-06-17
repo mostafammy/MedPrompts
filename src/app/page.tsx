@@ -2,6 +2,7 @@ import { SubjectGrid } from '@/components/SubjectGrid/SubjectGrid';
 import { GenerateContainer } from './GenerateContainer';
 import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: 'MedPrompts — Board-Exam Master Prompts',
@@ -63,7 +64,9 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
               </h2>
             </div>
           )}
-          <GenerateContainer subjectId={subjectId} />
+          <Suspense fallback={null}>
+            <GenerateContainer subjectId={subjectId} />
+          </Suspense>
         </section>
       </div>
     </div>
