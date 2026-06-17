@@ -3,7 +3,6 @@ import * as schema from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { SubjectGridClient } from './SubjectGridClient';
 import { CompactSubjectGridClient } from './CompactSubjectGridClient';
-import { Suspense } from 'react';
 
 export interface SubjectGridProps {
   variant?: 'full' | 'compact';
