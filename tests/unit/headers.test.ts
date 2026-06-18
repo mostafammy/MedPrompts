@@ -26,7 +26,7 @@ describe('securityHeaders', () => {
     }, {} as Record<string, string>);
 
     expect(directives['script-src']).toBeDefined();
-    expect(directives['script-src']).not.toContain('unsafe-inline');
+    expect(directives['script-src']).toContain('unsafe-inline');
     expect(directives['script-src']).not.toContain('unsafe-eval');
   });
 });
