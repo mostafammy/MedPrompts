@@ -11,7 +11,6 @@ export interface SubjectCardProps {
   label: string;
   icon: string;
   isSelected: boolean;
-  onClick?: () => void;
 }
 
 interface SubjectTheme {
@@ -105,7 +104,7 @@ const THEMES: Record<string, SubjectTheme> = {
 
 const DEFAULT_THEME = anatomyTheme;
 
-export function SubjectCard({ id, label, icon, isSelected, onClick }: SubjectCardProps) {
+export function SubjectCard({ id, label, icon, isSelected }: SubjectCardProps) {
   const iconName = icon.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
   const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[iconName] || Icons.CircleHelp;
 
@@ -143,10 +142,7 @@ export function SubjectCard({ id, label, icon, isSelected, onClick }: SubjectCar
     <motion.div
       whileHover={{ scale: theme.hoverScale }}
       whileTap={{ scale: 0.97 }}
-      onClick={(e) => {
-        haptics.tap();
-        if (onClick) onClick();
-      }}
+      onTap={() => haptics.tap()}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
