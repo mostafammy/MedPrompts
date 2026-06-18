@@ -5,13 +5,41 @@ interface UseSpeechRecognitionOptions {
   lang?: string;
 }
 
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: () => void;
+  onerror: (event: { error: string }) => void;
+  onend: () => void;
+  onresult: (event: {
+    resultIndex: number;
+    results: {
+      length: number;
+      [key: number]: {
+        isFinal: boolean;
+        [key: number]: {
+          transcript: string;
+        };
+      };
+    };
+  }) => void;
+  start: () => void;
+  stop: () => void;
+}
+
+interface SpeechRecognitionWindow extends Window {
+  SpeechRecognition?: new () => SpeechRecognitionInstance;
+  webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+}
+
 export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeechRecognitionOptions = {}) {
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
   
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const onFinalSpeechRef = useRef(onFinalSpeech);
 
@@ -21,10 +49,10 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
   }, [onFinalSpeech]);
 
   useEffect(() => {
-    const SpeechRecognition =
-      typeof window !== 'undefined' &&
-      ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    const win = typeof window !== 'undefined' ? (window as unknown as SpeechRecognitionWindow) : null;
+    const SpeechRecognition = win?.SpeechRecognition || win?.webkitSpeechRecognition;
     
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsSupported(!!SpeechRecognition);
   }, []);
 
@@ -52,9 +80,8 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
     setTranscript('');
     clearSpeechTimeout();
 
-    const SpeechRecognition =
-      typeof window !== 'undefined' &&
-      ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+    const win = typeof window !== 'undefined' ? (window as unknown as SpeechRecognitionWindow) : null;
+    const SpeechRecognition = win?.SpeechRecognition || win?.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setError('Speech recognition is not supported in this browser.');
@@ -71,7 +98,7 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
         setIsListening(true);
       };
 
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: { error: string }) => {
         // 'no-speech' can trigger if user is silent, ignore or handle gracefully
         if (event.error !== 'no-speech') {
           console.warn('Speech recognition error:', event.error);
@@ -86,15 +113,29 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
         clearSpeechTimeout();
       };
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: {
+        resultIndex: number;
+        results: {
+          length: number;
+          [key: number]: {
+            isFinal: boolean;
+            [key: number]: {
+              transcript: string;
+            };
+          };
+        };
+      }) => {
         let interimTranscript = '';
         let finalTranscript = '';
 
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
+          const result = event.results[i];
+          if (result) {
+            if (result.isFinal) {
+              finalTranscript += result[0]?.transcript || '';
+            } else {
+              interimTranscript += result[0]?.transcript || '';
+            }
           }
         }
 
@@ -125,9 +166,9 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
 
       recognitionRef.current = recognition;
       recognition.start();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      setError(e.message || 'Failed to start speech recognition');
+      setError((e as Error).message || 'Failed to start speech recognition');
       setIsListening(false);
     }
   }, [lang, clearSpeechTimeout]);
@@ -138,7 +179,7 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (e) {
+        } catch {
           // ignore
         }
       }
