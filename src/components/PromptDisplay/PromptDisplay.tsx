@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { soundEngine } from '@/lib/audio';
 import { haptics } from '@/lib/haptics';
@@ -35,6 +35,30 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
   
   const lastTapTimeRef = useRef<number>(0);
   const { toggleBookmark, isBookmarked, addHistoryItem } = usePromptHistory();
+
+  const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md');
+  const [fontSizeMounted, setFontSizeMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('medprompts_font_size');
+    if (saved === 'sm' || saved === 'md' || saved === 'lg') {
+      setFontSize(saved);
+    }
+    setFontSizeMounted(true);
+  }, []);
+
+  const cycleFontSize = () => {
+    haptics.tap();
+    setFontSize(prev => {
+      let next: 'sm' | 'md' | 'lg';
+      if (prev === 'sm') next = 'md';
+      else if (prev === 'md') next = 'lg';
+      else next = 'sm';
+      
+      localStorage.setItem('medprompts_font_size', next);
+      return next;
+    });
+  };
 
   // Log to history on mount
   useEffect(() => {
@@ -124,6 +148,20 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
                 }`}
               />
             </button>
+
+            <button
+              onClick={cycleFontSize}
+              title={`Change font size (current: ${fontSize})`}
+              aria-label="Cycle Font Size"
+              className="p-1.5 rounded-full border border-zinc-800 hover:bg-zinc-900 transition-colors text-zinc-500 hover:text-zinc-350 flex items-center gap-1 cursor-pointer"
+            >
+              <Icons.Type className="w-3.5 h-3.5 shrink-0" />
+              {fontSizeMounted && (
+                <span className="text-[9px] font-extrabold uppercase select-none px-0.5 min-w-[12px] text-zinc-400">
+                  {fontSize}
+                </span>
+              )}
+            </button>
             
             <span className="px-2.5 py-1 text-zinc-400 text-xs font-medium flex items-center gap-1.5 select-none border border-zinc-800/60 rounded-full bg-zinc-900/40">
               <Icons.FileText className="w-3.5 h-3.5 text-zinc-500" />
@@ -164,7 +202,13 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
       >
         <pre 
           onClick={handleDoubleTap}
-          className="whitespace-pre-wrap font-mono text-sm md:text-[15px] text-zinc-800 dark:text-zinc-300 leading-relaxed select-text cursor-text"
+          className={`whitespace-pre-wrap font-mono text-zinc-800 dark:text-zinc-300 select-text cursor-text ${
+            fontSize === 'sm'
+              ? 'text-[12px] md:text-[13px] leading-relaxed'
+              : fontSize === 'lg'
+              ? 'text-base md:text-lg leading-relaxed'
+              : 'text-sm md:text-[15px] leading-relaxed'
+          }`}
         >
           <code>{prompt}</code>
         </pre>
