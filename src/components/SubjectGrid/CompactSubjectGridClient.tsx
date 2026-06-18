@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Subject } from './SubjectGridClient';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
