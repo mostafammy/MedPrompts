@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 import { HomePageClient } from './HomePageClient';
 import * as Icons from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'MedPrompts — Board-Exam Master Prompts',
   description: 'Generate comprehensive, evidence-based medical study prompts for pathology, anatomy, pharmacology, and more.',
