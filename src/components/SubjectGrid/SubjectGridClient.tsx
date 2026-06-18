@@ -16,6 +16,7 @@ export interface Subject {
 export interface SubjectGridClientProps {
   subjects: Subject[];
   selectedId?: string | null;
+  onSelect?: (id: string) => void;
 }
 
 const containerVariants: Variants = {
@@ -43,7 +44,7 @@ const itemVariants: Variants = {
   },
 };
 
-export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: SubjectGridClientProps) {
+export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSelect }: SubjectGridClientProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
@@ -59,8 +60,32 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
     const isTopicPage = segments.length >= 2;
     const targetPathname = isTopicPage ? '/' : pathname;
     
-    // Instead of useSearchParams which suspends, just use ?subject=id
     return targetPathname + '?subject=' + encodeURIComponent(id);
+  };
+
+  const renderCard = (subject: Subject, isSelected: boolean, href: string) => {
+    const cardElement = (
+      <SubjectCard
+        id={subject.id as SubjectId}
+        label={subject.label}
+        icon={subject.icon}
+        isSelected={isSelected}
+      />
+    );
+
+    if (onSelect) {
+      return (
+        <div onClick={() => onSelect(subject.id)} className="block no-underline">
+          {cardElement}
+        </div>
+      );
+    }
+
+    return (
+      <Link href={href} scroll={false} className="block no-underline">
+        {cardElement}
+      </Link>
+    );
   };
 
   // SSR / Progressive Fallback: Return a static visible grid before client hydration.
@@ -75,19 +100,9 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
           const href = getHref(subject.id);
 
           return (
-            <Link
-              key={subject.id}
-              href={href}
-              scroll={false}
-              className="block no-underline"
-            >
-              <SubjectCard
-                id={subject.id as SubjectId}
-                label={subject.label}
-                icon={subject.icon}
-                isSelected={isSelected}
-              />
-            </Link>
+            <React.Fragment key={subject.id}>
+              {renderCard(subject, isSelected, href)}
+            </React.Fragment>
           );
         })}
       </div>
@@ -113,18 +128,7 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
             variants={itemVariants}
             className="block"
           >
-            <Link
-              href={href}
-              scroll={false}
-              className="block no-underline"
-            >
-              <SubjectCard
-                id={subject.id as SubjectId}
-                label={subject.label}
-                icon={subject.icon}
-                isSelected={isSelected}
-              />
-            </Link>
+            {renderCard(subject, isSelected, href)}
           </motion.div>
         );
       })}
