@@ -70,12 +70,13 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
         label={subject.label}
         icon={subject.icon}
         isSelected={isSelected}
+        onClick={onSelect ? () => onSelect(subject.id) : undefined}
       />
     );
 
     if (onSelect) {
       return (
-        <div onClick={() => onSelect(subject.id)} className="block no-underline">
+        <div className="block no-underline">
           {cardElement}
         </div>
       );
