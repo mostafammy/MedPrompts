@@ -1,6 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useRef } from 'react';
+import { toast } from 'sonner';
+import { soundEngine } from '@/lib/audio';
+import { haptics } from '@/lib/haptics';
+import { copyToClipboard } from '@/lib/clipboard';
 import { CopyButton } from '../CopyEngine/CopyButton';
 import { DeepLinkButton } from './DeepLinkButton';
 import { ShareButton } from './ShareButton';
@@ -8,6 +12,8 @@ import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/Spotlight';
+import { useRouter } from 'next/navigation';
+import { usePullToClear } from '@/hooks/usePullToClear';
 
 export interface PromptDisplayProps {
   prompt: string;
@@ -18,6 +24,35 @@ export interface PromptDisplayProps {
 }
 
 export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _fromCache }: PromptDisplayProps) {
+  const router = useRouter();
+  const scrollContainerRef = usePullToClear<HTMLDivElement>(() => {
+    soundEngine.playClick();
+    haptics.tap();
+    router.push(`/${subject}`);
+  });
+  
+  const lastTapTimeRef = useRef<number>(0);
+
+  const handleDoubleTap = async (e: React.MouseEvent | React.TouchEvent) => {
+    const now = Date.now();
+    const lastTap = lastTapTimeRef.current;
+    
+    if (lastTap > 0 && now - lastTap < 400) {
+      // It's a double tap
+      e.preventDefault();
+      lastTapTimeRef.current = 0;
+      
+      const success = await copyToClipboard(prompt);
+      if (success) {
+        soundEngine.playSuccess();
+        haptics.success();
+        toast.success('Prompt copied via double-tap!');
+      }
+    } else {
+      lastTapTimeRef.current = now;
+    }
+  };
+
   return (
     <>
     <motion.article 
@@ -82,8 +117,14 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
       </div>
       
       {/* Code / Prompt Body */}
-      <div className="p-4 sm:p-8 bg-zinc-50/50 dark:bg-zinc-950/50 max-h-[600px] overflow-y-auto relative selection:bg-blue-200 dark:selection:bg-blue-900/50 custom-scrollbar">
-        <pre className="whitespace-pre-wrap font-mono text-sm md:text-[15px] text-zinc-800 dark:text-zinc-300 leading-relaxed select-text">
+      <div 
+        ref={scrollContainerRef}
+        className="p-4 sm:p-8 bg-zinc-50/50 dark:bg-zinc-950/50 max-h-[600px] overflow-y-auto relative selection:bg-blue-200 dark:selection:bg-blue-900/50 custom-scrollbar overscroll-y-none"
+      >
+        <pre 
+          onClick={handleDoubleTap}
+          className="whitespace-pre-wrap font-mono text-sm md:text-[15px] text-zinc-800 dark:text-zinc-300 leading-relaxed select-text cursor-text"
+        >
           <code>{prompt}</code>
         </pre>
       </div>
