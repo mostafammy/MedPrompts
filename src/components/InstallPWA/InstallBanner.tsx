@@ -36,19 +36,19 @@ export function InstallBanner() {
     const isIOS = /iphone|ipad|ipod/.test(userAgent);
 
     if (isIOS) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setPlatform('ios');
       // Show iOS banner immediately on mobile Safari
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setIsVisible(true);
     } else {
       // Listen for the Chrome/Android install prompt
       const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
         deferredPromptRef.current = e as BeforeInstallPromptEvent;
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+
         setPlatform('android');
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+
         setIsVisible(true);
       };
 
