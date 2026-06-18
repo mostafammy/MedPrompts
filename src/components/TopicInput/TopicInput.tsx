@@ -8,11 +8,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Spotlight } from '@/components/ui/Spotlight';
 import { useRouter } from 'next/navigation';
 import { haptics } from '@/lib/haptics';
+import { toast } from 'sonner';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 
 export interface TopicInputProps {
   subjectId: SubjectId | null;
   onGenerate: (topic: string) => void;
 }
+
+const TRENDING_TOPICS: Record<string, string[]> = {
+  anatomy: ['Asthma', 'Heart', 'Lungs', 'Liver'],
+  pathology: ['Tuberculosis', 'Diabetes', 'Hypertension'],
+  physiology: ['Action Potential', 'Cardiac Cycle', 'Blood Pressure'],
+  pharmacology: ['Antibiotics', 'NSAIDs', 'Beta Blockers'],
+  microbiology: ['Gram Stain', 'Viruses', 'Bacteria'],
+  biochemistry: ['Glycolysis', 'Krebs Cycle', 'Enzymes'],
+};
 
 export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   const router = useRouter();
@@ -22,6 +33,50 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTapTimeRef = useRef<number>(0);
+
+  const {
+    isSupported: isSpeechSupported,
+    isListening,
+    transcript,
+    error: speechError,
+    startListening,
+    stopListening,
+  } = useSpeechRecognition({
+    onFinalSpeech: (finalText) => {
+      if (subjectId && finalText.trim() !== '' && !isSubmitting) {
+        setInputValue(finalText);
+        setIsSubmitting(true);
+        textareaRef.current?.blur();
+        onGenerate(finalText);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (isListening && transcript) {
+      setInputValue(transcript);
+    }
+  }, [transcript, isListening]);
+
+  useEffect(() => {
+    if (speechError) {
+      let message = 'An error occurred with voice input.';
+      if (speechError === 'not-allowed') {
+        message = 'Microphone access denied. Please enable microphone permission in your browser settings and ensure you are using a secure connection (HTTPS).';
+      } else if (speechError === 'audio-capture') {
+        message = 'No microphone detected. Please connect a working microphone.';
+      } else if (speechError === 'network') {
+        message = 'Network error occurred during voice recognition.';
+      } else if (speechError === 'service-not-allowed') {
+        message = 'Speech service not allowed. Try using Chrome or Safari.';
+      } else if (speechError === 'no-speech') {
+        return;
+      } else {
+        message = `Voice error: ${speechError}`;
+      }
+      toast.error(message);
+    }
+  }, [speechError]);
 
   const handleTap = (e: React.MouseEvent<HTMLTextAreaElement>) => {
     const now = Date.now();
@@ -48,11 +103,13 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
   };
 
   useEffect(() => {
-    if (subjectId && textareaRef.current) {
-      setTimeout(() => {
-        textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        textareaRef.current?.focus();
+    if (subjectId) {
+      const timer = setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+        }
       }, 150);
+      return () => clearTimeout(timer);
     }
   }, [subjectId]);
 
@@ -121,7 +178,17 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
     if (!subjectId || inputValue.trim() === '' || isSubmitting) return;
     haptics.success();
     setIsSubmitting(true);
+    textareaRef.current?.blur();
     onGenerate(inputValue);
+  };
+
+  const handleChipClick = (topic: string) => {
+    if (!subjectId || isSubmitting) return;
+    haptics.success();
+    setInputValue(topic);
+    setIsSubmitting(true);
+    textareaRef.current?.blur();
+    onGenerate(topic);
   };
 
   if (!subjectId) {
@@ -212,7 +279,14 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
               ref={textareaRef}
               id="topic-input"
               value={inputValue}
+              autoCorrect="off"
+              spellCheck="false"
+              autoComplete="off"
+              enterKeyHint="go"
               onChange={(e) => {
+                if (isListening) {
+                  stopListening();
+                }
                 const target = e.target;
                 let val = target.value;
                 if (val.length > 120) {
@@ -224,13 +298,60 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
               onClick={handleTap}
               aria-describedby="topic-hint"
               rows={2}
-              className="w-full touch-manipulation pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 rounded-2xl sm:rounded-3xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-lg sm:text-2xl leading-relaxed outline-none transition-all duration-300 border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20 resize-none shadow-inner font-sans"
-              placeholder="e.g. Myocardial Infarction..."
+              className={`w-full touch-manipulation pl-12 sm:pl-16 pr-16 sm:pr-24 py-4 sm:py-6 rounded-2xl sm:rounded-3xl border bg-white/50 dark:bg-zinc-950/50 text-zinc-900 dark:text-zinc-50 text-lg sm:text-2xl leading-relaxed outline-none transition-all duration-300 resize-none shadow-inner font-sans ${
+                isListening
+                  ? 'border-red-500/80 dark:border-red-500/80 ring-4 ring-red-500/20 dark:ring-red-500/20'
+                  : 'border-zinc-200/80 dark:border-zinc-800/80 focus:border-blue-500 dark:focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 dark:focus:ring-blue-500/20'
+              }`}
+              placeholder={isListening ? 'Listening... Speak now' : 'e.g. Myocardial Infarction...'}
             />
             
             <div className="pointer-events-none absolute right-3 sm:right-6 top-4 sm:top-[1.65rem] text-xs sm:text-sm font-semibold text-zinc-400 dark:text-zinc-500 bg-zinc-200/50 dark:bg-zinc-800/50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg backdrop-blur-sm">
               {inputValue.length}/120
             </div>
+
+            {isSpeechSupported && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  haptics.success();
+                  if (isListening) {
+                    stopListening();
+                  } else {
+                    startListening();
+                  }
+                }}
+                className={`absolute right-3 sm:right-6 bottom-3 sm:bottom-4 p-2 sm:p-2.5 rounded-full flex items-center justify-center transition-all duration-300 z-10 cursor-pointer ${
+                  isListening
+                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 ring-4 ring-red-500/10'
+                    : 'bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700/80 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+                title={isListening ? 'Stop listening' : 'Start voice input'}
+              >
+                {isListening ? (
+                  <Icons.Mic className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+                ) : (
+                  <Icons.Mic className="w-5 h-5 sm:w-6 sm:h-6" />
+                )}
+              </button>
+            )}
+          </div>
+          
+          {/* Trending Tap Chips */}
+          <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2 sm:pb-0 px-1">
+            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider py-1.5 shrink-0 mr-1">Trending:</span>
+            {TRENDING_TOPICS[subjectId] ? TRENDING_TOPICS[subjectId].map((topic) => (
+              <button
+                key={topic}
+                type="button"
+                onClick={() => handleChipClick(topic)}
+                className="shrink-0 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-800/40 text-blue-600 dark:text-blue-400 text-sm font-medium rounded-full transition-colors border border-blue-200/50 dark:border-blue-800/50 backdrop-blur-sm"
+              >
+                {topic}
+              </button>
+            )) : null}
           </div>
         </div>
 
