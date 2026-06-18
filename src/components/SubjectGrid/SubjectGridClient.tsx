@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 
 export interface Subject {
@@ -45,7 +43,6 @@ const itemVariants: Variants = {
 };
 
 export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSelect }: SubjectGridClientProps) {
-  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -53,17 +50,9 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
     return () => clearTimeout(timer);
   }, []);
 
-  const segments = pathname.split('/').filter(Boolean);
   const selectedId = serverSelectedId || null;
 
-  const getHref = (id: string) => {
-    const isTopicPage = segments.length >= 2;
-    const targetPathname = isTopicPage ? '/' : pathname;
-    
-    return targetPathname + '?subject=' + encodeURIComponent(id);
-  };
-
-  const renderCard = (subject: Subject, isSelected: boolean, href: string) => {
+  const renderCard = (subject: Subject, isSelected: boolean) => {
     const cardElement = (
       <SubjectCard
         id={subject.id as SubjectId}
@@ -73,22 +62,16 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
       />
     );
 
-    if (mounted && onSelect) {
-      return (
-        <button 
-          type="button"
-          onClick={() => onSelect(subject.id)}
-          className="block w-full text-left appearance-none bg-transparent border-none p-0 m-0 outline-none cursor-pointer"
-        >
-          {cardElement}
-        </button>
-      );
-    }
-
     return (
-      <Link href={href} scroll={false} className="block no-underline">
+      <button 
+        type="button"
+        onClick={() => {
+          if (onSelect) onSelect(subject.id);
+        }}
+        className="block w-full text-left appearance-none bg-transparent border-none p-0 m-0 outline-none cursor-pointer"
+      >
         {cardElement}
-      </Link>
+      </button>
     );
   };
 
@@ -101,11 +84,10 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
       >
         {subjects.map((subject) => {
           const isSelected = selectedId === subject.id;
-          const href = getHref(subject.id);
 
           return (
             <React.Fragment key={subject.id}>
-              {renderCard(subject, isSelected, href)}
+              {renderCard(subject, isSelected)}
             </React.Fragment>
           );
         })}
@@ -122,9 +104,8 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
       className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 w-full max-w-4xl mx-auto"
       aria-label="Select a medical subject"
     >
-      {subjects.map((subject) => {
+        {subjects.map((subject) => {
         const isSelected = selectedId === subject.id;
-        const href = getHref(subject.id);
 
         return (
           <motion.div
@@ -132,7 +113,7 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
             variants={itemVariants}
             className="block"
           >
-            {renderCard(subject, isSelected, href)}
+            {renderCard(subject, isSelected)}
           </motion.div>
         );
       })}
