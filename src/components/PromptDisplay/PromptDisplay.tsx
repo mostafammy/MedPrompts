@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { soundEngine } from '@/lib/audio';
 import { haptics } from '@/lib/haptics';
@@ -14,6 +14,8 @@ import { motion } from 'framer-motion';
 import { Spotlight } from '@/components/ui/Spotlight';
 import { useRouter } from 'next/navigation';
 import { usePullToClear } from '@/hooks/usePullToClear';
+import { usePromptHistory } from '@/hooks/usePromptHistory';
+import { TTSPlayer } from './TTSPlayer';
 
 export interface PromptDisplayProps {
   prompt: string;
@@ -32,6 +34,18 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
   });
   
   const lastTapTimeRef = useRef<number>(0);
+  const { toggleBookmark, isBookmarked, addHistoryItem } = usePromptHistory();
+
+  // Log to history on mount
+  useEffect(() => {
+    addHistoryItem({
+      subject,
+      topic,
+      wordCount,
+      promptText: prompt
+    });
+  }, [addHistoryItem, subject, topic, wordCount, prompt]);
+
 
   const handleDoubleTap = async (e: React.MouseEvent | React.TouchEvent) => {
     const now = Date.now();
@@ -83,8 +97,35 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
           </div>
         </div>
         <div className="flex items-center gap-3 justify-between sm:justify-end">
-          <div className="flex gap-2">
-            <span className="px-2.5 py-1 text-zinc-400 text-xs font-medium flex items-center gap-1.5 select-none">
+          <div className="flex items-center gap-2">
+            <TTSPlayer text={prompt} />
+            
+            <button
+              onClick={() => {
+                toggleBookmark({ subject, topic, wordCount, promptText: prompt });
+                if (isBookmarked(subject, topic)) {
+                  haptics.tap();
+                  soundEngine.playSwoop();
+                  toast.success('Removed from bookmarks');
+                } else {
+                  haptics.success();
+                  soundEngine.playSuccess();
+                  toast.success('Saved to bookmarks!');
+                }
+              }}
+              aria-label={isBookmarked(subject, topic) ? "Remove Bookmark" : "Add Bookmark"}
+              className="p-1.5 rounded-full border border-zinc-800 hover:bg-zinc-900 transition-colors group cursor-pointer flex items-center justify-center"
+            >
+              <Icons.Star
+                className={`w-3.5 h-3.5 transition-transform group-active:scale-125 ${
+                  isBookmarked(subject, topic)
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              />
+            </button>
+            
+            <span className="px-2.5 py-1 text-zinc-400 text-xs font-medium flex items-center gap-1.5 select-none border border-zinc-800/60 rounded-full bg-zinc-900/40">
               <Icons.FileText className="w-3.5 h-3.5 text-zinc-500" />
               {wordCount} words
             </span>
@@ -159,18 +200,45 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
     </motion.article>
 
     {/* Mobile Sticky Floating Action Bar (FAB) */}
-    <div className="sm:hidden fixed bottom-6 inset-x-4 z-50 flex items-center justify-center gap-3">
-      <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl rounded-full p-2 flex items-center gap-2 w-full max-w-sm justify-around relative overflow-hidden">
+    <div className="sm:hidden fixed bottom-6 inset-x-4 z-50 flex items-center justify-center gap-2">
+      <div className="bg-white/85 dark:bg-zinc-900/85 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl rounded-full p-2 flex items-center gap-1.5 w-full max-w-sm justify-around relative overflow-hidden">
         {/* Subtle inner glow */}
         <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent pointer-events-none" />
         
-        <div className="flex-1 max-w-[120px]">
+        <div className="flex-1 max-w-[80px]">
           <CopyButton textToCopy={prompt} isHeaderInline={true} />
         </div>
         
         <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
         
-        <div className="flex-1 max-w-[120px]">
+        <button
+          onClick={() => {
+            toggleBookmark({ subject, topic, wordCount, promptText: prompt });
+            if (isBookmarked(subject, topic)) {
+              haptics.tap();
+              soundEngine.playSwoop();
+              toast.success('Removed from bookmarks');
+            } else {
+              haptics.success();
+              soundEngine.playSuccess();
+              toast.success('Saved to bookmarks!');
+            }
+          }}
+          aria-label={isBookmarked(subject, topic) ? "Remove Bookmark" : "Add Bookmark"}
+          className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors text-zinc-650 dark:text-zinc-400 active:scale-95 cursor-pointer flex items-center justify-center"
+        >
+          <Icons.Star
+            className={`w-5 h-5 transition-transform active:scale-125 ${
+              isBookmarked(subject, topic)
+                ? 'fill-amber-400 text-amber-400'
+                : 'text-zinc-400 dark:text-zinc-500'
+            }`}
+          />
+        </button>
+
+        <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
+
+        <div className="flex-1 max-w-[80px]">
           <DeepLinkButton
             textToCopy={prompt}
             subjectId={subject as SubjectId}
@@ -187,7 +255,7 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
         
         <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
         
-        <div className="flex-1 max-w-[120px]">
+        <div className="flex-1 max-w-[80px]">
           <ShareButton subject={subject} topic={topic} isHeaderInline={true} />
         </div>
       </div>
