@@ -11,9 +11,7 @@ export function securityHeaders(response: Response): Response {
   
   const csp = [
     "default-src 'self'",
-    isDev 
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.io" 
-      : "script-src 'self' https://plausible.io",
+    "script-src 'self' 'unsafe-inline' https://plausible.io",
     "style-src 'self' 'unsafe-inline'", // Framer Motion updates inline element style attributes on the fly
     "img-src 'self' data: https:",
     "font-src 'self' data:",
