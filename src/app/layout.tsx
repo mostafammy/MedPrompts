@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { SkipToContent } from "@/components/ui/SkipToContent";
 import { Toaster } from "sonner";
+import { InstallBanner } from "@/components/InstallPWA/InstallBanner";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,14 +24,31 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} antialiased h-full dark:bg-zinc-950`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (_) {}
+            `
+          }}
+        />
+      </head>
       <body
         className="min-h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans relative overflow-x-hidden selection:bg-blue-200 dark:selection:bg-blue-900/50"
       >
         <SkipToContent />
+        <ThemeToggle />
         <main id="main-content" className="flex-1 flex flex-col">
           {children}
         </main>
-        <Toaster position="bottom-right" theme="system" richColors closeButton />
+        <Toaster position="top-center" theme="system" richColors closeButton />
+        <InstallBanner />
       </body>
     </html>
   );
