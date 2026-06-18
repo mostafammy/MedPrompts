@@ -1,6 +1,7 @@
-import { SubjectGrid } from '@/components/SubjectGrid/SubjectGrid';
-import { GenerateContainer } from './GenerateContainer';
-import { SubjectId } from '@/lib/types/branded';
+import { getDb } from '@/lib/db/get-db';
+import * as schema from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { HomePageClient } from './HomePageClient';
 import * as Icons from 'lucide-react';
 
 export const metadata = {
@@ -8,11 +9,26 @@ export const metadata = {
   description: 'Generate comprehensive, evidence-based medical study prompts for pathology, anatomy, pharmacology, and more.',
 };
 
-export const dynamic = 'force-dynamic';
-
-export default async function HomePage(props: { searchParams: Promise<{ subject?: string }> }) {
-  const searchParams = await props.searchParams;
-  const subjectId = (searchParams.subject as SubjectId) || null;
+export default async function HomePage() {
+  const db = getDb();
+  
+  let subjects;
+  try {
+    subjects = await db.query.subjects.findMany({
+      where: eq(schema.subjects.isActive, true),
+      orderBy: schema.subjects.sortOrder,
+    });
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return (
+      <div className="min-h-[100dvh] bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center p-8 border border-red-500/50 bg-red-500/10 rounded-2xl text-red-500">
+          <h3 className="font-bold mb-2">Database Error</h3>
+          <p className="text-sm break-words font-mono">{errorMessage}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[100dvh] bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -44,27 +60,7 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
           </p>
         </div>
 
-        {/* Subjects Selector Grid */}
-        <section className={`w-full mb-10 transition-all duration-700 ease-in-out ${subjectId ? 'scale-[0.97] opacity-60 blur-[1px] translate-y-[-1rem]' : 'animate-fade-in-up delay-100'}`}>
-          <div className="text-center mb-5">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-              1. Choose a Subject
-            </h2>
-          </div>
-          <SubjectGrid selectedId={subjectId} />
-        </section>
-
-        {/* Topic Input & Generation Container */}
-        <section className="w-full animate-fade-in-up delay-200">
-          {subjectId && (
-            <div className="text-center mb-4">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                2. Enter a Topic
-              </h2>
-            </div>
-          )}
-          <GenerateContainer subjectId={subjectId} />
-        </section>
+        <HomePageClient subjects={subjects} />
       </div>
     </div>
   );
