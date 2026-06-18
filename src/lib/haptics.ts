@@ -2,24 +2,44 @@
 
 class HapticEngine {
   private isSupported(): boolean {
-    return typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator;
+    try {
+      return (
+        typeof window !== 'undefined' &&
+        typeof window.navigator !== 'undefined' &&
+        'vibrate' in window.navigator
+      );
+    } catch (e) {
+      return false;
+    }
   }
 
   public tap() {
-    if (this.isSupported()) {
-      navigator.vibrate(10); // Light, short tap
+    try {
+      if (this.isSupported()) {
+        window.navigator.vibrate(10); // Light, short tap
+      }
+    } catch (e) {
+      console.warn('Haptics tap failed:', e);
     }
   }
 
   public success() {
-    if (this.isSupported()) {
-      navigator.vibrate([10, 50, 10]); // Double pulse
+    try {
+      if (this.isSupported()) {
+        window.navigator.vibrate([10, 50, 10]); // Double pulse
+      }
+    } catch (e) {
+      console.warn('Haptics success failed:', e);
     }
   }
 
   public warning() {
-    if (this.isSupported()) {
-      navigator.vibrate(50); // Longer single pulse
+    try {
+      if (this.isSupported()) {
+        window.navigator.vibrate(50); // Longer single pulse
+      }
+    } catch (e) {
+      console.warn('Haptics warning failed:', e);
     }
   }
 }
