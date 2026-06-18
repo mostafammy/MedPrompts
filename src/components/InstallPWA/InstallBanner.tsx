@@ -5,10 +5,15 @@ import * as Icons from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptics } from '@/lib/haptics';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export function InstallBanner() {
   const [isVisible, setIsVisible] = useState(false);
   const [platform, setPlatform] = useState<'ios' | 'android' | null>(null);
-  const deferredPromptRef = useRef<any>(null);
+  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     // 1. Check if dismissed before
@@ -20,7 +25,7 @@ export function InstallBanner() {
     // 2. Check if already in standalone mode (installed)
     const isStandalone = 
       window.matchMedia('(display-mode: standalone)').matches || 
-      (window.navigator as any).standalone === true;
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
     
     if (isStandalone) {
       return;
@@ -29,18 +34,21 @@ export function InstallBanner() {
     // 3. Detect platform
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOS = /iphone|ipad|ipod/.test(userAgent);
-    const isAndroid = /android/.test(userAgent);
 
     if (isIOS) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlatform('ios');
       // Show iOS banner immediately on mobile Safari
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(true);
     } else {
       // Listen for the Chrome/Android install prompt
       const handleBeforeInstallPrompt = (e: Event) => {
         e.preventDefault();
-        deferredPromptRef.current = e;
+        deferredPromptRef.current = e as BeforeInstallPromptEvent;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPlatform('android');
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsVisible(true);
       };
 
@@ -101,7 +109,7 @@ export function InstallBanner() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-normal">
               {platform === 'ios' ? (
                 <span>
-                  Tap Share <Icons.Share className="inline w-3 h-3 mx-0.5 text-zinc-500" /> then <strong>"Add to Home Screen"</strong>
+                  Tap Share <Icons.Share className="inline w-3 h-3 mx-0.5 text-zinc-500" /> then <strong>&ldquo;Add to Home Screen&rdquo;</strong>
                 </span>
               ) : (
                 'Access app offline and directly from your home screen'
