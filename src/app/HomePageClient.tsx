@@ -24,7 +24,7 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
     const params = new URLSearchParams(window.location.search);
     const subject = params.get('subject');
     if (subject) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setSelectedId(subject as SubjectId);
     }
   }, []);
