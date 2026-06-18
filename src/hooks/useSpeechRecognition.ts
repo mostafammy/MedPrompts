@@ -52,7 +52,7 @@ export function useSpeechRecognition({ onFinalSpeech, lang = 'en-US' }: UseSpeec
     const win = typeof window !== 'undefined' ? (window as unknown as SpeechRecognitionWindow) : null;
     const SpeechRecognition = win?.SpeechRecognition || win?.webkitSpeechRecognition;
     
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     setIsSupported(!!SpeechRecognition);
   }, []);
 
