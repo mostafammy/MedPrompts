@@ -53,25 +53,14 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
   const selectedId = serverSelectedId || null;
 
   const renderCard = (subject: Subject, isSelected: boolean) => {
-    const cardElement = (
+    return (
       <SubjectCard
         id={subject.id as SubjectId}
         label={subject.label}
         icon={subject.icon}
         isSelected={isSelected}
+        onSelect={() => onSelect?.(subject.id)}
       />
-    );
-
-    return (
-      <button 
-        type="button"
-        onClick={() => {
-          if (onSelect) onSelect(subject.id);
-        }}
-        className="block w-full text-left appearance-none bg-transparent border-none p-0 m-0 outline-none cursor-pointer"
-      >
-        {cardElement}
-      </button>
     );
   };
 
