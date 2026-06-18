@@ -70,7 +70,7 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId, onSe
         label={subject.label}
         icon={subject.icon}
         isSelected={isSelected}
-        onClick={onSelect ? () => onSelect(subject.id) : undefined}
+        {...(onSelect ? { onClick: () => onSelect(subject.id) } : {})}
       />
     );
 
