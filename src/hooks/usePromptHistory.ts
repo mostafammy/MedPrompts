@@ -71,6 +71,21 @@ export function usePromptHistory() {
     });
   }, []);
 
+  const restoreHistoryItem = useCallback((item: SavedPromptItem) => {
+    setHistory(prev => {
+      const exists = prev.some(p => p.id === item.id);
+      if (exists) return prev;
+      
+      const updated = [item, ...prev].sort((a, b) => b.timestamp - a.timestamp).slice(0, MAX_HISTORY);
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to restore history item:', e);
+      }
+      return updated;
+    });
+  }, []);
+
   const clearHistory = useCallback(() => {
     setHistory([]);
     try {
@@ -118,6 +133,21 @@ export function usePromptHistory() {
     });
   }, []);
 
+  const restoreBookmark = useCallback((item: SavedPromptItem) => {
+    setBookmarks(prev => {
+      const exists = prev.some(p => p.id === item.id);
+      if (exists) return prev;
+      
+      const updated = [item, ...prev].sort((a, b) => b.timestamp - a.timestamp);
+      try {
+        localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to restore bookmark:', e);
+      }
+      return updated;
+    });
+  }, []);
+
   const isBookmarked = useCallback((subject: string, topic: string) => {
     const id = `${subject.toLowerCase()}:${topic.toLowerCase()}`;
     return bookmarks.some(item => item.id === id);
@@ -129,9 +159,11 @@ export function usePromptHistory() {
     isLoaded,
     addHistoryItem,
     removeHistoryItem,
+    restoreHistoryItem,
     clearHistory,
     toggleBookmark,
     removeBookmark,
+    restoreBookmark,
     isBookmarked,
   };
 }
