@@ -23,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} antialiased h-full dark:bg-zinc-950`}>
+    <html lang="en" className={`${inter.variable} antialiased h-full dark:bg-zinc-950`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
