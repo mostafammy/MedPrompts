@@ -22,10 +22,6 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
     const typedId = id as SubjectId;
     const next = selectedId === typedId ? null : typedId;
     setSelectedId(next);
-    
-    // Soft URL update — no navigation, no RSC, just bookmarkability
-    const url = next ? `/?subject=${encodeURIComponent(next)}` : '/';
-    window.history.replaceState(null, '', url);
   }, [selectedId]);
 
   if (subjects.length === 0) {
