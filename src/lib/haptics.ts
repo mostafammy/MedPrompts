@@ -8,7 +8,7 @@ class HapticEngine {
         typeof window.navigator !== 'undefined' &&
         'vibrate' in window.navigator
       );
-    } catch (e) {
+    } catch {
       return false;
     }
   }
