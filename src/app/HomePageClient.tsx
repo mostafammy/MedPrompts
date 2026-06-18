@@ -14,7 +14,7 @@ import { soundEngine } from '@/lib/audio';
 
 export function HomePageClient({ subjects }: { subjects: Subject[] }) {
   const [selectedId, setSelectedId] = useState<SubjectId | null>(null);
-  const { history, bookmarks, isLoaded, removeHistoryItem, removeBookmark, toggleBookmark, isBookmarked } = usePromptHistory();
+  const { history, bookmarks, isLoaded, removeHistoryItem, restoreHistoryItem, removeBookmark, restoreBookmark, toggleBookmark, isBookmarked } = usePromptHistory();
   const [activeTab, setActiveTab] = useState<'saved' | 'recent'>('saved');
   const [mounted, setMounted] = useState(false);
 
@@ -117,7 +117,12 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
                     key={item.id}
                     onSwipeLeft={() => {
                       removeBookmark(item.id);
-                      toast.success('Removed bookmark');
+                      toast.success('Removed bookmark', {
+                        action: {
+                          label: 'Undo',
+                          onClick: () => restoreBookmark(item)
+                        }
+                      });
                     }}
                     leftActionComponent={
                       <div className="flex flex-col items-center">
@@ -146,7 +151,12 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
                               haptics.warning();
                               soundEngine.playSwoop();
                               removeBookmark(item.id);
-                              toast.success('Removed bookmark');
+                              toast.success('Removed bookmark', {
+                                action: {
+                                  label: 'Undo',
+                                  onClick: () => restoreBookmark(item)
+                                }
+                              });
                             }}
                             aria-label="Delete bookmark"
                             className="text-zinc-400 hover:text-red-500 dark:hover:text-red-400 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-805 transition-colors cursor-pointer"
@@ -190,7 +200,12 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
                       key={item.id}
                       onSwipeLeft={() => {
                         removeHistoryItem(item.id);
-                        toast.success('Removed from history');
+                        toast.success('Removed from history', {
+                          action: {
+                            label: 'Undo',
+                            onClick: () => restoreHistoryItem(item)
+                          }
+                        });
                       }}
                       onSwipeRight={() => {
                         toggleBookmark(item);
@@ -229,6 +244,12 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
                                 haptics.warning();
                                 soundEngine.playSwoop();
                                 removeHistoryItem(item.id);
+                                toast.success('Removed from history', {
+                                  action: {
+                                    label: 'Undo',
+                                    onClick: () => restoreHistoryItem(item)
+                                  }
+                                });
                               }}
                               aria-label="Delete history item"
                               className="text-zinc-400 hover:text-red-500 dark:hover:text-red-400 p-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
