@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, useAnimation, PanInfo } from 'framer-motion';
+import { motion, useAnimation, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import { haptics } from '@/lib/haptics';
 import { soundEngine } from '@/lib/audio';
@@ -24,7 +24,12 @@ export function SwipeableItem({
   swipeThreshold = 100,
 }: SwipeableItemProps) {
   const controls = useAnimation();
+  const x = useMotionValue(0);
   const [isSwiping, setIsSwiping] = useState(false);
+
+  // Background opacities based on drag direction
+  const leftBgOpacity = useTransform(x, [-50, 0], [1, 0]);
+  const rightBgOpacity = useTransform(x, [0, 50], [0, 1]);
 
   const handleDragEnd = async (
     event: MouseEvent | TouchEvent | PointerEvent,
@@ -61,16 +66,22 @@ export function SwipeableItem({
     <div className="relative w-full overflow-hidden rounded-2xl group">
       {/* Background layer for Swipe Left (Delete) */}
       {onSwipeLeft && (
-        <div className="absolute inset-0 bg-red-500 flex justify-end items-center px-6 rounded-2xl">
+        <motion.div
+          style={{ opacity: leftBgOpacity }}
+          className="absolute inset-0 bg-red-500 flex justify-end items-center px-6 rounded-2xl"
+        >
           {leftActionComponent || <Icons.Trash2 className="w-6 h-6 text-white" />}
-        </div>
+        </motion.div>
       )}
 
       {/* Background layer for Swipe Right (Bookmark/Action) */}
       {onSwipeRight && (
-        <div className="absolute inset-0 bg-blue-500 flex justify-start items-center px-6 rounded-2xl">
+        <motion.div
+          style={{ opacity: rightBgOpacity }}
+          className="absolute inset-0 bg-blue-500 flex justify-start items-center px-6 rounded-2xl"
+        >
           {rightActionComponent || <Icons.Star className="w-6 h-6 text-white" />}
-        </div>
+        </motion.div>
       )}
 
       {/* The Swipable Content Layer */}
@@ -83,7 +94,7 @@ export function SwipeableItem({
         onDragEnd={handleDragEnd}
         animate={controls}
         // Tailwind classes shouldn't override the style transforms applied by motion
-        style={{ touchAction: 'pan-y' }}
+        style={{ x, touchAction: 'pan-y' }}
         whileTap={{ cursor: 'grabbing' }}
       >
         <div className={`pointer-events-${isSwiping ? 'none' : 'auto'} w-full h-full bg-transparent`}>
