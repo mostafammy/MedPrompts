@@ -20,9 +20,8 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
 
   const handleSelect = useCallback((id: string) => {
     const typedId = id as SubjectId;
-    const next = selectedId === typedId ? null : typedId;
-    setSelectedId(next);
-  }, [selectedId]);
+    setSelectedId(prev => prev === typedId ? null : typedId);
+  }, []);
 
   if (subjects.length === 0) {
     return (
