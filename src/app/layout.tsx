@@ -5,6 +5,7 @@ import { SkipToContent } from "@/components/ui/SkipToContent";
 import { Toaster } from "sonner";
 import { InstallBanner } from "@/components/InstallPWA/InstallBanner";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,6 +50,7 @@ export default function RootLayout({
         </main>
         <Toaster position="top-center" theme="system" richColors closeButton />
         <InstallBanner />
+        <ConnectionStatus />
       </body>
     </html>
   );
