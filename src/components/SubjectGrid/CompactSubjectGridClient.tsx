@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { Subject } from './SubjectGridClient';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
@@ -17,13 +17,11 @@ export interface CompactSubjectGridClientProps {
 
 export function CompactSubjectGridClient({ subjects, selectedId: serverSelectedId }: CompactSubjectGridClientProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const segments = pathname.split('/').filter(Boolean);
-  const clientSelectedId = searchParams.get('subject') || serverSelectedId || null;
-  const selectedId = clientSelectedId;
+  const selectedId = serverSelectedId || null;
 
   const getHref = (id: string) => {
     const isTopicPage = segments.length >= 2;

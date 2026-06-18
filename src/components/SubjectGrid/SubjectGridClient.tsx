@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 
@@ -45,7 +45,6 @@ const itemVariants: Variants = {
 
 export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: SubjectGridClientProps) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -54,8 +53,7 @@ export function SubjectGridClient({ subjects, selectedId: serverSelectedId }: Su
   }, []);
 
   const segments = pathname.split('/').filter(Boolean);
-  const clientSelectedId = searchParams.get('subject') || serverSelectedId || null;
-  const selectedId = clientSelectedId;
+  const selectedId = serverSelectedId || null;
 
   const getHref = (id: string) => {
     const isTopicPage = segments.length >= 2;
