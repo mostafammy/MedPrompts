@@ -1,27 +1,17 @@
 'use client';
 
-import React, { useTransition, useState, useEffect } from 'react';
+import React, { useTransition } from 'react';
 import { SubjectId } from '@/lib/types/branded';
 import { TopicInput } from '@/components/TopicInput/TopicInput';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { slugifyTopic } from '@/lib/prompts/slugifier';
 import { motion } from 'framer-motion';
 
 export function GenerateContainer({ subjectId: serverSubjectId }: { subjectId: SubjectId | null }) {
   const router = useRouter();
-  const [clientSubjectId, setClientSubjectId] = useState<SubjectId | null>(serverSubjectId);
+  const searchParams = useSearchParams();
+  const clientSubjectId = (searchParams.get('subject') as SubjectId) || serverSubjectId;
   const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    const syncUrl = () => {
-      const params = new URLSearchParams(window.location.search);
-      setClientSubjectId((params.get('subject') as SubjectId) || serverSubjectId);
-    };
-    
-    syncUrl(); // Sync on mount
-    window.addEventListener('popstate', syncUrl);
-    return () => window.removeEventListener('popstate', syncUrl);
-  }, [serverSubjectId]);
 
   const handleGenerate = (topic: string) => {
     if (!clientSubjectId) return;

@@ -64,7 +64,9 @@ export default async function HomePage(props: { searchParams: Promise<{ subject?
               </h2>
             </div>
           )}
-          <GenerateContainer subjectId={subjectId} />
+          <Suspense fallback={null}>
+            <GenerateContainer subjectId={subjectId} />
+          </Suspense>
         </section>
       </div>
     </div>

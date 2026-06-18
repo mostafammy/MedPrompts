@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Subject } from './SubjectGridClient';
 import { SubjectCard } from './SubjectCard';
 import { SubjectId } from '@/lib/types/branded';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from 'lucide-react';
@@ -17,34 +17,18 @@ export interface CompactSubjectGridClientProps {
 
 export function CompactSubjectGridClient({ subjects, selectedId: serverSelectedId }: CompactSubjectGridClientProps) {
   const pathname = usePathname();
-  const [clientSelectedId, setClientSelectedId] = useState<string | null>(serverSelectedId || null);
+  const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const syncUrl = () => {
-      const params = new URLSearchParams(window.location.search);
-      setClientSelectedId(params.get('subject') || serverSelectedId || null);
-    };
-    syncUrl();
-    window.addEventListener('popstate', syncUrl);
-    return () => window.removeEventListener('popstate', syncUrl);
-  }, [serverSelectedId]);
-
   const segments = pathname.split('/').filter(Boolean);
+  const clientSelectedId = searchParams.get('subject') || serverSelectedId || null;
   const selectedId = clientSelectedId;
 
   const getHref = (id: string) => {
     const isTopicPage = segments.length >= 2;
     const targetPathname = isTopicPage ? '/' : pathname;
     return targetPathname + '?subject=' + encodeURIComponent(id);
-  };
-
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault();
-    window.history.pushState(null, '', href);
-    window.dispatchEvent(new Event('popstate'));
-    setIsOpen(false);
   };
 
   return (
@@ -108,12 +92,12 @@ export function CompactSubjectGridClient({ subjects, selectedId: serverSelectedI
                 const isSelected = selectedId === subject.id;
                 const href = getHref(subject.id);
                 return (
-                  <a
+                  <Link
                     key={subject.id}
                     href={href}
-                    onClick={(e) => handleClick(e, href)}
+                    scroll={false}
                     className="block no-underline outline-none rounded-3xl focus:ring-2 focus:ring-blue-500"
-                    role="menuitem"
+                    onClick={() => setIsOpen(false)}
                   >
                     <SubjectCard
                       id={subject.id as SubjectId}
@@ -121,7 +105,7 @@ export function CompactSubjectGridClient({ subjects, selectedId: serverSelectedI
                       icon={subject.icon}
                       isSelected={isSelected}
                     />
-                  </a>
+                  </Link>
                 );
               })}
             </div>
