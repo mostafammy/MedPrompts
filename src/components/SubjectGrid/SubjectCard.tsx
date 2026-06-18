@@ -143,11 +143,19 @@ export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCa
     <motion.div
       whileHover={{ scale: theme.hoverScale }}
       whileTap={{ scale: 0.97 }}
-      onTap={() => haptics.tap()}
-      onClick={onSelect}
+      onClick={() => {
+        haptics.tap();
+        onSelect?.();
+      }}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect?.(); } }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          haptics.tap();
+          onSelect?.();
+        }
+      }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
