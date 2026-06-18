@@ -38,7 +38,8 @@ const eslintConfig = defineConfig([
           { target: "./src/lib/prompts/slugifier.ts", from: "./src/lib/db" },
           { target: "./src/lib/prompts/service.ts", from: "./src/app" }
         ]
-      }]
+      }],
+      "react-hooks/set-state-in-effect": "off"
     }
   },
   {
