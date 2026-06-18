@@ -54,6 +54,7 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
 
   useEffect(() => {
     if (isListening && transcript) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setInputValue(transcript);
     }
   }, [transcript, isListening]);
