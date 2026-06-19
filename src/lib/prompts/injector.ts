@@ -76,7 +76,7 @@ export function injectVariables(
   });
 
   // Broad regex to catch placeholders the uppercase-only regex missed (e.g., {{lowercase_var}} or {{123}})
-  const unresolved = output.match(/\{\{([A-Za-z0-9_]+)\}\}/);
+  const unresolved = output.match(/\{\{\s*([A-Za-z0-9_]+)\s*\}\}/);
   if (unresolved) {
     return err({
       code: 'UNRESOLVED_PLACEHOLDER',
