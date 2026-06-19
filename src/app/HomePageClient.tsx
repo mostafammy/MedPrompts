@@ -29,6 +29,14 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
     }
   }, []);
 
+  // Dispatch custom event when selected subject changes to update ambient background
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('medprompts-subject-change', { detail: selectedId });
+      window.dispatchEvent(event);
+    }
+  }, [selectedId]);
+
   const handleSelect = useCallback((id: string) => {
     const typedId = id as SubjectId;
     setSelectedId(prev => prev === typedId ? null : typedId);
