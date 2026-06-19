@@ -1,75 +1,171 @@
-# Implementation Plan: Socratic Interactive Tutor Prompts
+# Implementation Plan: Socratic Interactive Tutor Prompts (Exact Runbook)
 
 **Branch**: `004-interactive-tutor-prompt` | **Date**: 2026-06-18 | **Spec**: [spec.md](file:///C:/Users/dell/Documents/MostafaYaser%20Website/medprompts.mostafayaser.earth/specs/004-interactive-tutor-prompt/spec.md)
-**Input**: Feature specification from `/specs/004-interactive-tutor-prompt/spec.md`
 
-## Summary
+## 1. Executive Summary
 
-The current application generates prompts using a rigid, one-shot architecture built entirely around replacing a single `{{TOPIC}}` variable. To support the new **Socratic Interactive Tutor**, which utilizes a highly structured 4-phase pedagogical pipeline with language localization and analogy customization, we must upgrade the prompt generation engine into a multi-variable templating system.
+This is the exact, file-by-file technical runbook to transition the prompt engine from a static one-shot `{{TOPIC}}` generator to a multi-variable engine capable of rendering the **Medical Tutor Master Prompt Template (v2.0)**. 
 
-**High-Level Architecture Changes:**
-1. **Data Layer**: Modify the SQLite (`prompt_templates`) schema to persist `variables` (JSON array of required variables) and an `is_interactive` (boolean) flag.
-2. **Core Logic**: Refactor `injector.ts` to execute a global Regex replacement over a dictionary of user-supplied variables instead of a static `replace('{{TOPIC}}')`. Update `evaluator.ts` to bypass strict markdown header requirements if `is_interactive` is true. Update `cache.ts` key generation to hash the additional variables.
-3. **API & Transport**: Update the `/api/generate` contract to accept an arbitrary `Record<string, string>` map of variables.
-4. **Frontend UI**: Update `GenerateContainer.tsx` to dynamically render input fields or dropdowns mapping to the template's required variables before executing the generation request.
+Because generation occurs Server-Side in `src/app/[subject]/[topic]/page.tsx`, we must pass user configurations via URL `searchParams`.
 
-## Technical Context
+---
 
-**Language/Version**: TypeScript / Next.js 16+
-**Primary Dependencies**: React, Next.js App Router, Drizzle ORM, @libsql/client
-**Storage**: `local.db` (SQLite for local dev) + Turso (production)
-**Testing**: Vitest for unit testing core logic (`injector.ts`, `evaluator.ts`), Playwright for E2E.
-**Target Platform**: Web & Cloudflare Workers (Edge execution via `opennextjs-cloudflare`)
-**Performance Goals**: Core variable injection logic (`injector.ts`) must remain under < 50ms execution time, despite the switch to global Regex mapping.
-**Constraints**: 
-- **Backwards Compatibility**: Must not break existing single-variable `{{TOPIC}}` templates in the DB.
-- **Cache Integrity**: Must prevent cross-variable cache collisions (e.g. Spanish vs German prompt on the same topic must result in different cache keys).
-**Scale/Scope**: End-to-End slice spanning DB migration, backend core, edge API route, and frontend UI components.
+## 2. File-by-File Implementation Guide
 
-## Constitution Check
+### Step 1: Database Schema Migration
+**File**: `src/lib/db/schema.ts`
+We must add metadata columns so the application knows which templates are interactive.
+
+```typescript
+// Add these to `promptTemplates` table:
+isInteractive: integer('is_interactive', { mode: 'boolean' }).notNull().default(false),
+requiredVariables: text('required_variables', { mode: 'json' }).$type<string[]>(),
+```
+*Run `npx drizzle-kit generate` and `npx drizzle-kit push`.*
+
+### Step 2: Injector Refactor
+**File**: `src/lib/prompts/injector.ts`
+Currently, `injectTopic` uses `template.split('{{TOPIC}}')`. We rewrite it to accept a dictionary.
+
+```typescript
+export function injectVariables(template: string, variables: Record<string, string>): Result<InjectionSuccess, InjectionError> {
+  if (template.trim() === '') return err({ code: 'TEMPLATE_EMPTY', message: 'Template cannot be empty' });
+
+  let matchCount = 0;
+  const output = template.replace(/\{\{([A-Z_]+)\}\}/g, (match, key) => {
+    if (variables[key] !== undefined) {
+      matchCount++;
+      return variables[key];
+    }
+    return match; // Leave unreplaced if missing
+  });
+
+  const characterCount = output.length;
+  const wordCount = output.trim().split(/\s+/).filter(Boolean).length;
+  return ok({ output, placeholderCount: matchCount, wordCount, characterCount });
+}
+```
+
+### Step 3: Evaluator Bypass
+**File**: `src/lib/prompts/evaluator.ts`
+The interactive prompt has no Markdown headers (`##`) or medical disclaimers (`⚠️ Verify`).
+
+```typescript
+// Add isInteractive parameter
+export function validateTemplate(template: string, isInteractive: boolean = false): Result<void, TemplateValidationError[]> {
+  const errors: TemplateValidationError[] = [];
+  
+  if (!isInteractive) {
+    const headerMatches = template.match(/^##\s+/gm) || [];
+    if (headerMatches.length < 3) errors.push({ code: 'MISSING_SECTIONS', ... });
+
+    const hasDisclaimer = /⚠️\s*Verify/i.test(template) || /verify/i.test(template);
+    if (!hasDisclaimer) errors.push({ code: 'MISSING_DISCLAIMER', ... });
+  }
+
+  // Common checks remain:
+  const wordCount = template.split(/\s+/).filter(Boolean).length;
+  // ...
+```
+
+### Step 4: Engine Refactor & Deterministic Caching
+**File**: `src/lib/prompts/engine.ts`
+Modify `generatePrompt` to accept `variables` and hash them for the cache key.
+
+```typescript
+async generatePrompt(subjectId: SubjectId, topic: string, variables: Record<string, string> = {}, env: EngineEnv) {
+  // Sort variables to ensure deterministic cache keys
+  const sortedVars = Object.keys(variables).sort().map(k => `${k}=${variables[k]}`).join('&');
+  const cacheKey = slugifyTopic(`${topic}-${sortedVars}`);
+
+  const cached = await this.promptCache.get(subjectId, cacheKey);
+  // ... cache logic ...
+
+  // Pass template.isInteractive to validateTemplate
+  const validationResult = validateTemplate(template.template, template.isInteractive);
+
+  // Inject variables instead of injectTopic
+  const injectionResult = injectVariables(template.template, {
+    TOPIC: safeTopic,
+    SUBJECT: subjectId.charAt(0).toUpperCase() + subjectId.slice(1),
+    ...variables
+  });
+  
+  // Save using the new cacheKey
+  await this.promptCache.set(subjectId, cacheKey, finalPrompt, 2592000);
+}
+```
+
+### Step 5: Frontend Router Updates
+**File**: `src/app/GenerateContainer.tsx`
+Add UI controls for the new variables and encode them into the URL as search parameters.
+
+```tsx
+const [language, setLanguage] = useState("German");
+const [analogy, setAnalogy] = useState("Cooking and Culinary Arts");
+const [cycles, setCycles] = useState("2");
+
+const handleGenerate = (topic: string) => {
+  if (!subjectId) return;
+  const slug = slugifyTopic(topic);
+  
+  const params = new URLSearchParams();
+  params.set('lang', language);
+  params.set('analogy', analogy);
+  params.set('cycles', cycles);
+
+  startTransition(() => {
+    router.push(`/${subjectId}/${slug}?${params.toString()}`);
+  });
+};
+```
+
+### Step 6: Server Component Execution
+**File**: `src/app/[subject]/[topic]/page.tsx`
+Read the `searchParams` and pass them into the `engine.generatePrompt()` call.
+
+```tsx
+interface PageProps {
+  params: Promise<{ subject: string; topic: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function TopicPage(props: PageProps) {
+  const { subject, topic } = await props.params;
+  const searchParams = await props.searchParams;
+
+  const variables = {
+    OUTPUT_LANGUAGE: (searchParams.lang as string) || 'German',
+    ANALOGY_DOMAIN: (searchParams.analogy as string) || 'Cooking and Culinary Arts',
+    MAX_REMEDIATION_CYCLES: (searchParams.cycles as string) || '2',
+    // We can infer TERMINOLOGY_STANDARD here based on the subject, or pass it directly.
+    TERMINOLOGY_STANDARD: getTerminologyForSubject(subject as SubjectId),
+  };
+
+  const result = await engine.generatePrompt(subjectId, topicName, variables, env);
+  // ... rest of rendering logic ...
+}
+```
+
+### Step 7: API Route Updates (External Access)
+**File**: `src/app/api/generate/route.ts`
+Ensure the REST API remains in sync with the core engine updates.
+
+```typescript
+const GenerateRequestSchema = z.object({
+  subjectId: z.string(),
+  topic: z.string(),
+  variables: z.record(z.string()).optional(),
+});
+// Inside POST handler:
+const result = await e.generatePrompt(subjectId, topic, parsed.data.variables || {}, env);
+```
+
+---
+
+## 3. Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- **Test-First Principle**: Unit tests for `injector.ts` and `evaluator.ts` will need to be written before implementing the multi-variable regex logic. 
-- **No violations detected.**
-
-## Project Structure
-
-### Documentation (this feature)
-
-```text
-specs/004-interactive-tutor-prompt/
-├── plan.md              # Detailed implementation roadmap (this file)
-├── research.md          # Explains regex and cache design decisions
-├── data-model.md        # Outlines Drizzle ORM schema modifications
-├── quickstart.md        # Dev-testing guide
-├── contracts/
-│   └── api.md           # API payload modifications
-└── tasks.md             # Ordered task breakdown (generated in next phase)
-```
-
-### Source Code (repository root)
-
-```text
-src/
-├── app/
-│   ├── api/generate/route.ts        # Updates to payload parsing and engine args
-│   ├── [subject]/[topic]/page.tsx   # Passes available template variables down to container
-│   └── GenerateContainer.tsx        # UI updates: dynamic dropdowns/inputs for Language/Analogy
-├── lib/
-│   ├── db/schema.ts                 # Adds `variables` (json) and `is_interactive` (boolean)
-│   └── prompts/
-│       ├── engine.ts                # Updates caching keys to include variable hashes
-│       ├── evaluator.ts             # Adds conditional bypass for strict format rules
-│       └── injector.ts              # Upgraded to multi-variable Regex replacement
-drizzle/                             # New migration files will be generated here
-```
-
-**Structure Decision**: Utilizing the existing standard Next.js App Router Monolith architecture. Logic stays decoupled in `/src/lib/prompts/` to ensure clean testing boundaries outside of Next.js contexts.
-
-## Complexity Tracking
-
-| Violation / Complexity | Why Needed | Simpler Alternative Rejected Because |
-|------------------------|------------|--------------------------------------|
-| **DB Schema Migration** | Need to inform the UI which dropdowns to render dynamically based on the selected prompt. | Hardcoding variables into the UI logic was rejected because it violates data-driven UI principles and makes future prompt expansions require code changes. |
-| **Regex Parsing over `replace`** | Required to support $N$ arbitrary variables (e.g. `{{LANGUAGE}}`, `{{ANALOGY}}`) dynamically. | Hardcoding `.replace('{{LANGUAGE}}').replace('{{ANALOGY}}')` was rejected because it doesn't scale for future arbitrary prompt variables. |
+- **Test-First Principle**: Unit tests for `injector.ts` and `evaluator.ts` must be updated to cover `injectVariables` and `isInteractive = true` scenarios before applying this code.
+- **Architectural Check**: Routing variables through `searchParams` correctly respects Next.js Server Components architecture, avoiding unnecessary client-side data fetching.
