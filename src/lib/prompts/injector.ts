@@ -56,7 +56,7 @@ export function injectVariables(
   }
 
   const placeholders = Array.from(template.matchAll(/\{\{([A-Z][A-Z0-9_]*)\}\}/g)).map(
-    (match) => match[1]
+    (match) => match[1]!
   );
 
   for (const placeholder of placeholders) {
@@ -72,15 +72,16 @@ export function injectVariables(
   let matchCount = 0;
   const output = template.replace(/\{\{([A-Z][A-Z0-9_]*)\}\}/g, (_match, key: string) => {
     matchCount++;
-    return variables[key];
+    return variables[key]!;
   });
 
-  const unresolved = output.match(/\{\{([A-Z][A-Z0-9_]*)\}\}/);
+  // Broad regex to catch placeholders the uppercase-only regex missed (e.g., {{lowercase_var}} or {{123}})
+  const unresolved = output.match(/\{\{([A-Za-z0-9_]+)\}\}/);
   if (unresolved) {
     return err({
       code: 'UNRESOLVED_PLACEHOLDER',
-      placeholder: unresolved[1],
-      message: `Unresolved placeholder {{${unresolved[1]}}}`,
+      placeholder: unresolved[1]!,
+      message: `Unresolved placeholder {{${unresolved[1]!}}}`,
     });
   }
 

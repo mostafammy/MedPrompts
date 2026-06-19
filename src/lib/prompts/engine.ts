@@ -23,6 +23,7 @@ export type EngineError =
   | { code: 'TOPIC_INVALID'; details: string }
   | { code: 'SUBJECT_NOT_FOUND' }
   | { code: 'VARIABLE_INVALID'; details: string }
+  | { code: 'GENERATION_FAILED'; details: string }
   | GenerateError;
 
 export class PromptEngine {
@@ -45,46 +46,49 @@ export class PromptEngine {
     submittedVariables: Record<string, string> = {},
     env: EngineEnv
   ): Promise<Result<string, EngineError>> {
-    const normalized = await this.pipeline.normalize(topic, {
-      subjectId,
-      raw: topic,
-    }, env);
+    try {
+      const normalized = await this.pipeline.normalize(topic, {
+        subjectId,
+        raw: topic,
+      }, env);
 
-    const sanitizedResult = sanitizeTopic(normalized.cleaned);
-    if (!sanitizedResult.ok) {
-      return err({ code: 'TOPIC_INVALID', details: sanitizedResult.error.code });
+      const sanitizedResult = sanitizeTopic(normalized.cleaned);
+      if (!sanitizedResult.ok) {
+        return err({ code: 'TOPIC_INVALID', details: sanitizedResult.error.code });
+      }
+      const safeTopic = sanitizedResult.value;
+      const topicSlug = slugifyTopic(safeTopic);
+
+      const template = await getActiveTemplate(this.db, subjectId);
+      if (!template) {
+        return err({ code: 'SUBJECT_NOT_FOUND' });
+      }
+
+      const variableDefinitions = template.requiredVariables ?? [];
+      const resolvedVariables = resolveTemplateVariables(variableDefinitions, submittedVariables);
+      if (!resolvedVariables.ok) {
+        return err({ code: 'VARIABLE_INVALID', details: resolvedVariables.error.message });
+      }
+
+      const result = await this.generator.generate({
+        subjectId,
+        topic: safeTopic,
+        topicSlug,
+        variables: {
+          TOPIC: safeTopic,
+          TERMINOLOGY_STANDARD: terminologyStandardForSubject(subjectId),
+          ...resolvedVariables.value,
+        },
+        rawTemplate: template.template,
+        templateVersion: template.version,
+        isInteractive: template.isInteractive ?? false,
+      });
+
+      return result.ok
+        ? ok(result.value.output)
+        : err(result.error);
+    } catch (e) {
+      return err({ code: 'GENERATION_FAILED', details: (e as Error).message });
     }
-    const safeTopic = sanitizedResult.value;
-    const topicSlug = slugifyTopic(safeTopic);
-
-    const template = await getActiveTemplate(this.db, subjectId);
-    if (!template) {
-      return err({ code: 'SUBJECT_NOT_FOUND' });
-    }
-
-    const variableDefinitions = template.requiredVariables ?? [];
-    const resolvedVariables = resolveTemplateVariables(variableDefinitions, submittedVariables);
-    if (!resolvedVariables.ok) {
-      return err({ code: 'VARIABLE_INVALID', details: resolvedVariables.error.message });
-    }
-
-    const result = await this.generator.generate({
-      subjectId,
-      topic: safeTopic,
-      topicSlug,
-      variables: {
-        SUBJECT: subjectId,
-        TOPIC: safeTopic,
-        TERMINOLOGY_STANDARD: terminologyStandardForSubject(subjectId),
-        ...resolvedVariables.value,
-      },
-      rawTemplate: template.template,
-      templateVersion: template.version,
-      isInteractive: template.isInteractive ?? false,
-    });
-
-    return result.ok
-      ? ok(result.value.output)
-      : err(result.error);
   }
 }

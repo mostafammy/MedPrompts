@@ -43,10 +43,10 @@ export function FloatingActionBar({ isVisible, subject, children }: FloatingActi
           <div 
             className={`
               pointer-events-auto
-              bg-white/40 dark:bg-zinc-950/45 
+              bg-white/45 dark:bg-zinc-950/50 
               backdrop-blur-2xl saturate-150
-              border shadow-2xl rounded-full p-2
-              flex items-center gap-1 w-full max-w-sm justify-around 
+              border shadow-2xl rounded-full p-2.5 px-4
+              flex items-center gap-3.5 w-full max-w-md justify-around 
               relative overflow-hidden transition-all duration-500
               ${getSubjectGlow(subject)}
             `}

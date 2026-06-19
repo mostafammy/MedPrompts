@@ -101,44 +101,25 @@ export function TTSPlayer({ text, compact = false }: TTSPlayerProps) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-1">
-        {!isPlaying ? (
-          <button
-            onClick={startSpeech}
-            aria-label="Read prompt aloud"
-            className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-850 text-zinc-550 dark:text-zinc-400 active:scale-95 cursor-pointer flex items-center justify-center transition-colors duration-200"
-          >
-            <Icons.Volume2 className="w-5 h-5 text-zinc-400 dark:text-zinc-550 hover:text-blue-500 dark:hover:text-blue-400" />
-          </button>
+      <button
+        onClick={isPlaying ? (isPaused ? resumeSpeech : pauseSpeech) : startSpeech}
+        onDoubleClick={isPlaying ? stopSpeech : undefined}
+        aria-label={isPlaying ? (isPaused ? "Resume reading" : "Pause reading") : "Read prompt aloud"}
+        className={`p-2.5 rounded-full transition-all duration-300 w-11 h-11 flex items-center justify-center cursor-pointer active:scale-90
+          ${isPlaying && !isPaused 
+            ? 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 dark:text-blue-400 border border-blue-500/20 shadow-sm' 
+            : 'hover:bg-zinc-150 dark:hover:bg-zinc-800 text-zinc-550 dark:text-zinc-400'
+          }
+        `}
+      >
+        {isPlaying && !isPaused ? (
+          <Icons.Pause className="w-5 h-5 animate-pulse" />
+        ) : isPaused ? (
+          <Icons.Play className="w-5 h-5 text-blue-500 animate-pulse" />
         ) : (
-          <div className="flex items-center gap-1 bg-blue-500/10 dark:bg-blue-400/10 rounded-full p-0.5 border border-blue-500/20">
-            {isPaused ? (
-              <button
-                onClick={resumeSpeech}
-                aria-label="Resume speech"
-                className="p-1.5 rounded-full hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 cursor-pointer"
-              >
-                <Icons.Play className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={pauseSpeech}
-                aria-label="Pause speech"
-                className="p-1.5 rounded-full hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 cursor-pointer"
-              >
-                <Icons.Pause className="w-4 h-4 animate-pulse" />
-              </button>
-            )}
-            <button
-              onClick={stopSpeech}
-              aria-label="Stop reading"
-              className="p-1.5 rounded-full hover:bg-red-500/20 text-red-500 dark:text-red-400 cursor-pointer"
-            >
-              <Icons.Square className="w-3.5 h-3.5 fill-current" />
-            </button>
-          </div>
+          <Icons.Volume2 className="w-5 h-5" />
         )}
-      </div>
+      </button>
     );
   }
 

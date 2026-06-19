@@ -6,6 +6,8 @@ import React, { useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 import { haptics } from '@/lib/haptics';
+import { soundEngine } from '@/lib/audio';
+import { toast } from 'sonner';
 
 export interface SubjectCardProps {
   id: SubjectId;
@@ -129,9 +131,9 @@ export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCa
       const diffBeta = orientation.beta - baselineBeta;
       const diffGamma = orientation.gamma;
 
-      // Adjust multiplier for sensitivity and clamp values
-      const rotX = Math.max(-10, Math.min(10, diffBeta * 0.45));
-      const rotY = Math.max(-10, Math.min(10, diffGamma * 0.45));
+      // Adjust multiplier for sensitivity and clamp values (increased for mobile visibility)
+      const rotX = Math.max(-20, Math.min(20, diffBeta * 0.95));
+      const rotY = Math.max(-20, Math.min(20, diffGamma * 0.95));
 
       rotateXValue.set(-rotX); // Invert pitch to match device inclination
       rotateYValue.set(rotY);
@@ -165,7 +167,11 @@ export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCa
       onClick={async () => {
         haptics.tap();
         if (permission === 'default') {
-          await requestPermission();
+          const granted = await requestPermission();
+          if (granted) {
+            soundEngine.playSuccess();
+            toast.success('3D Parallax Tilt enabled!');
+          }
         }
         onSelect?.();
       }}
@@ -176,7 +182,11 @@ export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCa
           e.preventDefault();
           haptics.tap();
           if (permission === 'default') {
-            await requestPermission();
+            const granted = await requestPermission();
+            if (granted) {
+              soundEngine.playSuccess();
+              toast.success('3D Parallax Tilt enabled!');
+            }
           }
           onSelect?.();
         }
@@ -187,7 +197,7 @@ export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCa
         rotateX: springX,
         rotateY: springY,
         transformStyle: 'preserve-3d',
-        transformPerspective: 800,
+        transformPerspective: 500,
       }}
       className={`
         relative group overflow-hidden flex flex-col items-center justify-center p-5 min-h-[120px]

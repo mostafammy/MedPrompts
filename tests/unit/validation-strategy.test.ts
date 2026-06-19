@@ -75,4 +75,13 @@ fourteen fifteen sixteen seventeen eighteen nineteen twenty. And more.
       expect(result.error.some(e => e.code === 'WORD_COUNT_OUT_OF_BOUNDS')).toBe(true);
     }
   });
+
+  it('should reject a template exceeding maximum word count', () => {
+    const template = 'word '.repeat(3001);
+    const result = strategy.validate(template);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.some(e => e.code === 'WORD_COUNT_OUT_OF_BOUNDS')).toBe(true);
+    }
+  });
 });

@@ -25,7 +25,7 @@ export class CachingDecorator implements Generator {
     const cacheKey = cacheKeyResult.value;
 
     const cached = await this.cache.get(request.subjectId, cacheKey);
-    if (cached) {
+    if (cached !== null && cached !== undefined) {
       const wordCount = cached.trim().split(/\s+/).filter(Boolean).length;
       return ok({
         output: cached,

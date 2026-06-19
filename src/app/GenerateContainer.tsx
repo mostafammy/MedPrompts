@@ -6,7 +6,6 @@ import { TopicInput } from '@/components/TopicInput/TopicInput';
 import { useRouter } from 'next/navigation';
 import { slugifyTopic } from '@/lib/prompts/slugifier';
 import { motion } from 'framer-motion';
-import { z } from 'zod';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 
 const VariableDefaults = {
@@ -24,12 +23,6 @@ const ANALOGY_DOMAINS = [
   'Transportation and Mechanics',
 ] as const;
 const REMEDIATION_CYCLES = ['1', '2', '3', '4', '5'] as const;
-
-const VariableSchema = z.object({
-  lang: z.enum(OUTPUT_LANGUAGES).default('German'),
-  analogy: z.enum(ANALOGY_DOMAINS).default('Cooking and Culinary Arts'),
-  cycles: z.enum(REMEDIATION_CYCLES).default('2'),
-});
 
 export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }) {
   const router = useRouter();

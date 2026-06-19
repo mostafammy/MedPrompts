@@ -8,11 +8,13 @@ import { usePromptHistory } from '@/hooks/usePromptHistory';
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import * as Icons from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { haptics } from '@/lib/haptics';
 import { soundEngine } from '@/lib/audio';
 
 
 export function HomePageClient({ subjects }: { subjects: Subject[] }) {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState<SubjectId | null>(null);
   const { history, bookmarks, isLoaded, removeHistoryItem, restoreHistoryItem, removeBookmark, restoreBookmark, toggleBookmark, isBookmarked } = usePromptHistory();
   const [activeTab, setActiveTab] = useState<'saved' | 'recent'>('saved');
@@ -143,7 +145,7 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
                       onClick={() => {
                         haptics.tap();
                         soundEngine.playClick();
-                        window.location.href = `/${item.subject.toLowerCase()}/${item.topic.toLowerCase()}`;
+                        router.push(`/${item.subject.toLowerCase()}/${item.topic.toLowerCase()}`);
                       }}
                       className="relative h-full group p-5 bg-white dark:bg-zinc-900/60 backdrop-blur border border-zinc-200 dark:border-zinc-800/80 rounded-2xl hover:border-blue-500 dark:hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
                     >
@@ -236,7 +238,7 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
                         onClick={() => {
                           haptics.tap();
                           soundEngine.playClick();
-                          window.location.href = `/${item.subject.toLowerCase()}/${item.topic.toLowerCase()}`;
+                          router.push(`/${item.subject.toLowerCase()}/${item.topic.toLowerCase()}`);
                         }}
                         className="relative h-full group p-5 bg-white dark:bg-zinc-900/60 backdrop-blur border border-zinc-200 dark:border-zinc-800/80 rounded-2xl hover:border-blue-500 dark:hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 cursor-pointer flex flex-col justify-between"
                       >

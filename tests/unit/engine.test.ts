@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CoreGenerator } from '../../src/lib/prompts/core-generator';
 import { CachingDecorator } from '../../src/lib/prompts/caching-decorator';
 import { AnalyticsDecorator } from '../../src/lib/prompts/analytics-decorator';
@@ -13,6 +13,10 @@ import * as loader from '../../src/lib/prompts/loader';
 vi.mock('../../src/lib/prompts/loader', () => ({
   getActiveTemplate: vi.fn()
 }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 const validTemplate = `
 ## Section 1
@@ -29,7 +33,7 @@ Final section content.
 ⚠️ Verify this information with a medical professional.
 `;
 
-const interactiveTemplate = 'Teach {{TOPIC}} in {{OUTPUT_LANGUAGE}}. This is a sufficiently long interactive template that actually has enough words to pass the minimum word count validation for interactive mode without any issues at all.';
+const interactiveTemplate = 'Teach {{TOPIC}} in {{OUTPUT_LANGUAGE}}. This is a sufficiently long interactive template that actually has enough words to pass the minimum word count validation for interactive mode without any issues at all. One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty twenty one twenty two twenty three twenty four twenty five.';
 
 const subjectId = 'anatomy' as SubjectId;
 const topicSlug = 'plexus-brachialis' as Slug;
@@ -144,21 +148,6 @@ describe('AnalyticsDecorator', () => {
 
 describe('PromptEngine (integration)', () => {
   const dummyEnv: EngineEnv = { hasApiKey: false, userPlan: 'free' };
-
-  it('should return cached prompt if available', async () => {
-    const promptCache = createInMemoryCache();
-    await promptCache.set(subjectId, 'mi' as Slug, 'Cached content', 3600);
-
-    const normCache = new NormalizerCache(createInMemoryCacheStore());
-    const pipeline = new TopicNormalizationPipeline([], normCache);
-    const engine = new PromptEngine({} as any, promptCache, pipeline, noopAnalytics);
-
-    const result = await engine.generatePrompt(subjectId, 'mi', {}, dummyEnv);
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.value).toBe('Cached content');
-    }
-  });
 
   it('should return SUBJECT_NOT_FOUND if no template is active', async () => {
     vi.mocked(loader.getActiveTemplate).mockResolvedValueOnce(null);

@@ -10,9 +10,10 @@ interface ShareButtonProps {
   subject: string;
   topic: string;
   isHeaderInline?: boolean;
+  minimal?: boolean;
 }
 
-export function ShareButton({ subject, topic, isHeaderInline = false }: ShareButtonProps) {
+export function ShareButton({ subject, topic, isHeaderInline = false, minimal = false }: ShareButtonProps) {
   // Lazy initialisers run once on mount — browser APIs are safe here
   // because this is a 'use client' component and never runs on the server.
   const [url] = useState(() =>
@@ -58,16 +59,20 @@ export function ShareButton({ subject, topic, isHeaderInline = false }: ShareBut
     }
   };
 
-  const buttonClasses = isHeaderInline
+  const buttonClasses = minimal
+    ? "w-11 h-11 rounded-full flex items-center justify-center bg-transparent hover:bg-zinc-150 dark:hover:bg-zinc-800 text-zinc-550 dark:text-zinc-400 border-0 transition-all duration-300 cursor-pointer"
+    : isHeaderInline
     ? "h-full w-full px-3 py-1.5 flex items-center justify-center gap-1.5 bg-blue-50/50 hover:bg-blue-100/50 dark:bg-blue-900/20 dark:hover:bg-blue-800/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-lg border border-blue-200/50 dark:border-blue-800/50 transition-all duration-300 backdrop-blur-sm"
     : "w-full py-2.5 px-4 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-all duration-300";
 
   return (
-    <button onClick={handleShare} className={buttonClasses}>
-      <Icons.Share2 className={isHeaderInline ? "w-3.5 h-3.5 shrink-0" : "w-4 h-4 shrink-0"} />
-      <span className={isHeaderInline ? "hidden lg:inline" : ""}>
-        Share Link
-      </span>
+    <button onClick={handleShare} className={buttonClasses} title="Share Link">
+      <Icons.Share2 className={minimal ? "w-5 h-5 shrink-0" : isHeaderInline ? "w-3.5 h-3.5 shrink-0" : "w-4 h-4 shrink-0"} />
+      {!minimal && (
+        <span className={isHeaderInline ? "hidden lg:inline" : ""}>
+          Share Link
+        </span>
+      )}
     </button>
   );
 }

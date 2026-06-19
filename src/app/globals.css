@@ -4,6 +4,14 @@
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-zinc-150: #eeeeef;
+  --color-zinc-350: #c2c2c6;
+  --color-zinc-450: #95959c;
+  --color-zinc-550: #6b6b72;
+  --color-zinc-650: #4a4a52;
+  --color-zinc-805: #222225;
+  --color-zinc-850: #1c1c1f;
   
   --animate-fade-in-up: fade-in-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-fade-in: fade-in 1s cubic-bezier(0.16, 1, 0.3, 1) both;

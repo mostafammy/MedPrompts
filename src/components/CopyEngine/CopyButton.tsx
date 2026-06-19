@@ -13,6 +13,7 @@ import { haptics } from '@/lib/haptics';
 export interface CopyButtonProps {
   textToCopy: string;
   isHeaderInline?: boolean;
+  minimal?: boolean;
 }
 
 const PARTICLE_COUNT = 10;
@@ -29,7 +30,7 @@ const particles = Array.from({ length: PARTICLE_COUNT }).map((_, i) => {
   };
 });
 
-export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonProps) {
+export function CopyButton({ textToCopy, isHeaderInline = false, minimal = false }: CopyButtonProps) {
   const [state, dispatch] = useReducer(copyReducer, { status: 'idle' });
 
   useEffect(() => {
@@ -59,7 +60,9 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
   const isSuccess = state.status === 'success';
 
   // Apple-tier glassmorphic button styles
-  const buttonClass = isHeaderInline
+  const buttonClass = minimal
+    ? `relative overflow-hidden w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-300 select-none cursor-pointer border-0 bg-transparent text-zinc-550 dark:text-zinc-400 hover:bg-zinc-150 dark:hover:bg-zinc-800 ${isSuccess ? 'text-emerald-500 dark:text-emerald-400' : ''}`
+    : isHeaderInline
     ? `relative overflow-hidden w-full h-9 px-3 rounded-lg border text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors duration-300 select-none cursor-pointer
        ${isSuccess 
          ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300' 
@@ -72,12 +75,13 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
        }`;
 
   return (
-    <div className={isHeaderInline ? "relative w-full h-9" : "relative"}>
+    <div className={minimal ? "" : isHeaderInline ? "relative w-full h-9" : "relative"}>
       <motion.button
         whileTap={{ scale: 0.96 }}
         onClick={handleCopy}
         className={buttonClass}
         aria-label="Copy prompt to clipboard"
+        title={isSuccess ? "Copied!" : "Copy Master Prompt"}
       >
         <span aria-live="polite" className="sr-only">
           {isSuccess ? 'Copied!' : ''}
@@ -90,10 +94,10 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
               animate={{ scale: 1, rotate: 0 }}
               exit={{ scale: 0, rotate: 45 }}
               transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-center"
             >
-              <Icons.Check className={isHeaderInline ? "w-3.5 h-3.5" : "w-4 h-4"} />
-              <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>Copied</span>
+              <Icons.Check className={minimal ? "w-5 h-5" : isHeaderInline ? "w-3.5 h-3.5" : "w-4 h-4"} />
+              {!minimal && <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>Copied</span>}
             </motion.span>
           ) : (
             <motion.span
@@ -102,10 +106,10 @@ export function CopyButton({ textToCopy, isHeaderInline = false }: CopyButtonPro
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 25 }}
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-center"
             >
-              <Icons.Copy className={isHeaderInline ? "w-3.5 h-3.5" : "w-4 h-4"} />
-              <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>{isHeaderInline ? 'Copy' : 'Copy Master Prompt'}</span>
+              <Icons.Copy className={minimal ? "w-5 h-5" : isHeaderInline ? "w-3.5 h-3.5" : "w-4 h-4"} />
+              {!minimal && <span className={isHeaderInline ? 'hidden sm:inline-block' : ''}>{isHeaderInline ? 'Copy' : 'Copy Master Prompt'}</span>}
             </motion.span>
           )}
         </AnimatePresence>

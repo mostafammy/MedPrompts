@@ -52,21 +52,21 @@ function AmbientBackgroundInner() {
     <div className="absolute inset-0 -z-50 overflow-hidden pointer-events-none bg-zinc-50 dark:bg-zinc-950 transition-colors duration-1000">
       {/* Aurora Orb 1 */}
       <div 
-        className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full opacity-[0.15] dark:opacity-[0.08] filter blur-[100px] transition-all duration-1000 animate-[pulse_8s_ease-in-out_infinite] will-change-[transform,opacity]"
+        className="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] rounded-full opacity-[0.28] dark:opacity-[0.16] filter blur-[80px] transition-all duration-1000 animate-[pulse_8s_ease-in-out_infinite] will-change-[transform,opacity]"
         style={{
           background: `radial-gradient(circle, ${colors.primary} 0%, transparent 70%)`
         }}
       />
       {/* Aurora Orb 2 */}
       <div 
-        className="absolute top-[20%] right-[-10%] w-[45vw] h-[45vw] rounded-full opacity-[0.15] dark:opacity-[0.06] filter blur-[100px] transition-all duration-1000 animate-[pulse_12s_ease-in-out_infinite] will-change-[transform,opacity] delay-1000"
+        className="absolute top-[20%] right-[-10%] w-[50vw] h-[50vw] rounded-full opacity-[0.28] dark:opacity-[0.14] filter blur-[80px] transition-all duration-1000 animate-[pulse_12s_ease-in-out_infinite] will-change-[transform,opacity] delay-1000"
         style={{
           background: `radial-gradient(circle, ${colors.secondary} 0%, transparent 70%)`
         }}
       />
       {/* Aurora Orb 3 */}
       <div 
-        className="absolute bottom-[-10%] left-[20%] w-[40vw] h-[40vw] rounded-full opacity-[0.12] dark:opacity-[0.05] filter blur-[100px] transition-all duration-1000 animate-[pulse_10s_ease-in-out_infinite] will-change-[transform,opacity] delay-2000"
+        className="absolute bottom-[-10%] left-[20%] w-[45vw] h-[45vw] rounded-full opacity-[0.22] dark:opacity-[0.12] filter blur-[80px] transition-all duration-1000 animate-[pulse_10s_ease-in-out_infinite] will-change-[transform,opacity] delay-2000"
         style={{
           background: `radial-gradient(circle, ${colors.tertiary} 0%, transparent 70%)`
         }}
