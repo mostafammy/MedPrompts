@@ -3,7 +3,7 @@
 import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
 import React, { useEffect } from 'react';
-import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 import { haptics } from '@/lib/haptics';
 import { soundEngine } from '@/lib/audio';
