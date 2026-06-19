@@ -19,7 +19,7 @@ export class StandardValidation implements ValidationStrategy {
       errors.push({ code: 'MISSING_SECTIONS', message: `Expected at least 3 headers, found ${headerMatches.length}` });
     }
 
-    const hasDisclaimer = /⚠️\s*Verify/i.test(template) || /verify/i.test(template);
+    const hasDisclaimer = /⚠️\s*Verify/i.test(template) || /\bverify\b/i.test(template);
     if (!hasDisclaimer) {
       errors.push({ code: 'MISSING_DISCLAIMER', message: 'Template must contain a verification disclaimer' });
     }
