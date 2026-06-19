@@ -21,9 +21,9 @@ export class CoreGenerator implements Generator {
     }
 
     const injectionResult = injectVariables(request.rawTemplate, {
+      ...request.variables,
       TOPIC: request.topic,
       SUBJECT: request.subjectId.charAt(0).toUpperCase() + request.subjectId.slice(1),
-      ...request.variables,
     });
 
     if (!injectionResult.ok) {
