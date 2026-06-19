@@ -2,8 +2,9 @@
 
 import { SubjectId } from '@/lib/types/branded';
 import * as Icons from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import { useDeviceOrientation } from '@/hooks/useDeviceOrientation';
 import { haptics } from '@/lib/haptics';
 
 export interface SubjectCardProps {
@@ -111,48 +112,72 @@ export function SubjectCard({ id, label, icon, isSelected, onSelect }: SubjectCa
 
   const theme = THEMES[id] || DEFAULT_THEME;
 
-  // Parallax motion tracking
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const { orientation, permission, requestPermission } = useDeviceOrientation();
 
-  // Map coordinate range relative to card center to degree rotation bounds
-  const rotateX = useTransform(mouseY, [-60, 60], [8, -8]);
-  const rotateY = useTransform(mouseX, [-60, 60], [-8, 8]);
+  // Unified Motion Values driven by Mouse or Gyroscope
+  const rotateXValue = useMotionValue(0);
+  const rotateYValue = useMotionValue(0);
 
   // Spring smoothing using subject-specific kinetic weights
-  const springX = useSpring(rotateX, theme.spring);
-  const springY = useSpring(rotateY, theme.spring);
+  const springX = useSpring(rotateXValue, theme.spring);
+  const springY = useSpring(rotateYValue, theme.spring);
+
+  useEffect(() => {
+    if (orientation.beta !== null && orientation.gamma !== null) {
+      // Natural hand-held angle baseline for phones (around 50-60 deg)
+      const baselineBeta = 55;
+      const diffBeta = orientation.beta - baselineBeta;
+      const diffGamma = orientation.gamma;
+
+      // Adjust multiplier for sensitivity and clamp values
+      const rotX = Math.max(-10, Math.min(10, diffBeta * 0.45));
+      const rotY = Math.max(-10, Math.min(10, diffGamma * 0.45));
+
+      rotateXValue.set(-rotX); // Invert pitch to match device inclination
+      rotateYValue.set(rotY);
+    }
+  }, [orientation, rotateXValue, rotateYValue]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (orientation.beta !== null) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
     // Calculate cursor displacement relative to center
     const x = e.clientX - rect.left - width / 2;
     const y = e.clientY - rect.top - height / 2;
-    mouseX.set(x);
-    mouseY.set(y);
+    const rotX = (y / (height / 2)) * -8;
+    const rotY = (x / (width / 2)) * 8;
+    rotateXValue.set(rotX);
+    rotateYValue.set(rotY);
   };
 
   const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
+    if (orientation.beta !== null) return;
+    rotateXValue.set(0);
+    rotateYValue.set(0);
   };
 
   return (
     <motion.div
       whileHover={{ scale: theme.hoverScale }}
       whileTap={{ scale: 0.97 }}
-      onClick={() => {
+      onClick={async () => {
         haptics.tap();
+        if (permission === 'default') {
+          await requestPermission();
+        }
         onSelect?.();
       }}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
+      onKeyDown={async (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           haptics.tap();
+          if (permission === 'default') {
+            await requestPermission();
+          }
           onSelect?.();
         }
       }}

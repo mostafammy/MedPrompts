@@ -6,6 +6,7 @@ import { Toaster } from "sonner";
 import { InstallBanner } from "@/components/InstallPWA/InstallBanner";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ConnectionStatus } from "@/components/ui/ConnectionStatus";
+import { AmbientBackground } from "@/components/ui/AmbientBackground";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body
         className="min-h-[100dvh] flex flex-col bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 font-sans relative overflow-x-hidden selection:bg-blue-200 dark:selection:bg-blue-900/50"
       >
+        <AmbientBackground />
         <SkipToContent />
         <ThemeToggle />
         <main id="main-content" className="flex-1 flex flex-col">
