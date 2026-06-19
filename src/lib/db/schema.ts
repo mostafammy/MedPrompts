@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import type { TemplateVariableDefinition } from '../prompts/variable-schema';
 
 export const subjects = sqliteTable('subjects', {
   id: text('id').primaryKey(),
@@ -18,7 +19,12 @@ export const promptTemplates = sqliteTable('prompt_templates', {
   version: integer('version').notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(false),
   changelog: text('changelog'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date())
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  isInteractive: integer('is_interactive', { mode: 'boolean' }).notNull().default(false),
+  requiredVariables: text('required_variables', { mode: 'json' })
+    .$type<TemplateVariableDefinition[]>()
+    .notNull()
+    .$defaultFn(() => []),
 }, (table) => ({
   activeSubjectIdx: index('active_subject_idx').on(table.subjectId, table.isActive)
 }));
@@ -45,6 +51,9 @@ export const promptEvents = sqliteTable('prompt_events', {
 }));
 
 export type Subject = typeof subjects.$inferSelect;
-export type PromptTemplate = typeof promptTemplates.$inferSelect;
+export type PromptTemplate = typeof promptTemplates.$inferSelect & {
+  isInteractive: boolean;
+  requiredVariables: TemplateVariableDefinition[];
+};
 export type TopicSeed = typeof topicsSeed.$inferSelect;
 export type PromptEvent = typeof promptEvents.$inferSelect;

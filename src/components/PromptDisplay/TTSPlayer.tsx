@@ -7,9 +7,10 @@ import { soundEngine } from '@/lib/audio';
 
 interface TTSPlayerProps {
   text: string;
+  compact?: boolean;
 }
 
-export function TTSPlayer({ text }: TTSPlayerProps) {
+export function TTSPlayer({ text, compact = false }: TTSPlayerProps) {
   const [isSupported, setIsSupported] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -97,6 +98,30 @@ export function TTSPlayer({ text }: TTSPlayerProps) {
   };
 
   if (!isSupported) return null;
+
+  if (compact) {
+    return (
+      <button
+        onClick={isPlaying ? (isPaused ? resumeSpeech : pauseSpeech) : startSpeech}
+        onDoubleClick={isPlaying ? stopSpeech : undefined}
+        aria-label={isPlaying ? (isPaused ? "Resume reading" : "Pause reading") : "Read prompt aloud"}
+        className={`p-2.5 rounded-full transition-all duration-300 w-11 h-11 flex items-center justify-center cursor-pointer active:scale-90
+          ${isPlaying && !isPaused 
+            ? 'bg-blue-500/10 dark:bg-blue-500/20 text-blue-500 dark:text-blue-400 border border-blue-500/20 shadow-sm' 
+            : 'hover:bg-zinc-150 dark:hover:bg-zinc-800 text-zinc-550 dark:text-zinc-400'
+          }
+        `}
+      >
+        {isPlaying && !isPaused ? (
+          <Icons.Pause className="w-5 h-5 animate-pulse" />
+        ) : isPaused ? (
+          <Icons.Play className="w-5 h-5 text-blue-500 animate-pulse" />
+        ) : (
+          <Icons.Volume2 className="w-5 h-5" />
+        )}
+      </button>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1.5 bg-zinc-950/40 dark:bg-zinc-800/30 border border-zinc-800/60 dark:border-zinc-700/40 rounded-full px-2.5 py-1 text-xs text-zinc-300 backdrop-blur-md">

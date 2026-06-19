@@ -16,6 +16,8 @@ import { useRouter } from 'next/navigation';
 import { usePullToClear } from '@/hooks/usePullToClear';
 import { usePromptHistory } from '@/hooks/usePromptHistory';
 import { TTSPlayer } from './TTSPlayer';
+import { FloatingActionBar } from '../ui/FloatingActionBar';
+import { useContainerScrollDirection } from '@/hooks/useContainerScrollDirection';
 
 export interface PromptDisplayProps {
   prompt: string;
@@ -32,6 +34,8 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
     haptics.tap();
     router.push(`/${subject}`);
   });
+  
+  const isBarVisible = useContainerScrollDirection(scrollContainerRef);
   
   const lastTapTimeRef = useRef<number>(0);
   const { toggleBookmark, isBookmarked, addHistoryItem } = usePromptHistory();
@@ -120,8 +124,8 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
             </h2>
           </div>
         </div>
-        <div className="flex items-center gap-3 justify-between sm:justify-end">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 justify-end w-full sm:w-auto">
+          <div className="hidden sm:flex items-center gap-2">
             <TTSPlayer text={prompt} />
             
             <button
@@ -162,12 +166,12 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
                 </span>
               )}
             </button>
-            
-            <span className="px-2.5 py-1 text-zinc-400 text-xs font-medium flex items-center gap-1.5 select-none border border-zinc-800/60 rounded-full bg-zinc-900/40">
-              <Icons.FileText className="w-3.5 h-3.5 text-zinc-500" />
-              {wordCount} words
-            </span>
           </div>
+          
+          <span className="px-2.5 py-1 text-zinc-400 text-xs font-medium flex items-center gap-1.5 select-none border border-zinc-800/60 rounded-full bg-zinc-900/40 shrink-0">
+            <Icons.FileText className="w-3.5 h-3.5 text-zinc-500" />
+            {wordCount} words
+          </span>
           
           {/* Header actions: ChatGPT Deep Link & Copy Button */}
           <div className="hidden sm:flex items-center gap-2">
@@ -244,66 +248,86 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
     </motion.article>
 
     {/* Mobile Sticky Floating Action Bar (FAB) */}
-    <div className="sm:hidden fixed bottom-6 inset-x-4 z-50 flex items-center justify-center gap-2">
-      <div className="bg-white/85 dark:bg-zinc-900/85 backdrop-blur-xl border border-zinc-200/80 dark:border-zinc-800/80 shadow-2xl rounded-full p-2 flex items-center gap-1.5 w-full max-w-sm justify-around relative overflow-hidden">
-        {/* Subtle inner glow */}
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 to-transparent pointer-events-none" />
-        
-        <div className="flex-1 max-w-[80px]">
-          <CopyButton textToCopy={prompt} isHeaderInline={true} />
-        </div>
-        
-        <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
-        
-        <button
-          onClick={() => {
-            toggleBookmark({ subject, topic, wordCount, promptText: prompt });
-            if (isBookmarked(subject, topic)) {
-              haptics.tap();
-              soundEngine.playSwoop();
-              toast.success('Removed from bookmarks');
-            } else {
-              haptics.success();
-              soundEngine.playSuccess();
-              toast.success('Saved to bookmarks!');
-            }
-          }}
-          aria-label={isBookmarked(subject, topic) ? "Remove Bookmark" : "Add Bookmark"}
-          className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-850 transition-colors text-zinc-650 dark:text-zinc-400 active:scale-95 cursor-pointer flex items-center justify-center"
-        >
-          <Icons.Star
-            className={`w-5 h-5 transition-transform active:scale-125 ${
-              isBookmarked(subject, topic)
-                ? 'fill-amber-400 text-amber-400'
-                : 'text-zinc-400 dark:text-zinc-500'
-            }`}
-          />
-        </button>
+    <FloatingActionBar isVisible={isBarVisible} subject={subject}>
+      {/* 1. compact TTS player */}
+      <TTSPlayer text={prompt} compact={true} />
+      
+      <div className="w-[1px] h-7 bg-zinc-200 dark:bg-zinc-800/60 rounded-full shrink-0" />
+      
+      {/* 2. Star Bookmark */}
+      <button
+        onClick={() => {
+          toggleBookmark({ subject, topic, wordCount, promptText: prompt });
+          if (isBookmarked(subject, topic)) {
+            haptics.tap();
+            soundEngine.playSwoop();
+            toast.success('Removed from bookmarks');
+          } else {
+            haptics.success();
+            soundEngine.playSuccess();
+            toast.success('Saved to bookmarks!');
+          }
+        }}
+        aria-label={isBookmarked(subject, topic) ? "Remove Bookmark" : "Add Bookmark"}
+        className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-zinc-150 dark:hover:bg-zinc-800 transition-colors text-zinc-550 dark:text-zinc-400 active:scale-90 cursor-pointer shrink-0"
+      >
+        <Icons.Star
+          className={`w-5 h-5 transition-transform active:scale-125 ${
+            isBookmarked(subject, topic)
+              ? 'fill-amber-400 text-amber-400'
+              : 'text-zinc-400 dark:text-zinc-550 hover:text-amber-500'
+          }`}
+        />
+      </button>
 
-        <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
+      <div className="w-[1px] h-7 bg-zinc-200 dark:bg-zinc-800/60 rounded-full shrink-0" />
 
-        <div className="flex-1 max-w-[80px]">
-          <DeepLinkButton
-            textToCopy={prompt}
-            subjectId={subject as SubjectId}
-            targetApp="chatgpt"
-            label="ChatGPT"
-            isHeaderInline={true}
-            icon={
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.073zm-9.022 12.108a4.4735 4.4735 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-2.1466zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.8956zm16.0993 3.8558L12.5973 8.3829 14.6174 7.2144a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.3927-.6813zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L8.809 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.4592a.7948.7948 0 0 0-.3927.6813v6.7225zm1.0855-3.0941l2.6086-1.5034 2.6086 1.5034v3.0069l-2.6086 1.5034-2.6086-1.5034v-3.0069z" />
-              </svg>
-            }
-          />
-        </div>
-        
-        <div className="w-[1px] h-8 bg-zinc-200 dark:bg-zinc-800/80 rounded-full" />
-        
-        <div className="flex-1 max-w-[80px]">
-          <ShareButton subject={subject} topic={topic} isHeaderInline={true} />
-        </div>
+      {/* 3. Font Size Zoom Cycler */}
+      <button
+        onClick={cycleFontSize}
+        aria-label="Cycle Font Size"
+        className="w-11 h-11 flex flex-col items-center justify-center rounded-full hover:bg-zinc-150 dark:hover:bg-zinc-800 transition-colors text-zinc-550 dark:text-zinc-400 active:scale-90 cursor-pointer shrink-0 py-1"
+      >
+        <Icons.Type className="w-5 h-5 text-zinc-400 dark:text-zinc-550" />
+        {fontSizeMounted && (
+          <span className="text-[8px] font-extrabold uppercase select-none min-w-[12px] text-zinc-400 leading-none mt-0.5">
+            {fontSize}
+          </span>
+        )}
+      </button>
+
+      <div className="w-[1px] h-7 bg-zinc-200 dark:bg-zinc-800/60 rounded-full shrink-0" />
+
+      {/* 4. Copy Master Prompt */}
+      <div className="w-11 h-11 flex items-center justify-center shrink-0">
+        <CopyButton textToCopy={prompt} minimal={true} />
       </div>
-    </div>
+
+      <div className="w-[1px] h-7 bg-zinc-200 dark:bg-zinc-800/60 rounded-full shrink-0" />
+
+      {/* 5. Open in ChatGPT */}
+      <div className="w-11 h-11 flex items-center justify-center shrink-0">
+        <DeepLinkButton
+          textToCopy={prompt}
+          subjectId={subject as SubjectId}
+          targetApp="chatgpt"
+          label="ChatGPT"
+          minimal={true}
+          icon={
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.073zm-9.022 12.108a4.4735 4.4735 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-2.1466zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.8956zm16.0993 3.8558L12.5973 8.3829 14.6174 7.2144a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.3927-.6813zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L8.809 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.4592a.7948.7948 0 0 0-.3927.6813v6.7225zm1.0855-3.0941l2.6086-1.5034 2.6086 1.5034v3.0069l-2.6086 1.5034-2.6086-1.5034v-3.0069z" />
+            </svg>
+          }
+        />
+      </div>
+
+      <div className="w-[1px] h-7 bg-zinc-200 dark:bg-zinc-800/60 rounded-full shrink-0" />
+
+      {/* 6. Native Share */}
+      <div className="w-11 h-11 flex items-center justify-center shrink-0">
+        <ShareButton subject={subject} topic={topic} minimal={true} />
+      </div>
+    </FloatingActionBar>
     </>
   );
 }
