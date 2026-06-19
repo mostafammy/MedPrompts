@@ -1,5 +1,6 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
+import { sql } from 'drizzle-orm';
 import * as schema from '../src/lib/db/schema';
 import { slugifyTopic } from '../src/lib/prompts/slugifier';
 import * as dotenv from 'dotenv';
@@ -123,10 +124,10 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
     ]).onConflictDoUpdate({
       target: schema.subjects.id,
       set: {
-        label: schema.subjects.label,
-        icon: schema.subjects.icon,
-        sortOrder: schema.subjects.sortOrder,
-        isActive: schema.subjects.isActive
+        label: sql`excluded.label`,
+        icon: sql`excluded.icon`,
+        sortOrder: sql`excluded.sort_order`,
+        isActive: sql`excluded.is_active`
       }
     });
 
@@ -150,12 +151,17 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
       }).onConflictDoUpdate({
         target: schema.promptTemplates.id,
         set: {
-          template: schema.promptTemplates.template,
-          version: schema.promptTemplates.version,
-          isActive: schema.promptTemplates.isActive,
-          changelog: schema.promptTemplates.changelog,
-          isInteractive: schema.promptTemplates.isInteractive,
-          requiredVariables: schema.promptTemplates.requiredVariables
+          template: info.content,
+          version: 2,
+          isActive: true,
+          changelog: info.name,
+          isInteractive: true,
+          requiredVariables: [
+            { key: 'OUTPUT_LANGUAGE', label: 'Output Language', control: 'select', defaultValue: 'German', options: ['German', 'English', 'Spanish', 'French', 'Arabic'], required: true },
+            { key: 'ANALOGY_DOMAIN', label: 'Analogy Domain', control: 'select', defaultValue: 'Cooking and Culinary Arts', options: ['Cooking and Culinary Arts', 'Construction and Architecture', 'Music and Orchestra', 'Sports and Athletics', 'Transportation and Mechanics'], required: true },
+            { key: 'MAX_REMEDIATION_CYCLES', label: 'Max Remediation Cycles', control: 'select', defaultValue: '2', options: ['1', '2', '3', '4', '5'], required: true },
+            { key: 'TERMINOLOGY_STANDARD', label: 'Terminology Standard', control: 'text', defaultValue: 'Standard', required: true }
+          ]
         }
       });
     }
@@ -173,8 +179,8 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
         }).onConflictDoUpdate({
           target: [schema.topicsSeed.subjectId, schema.topicsSeed.slug],
           set: {
-            topic: schema.topicsSeed.topic,
-            isHighYield: schema.topicsSeed.isHighYield
+            topic: topic,
+            isHighYield: true
           }
         });
       }
