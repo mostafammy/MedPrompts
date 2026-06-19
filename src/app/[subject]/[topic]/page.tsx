@@ -1,5 +1,5 @@
 import { SubjectId, Slug, Topic } from '@/lib/types/branded';
-import { PromptEngine } from '@/lib/prompts/engine';
+import { PromptEngine, EngineEnv } from '@/lib/prompts/engine';
 import { notFound } from 'next/navigation';
 import { PromptDisplay } from '@/components/PromptDisplay/PromptDisplay';
 import { getDb } from '@/lib/db/get-db';
@@ -13,31 +13,43 @@ import { Metadata } from 'next';
 import { slugToTopic } from '@/lib/prompts/slugifier';
 import { SubjectGrid } from '@/components/SubjectGrid/SubjectGrid';
 import { SwipeableContainer } from '@/components/SwipeableContainer';
+import { z } from 'zod';
+import { terminologyStandardForSubject } from '@/lib/prompts/medical-tutor-variables';
 
-export const dynamic = 'force-static';
-export const revalidate = 3600; // ISR: revalidate every 1 hour
+export const dynamic = 'force-dynamic';
 
-function getEngine() {
+const SearchParamsSchema = z.object({
+  lang: z.string().optional().default('German'),
+  analogy: z.string().optional().default('Cooking and Culinary Arts'),
+  cycles: z.string().optional().default('2'),
+});
+
+let engineInstance: PromptEngine | null = null;
+
+function getEngine(): PromptEngine {
+  if (engineInstance) return engineInstance;
   const db = getDb();
   const promptCache = createInMemoryCache();
   const normCache = new NormalizerCache(createInMemoryCacheStore());
   const pipeline = new TopicNormalizationPipeline([], normCache);
-  return new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
+  engineInstance = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
+  return engineInstance;
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ subject: string; topic: string }> }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ subject: string; topic: string }>;
+}): Promise<Metadata> {
   const { subject, topic } = await params;
   const decodedTopic = slugToTopic(topic as Slug);
   const titleCaseTopic = decodedTopic.charAt(0).toUpperCase() + decodedTopic.slice(1);
-  const title = `${titleCaseTopic} | ${subject} — MedPrompts`;
-  const description = `Get a structured study prompt for ${titleCaseTopic} in ${subject} — optimized for medical boards.`;
-
   return {
-    title,
-    description,
+    title: `${titleCaseTopic} | ${subject} — MedPrompts`,
+    description: `Get a structured study prompt for ${titleCaseTopic} in ${subject} — optimized for medical boards.`,
     openGraph: {
-      title,
-      description,
+      title: `${titleCaseTopic} | ${subject} — MedPrompts`,
+      description: `Get a structured study prompt for ${titleCaseTopic} in ${subject} — optimized for medical boards.`,
       images: [
         {
           url: `/api/og?subject=${subject}&topic=${topic}`,
@@ -46,8 +58,8 @@ export async function generateMetadata({ params }: { params: Promise<{ subject: 
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: `${titleCaseTopic} | ${subject} — MedPrompts`,
+      description: `Get a structured study prompt for ${titleCaseTopic} in ${subject} — optimized for medical boards.`,
     },
   };
 }
@@ -69,9 +81,24 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function DynamicPromptPage({ params }: { params: Promise<{ subject: string; topic: string }> }) {
+export default async function DynamicPromptPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ subject: string; topic: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { subject, topic } = await params;
-  
+  const rawSearchParams = await searchParams;
+
+  const parsedParams = SearchParamsSchema.safeParse(rawSearchParams);
+  const variables = {
+    OUTPUT_LANGUAGE: parsedParams.success ? parsedParams.data.lang : 'German',
+    ANALOGY_DOMAIN: parsedParams.success ? parsedParams.data.analogy : 'Cooking and Culinary Arts',
+    MAX_REMEDIATION_CYCLES: parsedParams.success ? parsedParams.data.cycles : '2',
+    TERMINOLOGY_STANDARD: terminologyStandardForSubject(subject),
+  };
+
   const parsedSubject = SubjectId.parse(subject);
   const parsedSlug = Slug.parse(topic);
 
@@ -85,15 +112,14 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
 
   const engine = getEngine();
 
-  // Fetch subjects for swipeable container
   const db = getDb();
   const subjects = await db.query.subjects.findMany({
     where: eq(schema.subjects.isActive, true),
     orderBy: schema.subjects.sortOrder,
   });
 
-  const env = { hasApiKey: false, userPlan: 'free' as const };
-  const result = await engine.generatePrompt(subjectId, topicName, env);
+  const env: EngineEnv = { hasApiKey: false, userPlan: 'free' };
+  const result = await engine.generatePrompt(subjectId, topicName, variables, env);
 
   if (!result.ok) {
     if (result.error.code === 'SUBJECT_NOT_FOUND' || result.error.code === 'TOPIC_INVALID') {
@@ -104,8 +130,6 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
 
   const promptText = result.value;
   const wordCount = promptText.split(/\s+/).filter(Boolean).length;
-  // `engine.generatePrompt` handles cache internally but doesn't return boolean flag currently
-  const fromCache = false;
 
   return (
     <main className="min-h-[100dvh] p-4 sm:p-8 md:p-24 pt-12 max-w-7xl mx-auto flex flex-col items-center overflow-x-hidden">
@@ -129,7 +153,7 @@ export default async function DynamicPromptPage({ params }: { params: Promise<{ 
             subject={subjectId}
             topic={slugToTopic(slug)}
             wordCount={wordCount}
-            fromCache={fromCache}
+            fromCache={false}
           />
         </SwipeableContainer>
       </div>
