@@ -4,168 +4,21 @@ import * as schema from '../src/lib/db/schema';
 import { slugifyTopic } from '../src/lib/prompts/slugifier';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 // Define high-yield templates for all subjects
+const masterTemplate = fs.readFileSync(path.resolve(__dirname, '../Master Prompt V2/Medical tutor master prompt template.md'), 'utf-8');
+
 const templates: Record<string, { id: string; name: string; content: string }> = {
-  pathology: {
-    id: 'pt_path_001',
-    name: 'Initial pathology template',
-    content: `
-## Pathogenesis
-Act as an expert pathologist. Explain the pathogenesis of {{TOPIC}}. Focus on the sequence of events from initial injury to morphological changes.
-
-## Gross Morphology
-Describe the macroscopic appearance of the affected organs in {{TOPIC}}.
-
-## Microscopic Morphology
-Describe the key histological features and findings on light microscopy for {{TOPIC}}.
-
-## Clinical Correlation
-How do the pathological changes in {{TOPIC}} translate into the patient's signs and symptoms?
-
-## Complications
-What are the major pathological and clinical complications of {{TOPIC}}?
-
-## Diagnostic Markers
-List any relevant immunohistochemical stains, genetic markers, or special stains useful for diagnosing {{TOPIC}}.
-
-## Differential Diagnosis
-List the top pathological differential diagnoses for {{TOPIC}} and how to distinguish them microscopically.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  anatomy: {
-    id: 'pt_anat_001',
-    name: 'Initial anatomy template',
-    content: `
-## Anatomical Overview
-Act as an expert anatomist. Provide a comprehensive anatomical overview of {{TOPIC}}. Include its main subdivisions or components.
-
-## Relations and Location
-Describe the anatomical relations, borders, and location of {{TOPIC}} relative to surrounding structures.
-
-## Vascular Supply and Lymphatics
-Detail the arterial supply, venous drainage, and lymphatic drainage of {{TOPIC}}.
-
-## Innervation
-Describe the nerve supply (sensory, motor, and autonomic if applicable) of {{TOPIC}}.
-
-## Histology and Microanatomy
-Detail the microscopic structure, epithelial lining, and cellular composition of {{TOPIC}}.
-
-## Embryology and Development
-Briefly explain the embryological origin and development of {{TOPIC}}, including any key developmental milestones.
-
-## Clinical Anatomy
-Correlate the anatomical features of {{TOPIC}} with common clinical procedures, injuries, or pathologies (e.g., surgical access points, referred pain).
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  physiology: {
-    id: 'pt_phys_001',
-    name: 'Initial physiology template',
-    content: `
-## Physiological Mechanisms
-Act as an expert physiologist. Explain the normal physiological processes and pathways of {{TOPIC}}.
-
-## Cellular and Molecular Functions
-Describe the cellular and molecular mechanisms underlying {{TOPIC}}.
-
-## Regulation and Control
-How is {{TOPIC}} regulated (e.g., feedback loops, neural/hormonal controls) to maintain homeostasis?
-
-## Integration with Other Systems
-Explain how {{TOPIC}} interacts with and affects other organ systems in the body.
-
-## Physiological Response to Stress/Exercise
-Describe how {{TOPIC}} responds or adapts to stressors, exercise, or environmental changes.
-
-## Clinical Correlation
-Explain how pathophysiological disruptions of {{TOPIC}} lead to clinical manifestations.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  pharmacology: {
-    id: 'pt_phar_001',
-    name: 'Initial pharmacology template',
-    content: `
-## Drug Class and Mechanism of Action
-Act as an expert pharmacologist. Explain the drug class, chemical structure (if relevant), and molecular mechanism of action of {{TOPIC}}.
-
-## Pharmacokinetics
-Detail the absorption, distribution, metabolism, and excretion (ADME) of {{TOPIC}}.
-
-## Clinical Indications
-What are the FDA-approved and off-label clinical uses of {{TOPIC}}?
-
-## Adverse Effects and Toxicity
-List the common and severe side effects, toxicity profile, and antidote (if applicable) for {{TOPIC}}.
-
-## Contraindications and Drug Interactions
-Describe the absolute and relative contraindications, and major drug-drug or drug-food interactions of {{TOPIC}}.
-
-## Resistance Mechanisms
-If applicable, explain the mechanisms of drug resistance associated with {{TOPIC}}.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  microbiology: {
-    id: 'pt_micr_001',
-    name: 'Initial microbiology template',
-    content: `
-## Classification and Characteristics
-Act as an expert microbiologist. Classify {{TOPIC}} (bacterial, viral, fungal, parasitic) and detail its morphologic and staining characteristics.
-
-## Pathogenicity and Virulence Factors
-Explain how {{TOPIC}} causes disease, including its key virulence factors (toxins, capsules, enzymes).
-
-## Transmission and Epidemiology
-Describe the reservoir, modes of transmission, risk factors, and epidemiology of {{TOPIC}}.
-
-## Clinical Manifestations
-What are the key clinical presentations, syndromes, and diseases caused by {{TOPIC}}?
-
-## Laboratory Diagnosis
-Detail the methods used to identify {{TOPIC}} (e.g., cultures, staining, PCR, serology, special media).
-
-## Prevention and Treatment
-Describe the vaccines, prophylactic measures, and primary antimicrobial treatments for {{TOPIC}}.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  biochemistry: {
-    id: 'pt_bioc_001',
-    name: 'Initial biochemistry template',
-    content: `
-## Metabolic Pathways and Cycles
-Act as an expert biochemist. Describe the major metabolic pathways, cycles, or biochemical processes involving {{TOPIC}}.
-
-## Key Enzymes and Regulation
-Identify the rate-limiting and key regulatory enzymes, cofactors, and allosteric/hormonal regulators of {{TOPIC}}.
-
-## Molecular Structures and Reactions
-Detail the chemical structures, substrates, products, and thermodynamics of key reactions in {{TOPIC}}.
-
-## Cellular Localization
-Where do the biochemical events of {{TOPIC}} take place within the cell (e.g., mitochondria, cytosol)?
-
-## Clinical/Inborn Errors of Metabolism
-Explain the clinical disorders, genetic mutations, and enzyme deficiencies associated with {{TOPIC}} (e.g., inborn errors of metabolism).
-
-## Diagnostic Tests and Indicators
-Describe biochemically relevant lab tests or markers used to assess {{TOPIC}}.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  }
+  pathology: { id: 'pt_path_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  anatomy: { id: 'pt_anat_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  physiology: { id: 'pt_phys_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  pharmacology: { id: 'pt_phar_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  microbiology: { id: 'pt_micr_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  biochemistry: { id: 'pt_bioc_001', name: 'Master tutor template v2.0', content: masterTemplate },
 };
 
 const topicsSeedData: Record<string, string[]> = {
@@ -283,16 +136,26 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
         id: info.id,
         subjectId,
         template: info.content,
-        version: 1,
+        version: 2,
         isActive: true,
         changelog: info.name,
-        createdAt: new Date()
+        createdAt: new Date(),
+        isInteractive: true,
+        requiredVariables: [
+          { key: 'OUTPUT_LANGUAGE', label: 'Output Language', control: 'select', defaultValue: 'German', options: ['German', 'English', 'Spanish', 'French', 'Arabic'], required: true },
+          { key: 'ANALOGY_DOMAIN', label: 'Analogy Domain', control: 'select', defaultValue: 'Cooking and Culinary Arts', options: ['Cooking and Culinary Arts', 'Construction and Architecture', 'Music and Orchestra', 'Sports and Athletics', 'Transportation and Mechanics'], required: true },
+          { key: 'MAX_REMEDIATION_CYCLES', label: 'Max Remediation Cycles', control: 'select', defaultValue: '2', options: ['1', '2', '3', '4', '5'], required: true },
+          { key: 'TERMINOLOGY_STANDARD', label: 'Terminology Standard', control: 'text', defaultValue: 'Standard', required: true }
+        ]
       }).onConflictDoUpdate({
         target: schema.promptTemplates.id,
         set: {
           template: schema.promptTemplates.template,
+          version: schema.promptTemplates.version,
           isActive: schema.promptTemplates.isActive,
-          changelog: schema.promptTemplates.changelog
+          changelog: schema.promptTemplates.changelog,
+          isInteractive: schema.promptTemplates.isInteractive,
+          requiredVariables: schema.promptTemplates.requiredVariables
         }
       });
     }
