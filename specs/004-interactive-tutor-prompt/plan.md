@@ -123,12 +123,66 @@ export function strategyForTemplate(template: { isInteractive: boolean }): Valid
 **File**: `src/lib/db/schema.ts`
 
 ```typescript
+import type { TemplateVariableDefinition } from '../prompts/variable-schema';
+
 // Add these columns to the `promptTemplates` table:
 isInteractive: integer('is_interactive', { mode: 'boolean' }).notNull().default(false),
-requiredVariables: text('required_variables', { mode: 'json' }).$type<string[]>(),
+requiredVariables: text('required_variables', { mode: 'json' })
+  .$type<TemplateVariableDefinition[]>()
+  .notNull()
+  .$defaultFn(() => []),
 ```
 
-*Run `npx drizzle-kit generate` and `npx drizzle-kit push`.*
+Create `src/lib/prompts/variable-schema.ts` before importing this type:
+
+```typescript
+import { z } from 'zod';
+import { Result, ok, err } from '../types/result';
+
+export const TemplateVariableDefinitionSchema = z.object({
+  key: z.string().regex(/^[A-Z][A-Z0-9_]*$/),
+  label: z.string().min(1).max(80),
+  control: z.enum(['select', 'text', 'number']),
+  defaultValue: z.string().max(200),
+  options: z.array(z.string().min(1).max(200)).optional(),
+  required: z.boolean().default(true),
+});
+
+export type TemplateVariableDefinition = z.infer<typeof TemplateVariableDefinitionSchema>;
+
+export type VariableResolutionError =
+  | { code: 'INVALID_VARIABLE_DEFINITION'; message: string }
+  | { code: 'INVALID_VARIABLE_VALUE'; key: string; message: string };
+
+export function resolveTemplateVariables(
+  definitions: readonly TemplateVariableDefinition[],
+  submitted: Record<string, string>
+): Result<Record<string, string>, VariableResolutionError> {
+  const resolved: Record<string, string> = {};
+
+  for (const definition of definitions) {
+    const parsed = TemplateVariableDefinitionSchema.safeParse(definition);
+    if (!parsed.success) {
+      return err({ code: 'INVALID_VARIABLE_DEFINITION', message: parsed.error.message });
+    }
+
+    const value = submitted[definition.key] ?? definition.defaultValue;
+    if (definition.required && value.trim() === '') {
+      return err({ code: 'INVALID_VARIABLE_VALUE', key: definition.key, message: `${definition.label} is required` });
+    }
+
+    if (definition.options && !definition.options.includes(value)) {
+      return err({ code: 'INVALID_VARIABLE_VALUE', key: definition.key, message: `${definition.label} must be one of: ${definition.options.join(', ')}` });
+    }
+
+    resolved[definition.key] = value;
+  }
+
+  return ok(resolved);
+}
+```
+
+*Run the repo's Drizzle generation/push commands. Prefer package scripts if present; otherwise use `pnpm drizzle-kit generate` and `pnpm drizzle-kit push`.*
 
 ### Step 3: Injector Refactor
 
@@ -141,7 +195,8 @@ import { Result, ok, err } from '../types/result';
 
 export type InjectionError =
   | { code: 'TEMPLATE_EMPTY'; message: string }
-  | { code: 'PLACEHOLDER_NOT_FOUND'; message: string };
+  | { code: 'MISSING_PLACEHOLDER'; placeholder: string; message: string }
+  | { code: 'UNRESOLVED_PLACEHOLDER'; placeholder: string; message: string };
 
 export type InjectionSuccess = {
   output: string;
@@ -162,17 +217,34 @@ export function injectVariables(
     return err({ code: 'TEMPLATE_EMPTY', message: 'Template cannot be empty' });
   }
 
-  let matchCount = 0;
-  let unreplacedKeys: string[] = [];
+  const placeholders = Array.from(template.matchAll(/\{\{([A-Z][A-Z0-9_]*)\}\}/g)).map(
+    (match) => match[1]
+  );
 
-  const output = template.replace(/\{\{([A-Z_]+)\}\}/g, (match, key: string) => {
-    if (variables[key] !== undefined) {
-      matchCount++;
-      return variables[key];
+  for (const placeholder of placeholders) {
+    if (variables[placeholder] === undefined) {
+      return err({
+        code: 'MISSING_PLACEHOLDER',
+        placeholder,
+        message: `Missing value for {{${placeholder}}}`,
+      });
     }
-    unreplacedKeys.push(key);
-    return match;
+  }
+
+  let matchCount = 0;
+  const output = template.replace(/\{\{([A-Z][A-Z0-9_]*)\}\}/g, (_match, key: string) => {
+    matchCount++;
+    return variables[key];
   });
+
+  const unresolved = output.match(/\{\{([A-Z][A-Z0-9_]*)\}\}/);
+  if (unresolved) {
+    return err({
+      code: 'UNRESOLVED_PLACEHOLDER',
+      placeholder: unresolved[1],
+      message: `Unresolved placeholder {{${unresolved[1]}}}`,
+    });
+  }
 
   const characterCount = output.length;
   const wordCount = output.trim().split(/\s+/).filter(Boolean).length;
@@ -225,27 +297,30 @@ validateTemplate(template.template, strategyForTemplate(template))
 
 ```typescript
 import { Result } from '../types/result';
-import { SubjectId } from '../types/branded';
+import { SubjectId, Slug } from '../types/branded';
 
 export type GenerateRequest = {
   subjectId: SubjectId;
   topic: string;
+  topicSlug: Slug;
   variables: Record<string, string>;
   rawTemplate: string;
+  templateVersion: number;
   isInteractive: boolean;
 };
 
 export type GenerateSuccess = {
   output: string;
+  cacheKey: Slug;
   placeholderCount: number;
   wordCount: number;
   characterCount: number;
 };
 
 export type GenerateError =
-  | { code: 'SUBJECT_NOT_FOUND' }
   | { code: 'TEMPLATE_MALFORMED'; errors: unknown[] }
-  | { code: 'INJECTION_FAILED'; details: string };
+  | { code: 'INJECTION_FAILED'; details: string }
+  | { code: 'CACHE_KEY_FAILED'; details: string };
 
 export interface Generator {
   generate(request: GenerateRequest): Promise<Result<GenerateSuccess, GenerateError>>;
