@@ -34,6 +34,10 @@ export function buildPromptCacheSlug(input: {
     ? (input.topicSlug.slice(0, maxPrefixLen).replace(/-$/, '') as Slug)
     : input.topicSlug;
 
-  const cacheKeyStr = `${truncatedSlug}${suffix}` as Slug;
-  return ok(cacheKeyStr);
+  const cacheKeyStr = `${truncatedSlug}${suffix}`;
+  const parsedKey = Slug.parse(cacheKeyStr);
+  if (!parsedKey.ok) {
+    return err({ code: 'INVALID_CACHE_KEY', message: parsedKey.error.message });
+  }
+  return ok(parsedKey.value);
 }
