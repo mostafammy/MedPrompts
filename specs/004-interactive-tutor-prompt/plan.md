@@ -184,6 +184,59 @@ export function resolveTemplateVariables(
 
 *Run the repo's Drizzle generation/push commands. Prefer package scripts if present; otherwise use `pnpm drizzle-kit generate` and `pnpm drizzle-kit push`.*
 
+### Step 2b: Medical Tutor Variable Definitions
+
+**File**: `src/lib/prompts/medical-tutor-variables.ts`
+
+```typescript
+import type { TemplateVariableDefinition } from './variable-schema';
+
+export const MEDICAL_TUTOR_VARIABLES = [
+  {
+    key: 'OUTPUT_LANGUAGE',
+    label: 'Language',
+    control: 'select',
+    defaultValue: 'German',
+    options: ['German', 'English', 'Spanish', 'French', 'Arabic'],
+    required: true,
+  },
+  {
+    key: 'ANALOGY_DOMAIN',
+    label: 'Analogy Domain',
+    control: 'select',
+    defaultValue: 'Cooking and Culinary Arts',
+    options: [
+      'Cooking and Culinary Arts',
+      'Construction and Architecture',
+      'Music and Orchestra',
+      'Sports and Athletics',
+      'Transportation and Mechanics',
+    ],
+    required: true,
+  },
+  {
+    key: 'MAX_REMEDIATION_CYCLES',
+    label: 'Max Remediation Cycles',
+    control: 'select',
+    defaultValue: '2',
+    options: ['1', '2', '3', '4', '5'],
+    required: true,
+  },
+] satisfies TemplateVariableDefinition[];
+
+export function terminologyStandardForSubject(subjectId: string): string {
+  const standards: Record<string, string> = {
+    anatomy: 'Terminologia Anatomica',
+    physiology: 'IUPS-recognized physiological nomenclature',
+    pharmacology: 'INN (International Nonproprietary Names)',
+    pathology: 'WHO / ICD-O classification',
+    microbiology: 'Current accepted taxonomic nomenclature',
+  };
+
+  return standards[subjectId] ?? 'the most authoritative current international nomenclature/classification body for this subject';
+}
+```
+
 ### Step 3: Injector Refactor
 
 **File**: `src/lib/prompts/injector.ts`
@@ -488,7 +541,7 @@ export class AnalyticsDecorator implements Generator {
 **File 5f**: `src/lib/prompts/engine.ts` (refactored — thin factory facade)
 
 ```typescript
-import { SubjectId, Topic, Slug } from '../types/branded';
+import { SubjectId } from '../types/branded';
 import { Result, ok, err } from '../types/result';
 import { Database } from '../db/client';
 import { PromptCache } from './cache';
@@ -496,17 +549,24 @@ import { Analytics } from '../analytics';
 import { TopicNormalizationPipeline } from './pipeline';
 import { sanitizeTopic } from './sanitizer';
 import { getActiveTemplate } from './loader';
-import { Generator, GenerateError, GenerateRequest } from './generator';
+import { Generator, GenerateError } from './generator';
 import { CoreGenerator } from './core-generator';
 import { CachingDecorator } from './caching-decorator';
 import { AnalyticsDecorator } from './analytics-decorator';
+import { slugifyTopic } from './slugifier';
+import { resolveTemplateVariables } from './variable-schema';
+import { terminologyStandardForSubject } from './medical-tutor-variables';
 
 export type EngineEnv = {
   hasApiKey: boolean;
   userPlan: 'free' | 'pro';
 };
 
-export type { GenerateError as EngineError };
+export type EngineError =
+  | { code: 'TOPIC_INVALID'; details: string }
+  | { code: 'SUBJECT_NOT_FOUND' }
+  | { code: 'VARIABLE_INVALID'; details: string }
+  | GenerateError;
 
 export class PromptEngine {
   private generator: Generator;
@@ -526,9 +586,9 @@ export class PromptEngine {
   async generatePrompt(
     subjectId: SubjectId,
     topic: string,
-    variables: Record<string, string> = {},
+    submittedVariables: Record<string, string> = {},
     env: EngineEnv
-  ): Promise<Result<string, GenerateError>> {
+  ): Promise<Result<string, EngineError>> {
     // 1. Normalize topic
     const normalized = await this.pipeline.normalize(topic, {
       subjectId,
@@ -538,26 +598,38 @@ export class PromptEngine {
     // 2. Sanitize
     const sanitizedResult = sanitizeTopic(normalized.cleaned);
     if (!sanitizedResult.ok) {
-      return err({ code: 'TOPIC_INVALID' as any, details: sanitizedResult.error.code });
+      return err({ code: 'TOPIC_INVALID', details: sanitizedResult.error.code });
     }
     const safeTopic = sanitizedResult.value;
+    const topicSlug = slugifyTopic(safeTopic);
 
     // 3. Fetch template
     const template = await getActiveTemplate(this.db, subjectId);
     if (!template) {
-      return err({ code: 'SUBJECT_NOT_FOUND' as any });
+      return err({ code: 'SUBJECT_NOT_FOUND' });
     }
 
-    // 4. Delegate to decorator chain
-    const request: GenerateRequest = {
+    // 4. Resolve and validate template variables from metadata
+    const resolvedVariables = resolveTemplateVariables(template.requiredVariables, submittedVariables);
+    if (!resolvedVariables.ok) {
+      return err({ code: 'VARIABLE_INVALID', details: resolvedVariables.error.message });
+    }
+
+    // 5. Delegate to decorator chain
+    const result = await this.generator.generate({
       subjectId,
       topic: safeTopic,
-      variables,
+      topicSlug,
+      variables: {
+        SUBJECT: subjectId,
+        TOPIC: safeTopic,
+        TERMINOLOGY_STANDARD: terminologyStandardForSubject(subjectId),
+        ...resolvedVariables.value,
+      },
       rawTemplate: template.template,
+      templateVersion: template.version,
       isInteractive: template.isInteractive,
-    };
-
-    const result = await this.generator.generate(request);
+    });
 
     return result.ok
       ? ok(result.value.output)
