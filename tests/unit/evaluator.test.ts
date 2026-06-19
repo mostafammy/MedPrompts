@@ -30,9 +30,11 @@ Describe the signs and symptoms.
     const result = validateTemplate(template, strategy);
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error.length).toBeGreaterThanOrEqual(2);
+      expect(result.error.length).toBeGreaterThanOrEqual(4);
       const codes = result.error.map(e => e.code);
       expect(codes).toContain('MISSING_SECTIONS');
+      expect(codes).toContain('MISSING_DISCLAIMER');
+      expect(codes).toContain('MISSING_PLACEHOLDER');
       expect(codes).toContain('WORD_COUNT_OUT_OF_BOUNDS');
     }
   });
