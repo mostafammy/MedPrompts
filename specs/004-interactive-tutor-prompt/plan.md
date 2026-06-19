@@ -362,19 +362,55 @@ export class CoreGenerator implements Generator {
       return err({ code: 'INJECTION_FAILED', details: injectionResult.error.code });
     }
 
-    return ok(injectionResult.value);
+    return ok({ ...injectionResult.value, cacheKey: request.topicSlug });
   }
 }
 ```
 
-**File 5c**: `src/lib/prompts/caching-decorator.ts` (new — cache-aside with variable-hashed keys)
+**File 5c**: `src/lib/prompts/cache-key.ts` (new — canonical variable hash)
+
+```typescript
+import { createHash } from 'node:crypto';
+import { Result, ok, err } from '../types/result';
+import { Slug } from '../types/branded';
+
+export function canonicalJson(value: Record<string, string>): string {
+  const sorted = Object.keys(value)
+    .sort()
+    .reduce<Record<string, string>>((acc, key) => {
+      acc[key] = value[key];
+      return acc;
+    }, {});
+
+  return JSON.stringify(sorted);
+}
+
+export function buildPromptCacheSlug(input: {
+  topicSlug: Slug;
+  templateVersion: number;
+  variables: Record<string, string>;
+}): Result<Slug, { code: 'INVALID_CACHE_KEY'; message: string }> {
+  const hash = createHash('sha256')
+    .update(canonicalJson(input.variables))
+    .digest('hex')
+    .slice(0, 16);
+
+  const parsed = Slug.parse(`${input.topicSlug}-t${input.templateVersion}-${hash}`);
+  if (!parsed.ok) {
+    return err({ code: 'INVALID_CACHE_KEY', message: parsed.error.message });
+  }
+
+  return ok(parsed.value);
+}
+```
+
+**File 5d**: `src/lib/prompts/caching-decorator.ts` (new — cache-aside with versioned variable-hashed keys)
 
 ```typescript
 import { Generator, GenerateRequest, GenerateSuccess, GenerateError } from './generator';
 import { PromptCache } from './cache';
-import { slugifyTopic } from './slugifier';
-import { SubjectId, Slug } from '../types/branded';
-import { Result, ok } from '../types/result';
+import { buildPromptCacheSlug } from './cache-key';
+import { Result, ok, err } from '../types/result';
 
 export class CachingDecorator implements Generator {
   constructor(
@@ -385,14 +421,25 @@ export class CachingDecorator implements Generator {
   async generate(
     request: GenerateRequest
   ): Promise<Result<GenerateSuccess, GenerateError>> {
-    const cacheKey = this.buildCacheKey(request.subjectId, request.topic, request.variables);
+    const cacheKeyResult = buildPromptCacheSlug({
+      topicSlug: request.topicSlug,
+      templateVersion: request.templateVersion,
+      variables: request.variables,
+    });
+
+    if (!cacheKeyResult.ok) {
+      return err({ code: 'CACHE_KEY_FAILED', details: cacheKeyResult.error.message });
+    }
+
+    const cacheKey = cacheKeyResult.value;
 
     const cached = await this.cache.get(request.subjectId, cacheKey);
     if (cached) {
       const wordCount = cached.trim().split(/\s+/).filter(Boolean).length;
       return ok({
         output: cached,
-        placeholderCount: Object.keys(request.variables).length,
+        cacheKey,
+        placeholderCount: 0,
         wordCount,
         characterCount: cached.length,
       });
@@ -404,30 +451,16 @@ export class CachingDecorator implements Generator {
       await this.cache.set(request.subjectId, cacheKey, result.value.output, 2592000);
     }
 
-    return result;
-  }
-
-  private buildCacheKey(
-    subjectId: SubjectId,
-    topic: string,
-    variables: Record<string, string>
-  ): Slug {
-    const sortedVars = Object.keys(variables)
-      .sort()
-      .map((k) => `${k}=${variables[k]}`)
-      .join('&');
-    const compositeKey = sortedVars ? `${topic}-${sortedVars}` : topic;
-    return slugifyTopic(compositeKey);
+    return result.ok ? ok({ ...result.value, cacheKey }) : result;
   }
 }
 ```
 
-**File 5d**: `src/lib/prompts/analytics-decorator.ts` (new — observability, no business logic)
+**File 5e**: `src/lib/prompts/analytics-decorator.ts` (new — observability, no business logic)
 
 ```typescript
 import { Generator, GenerateRequest, GenerateSuccess, GenerateError } from './generator';
 import { Analytics } from '../analytics';
-import { slugifyTopic } from './slugifier';
 import { Result } from '../types/result';
 
 export class AnalyticsDecorator implements Generator {
@@ -444,8 +477,7 @@ export class AnalyticsDecorator implements Generator {
     const latency = Date.now() - start;
 
     if (result.ok) {
-      const slug = slugifyTopic(request.topic);
-      this.analytics.trackPromptGenerated(request.subjectId, slug, latency);
+      this.analytics.trackPromptGenerated(request.subjectId, result.value.cacheKey, latency);
     }
 
     return result;
@@ -453,7 +485,7 @@ export class AnalyticsDecorator implements Generator {
 }
 ```
 
-**File 5e**: `src/lib/prompts/engine.ts` (refactored — thin factory facade)
+**File 5f**: `src/lib/prompts/engine.ts` (refactored — thin factory facade)
 
 ```typescript
 import { SubjectId, Topic, Slug } from '../types/branded';
