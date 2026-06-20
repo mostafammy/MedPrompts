@@ -18,6 +18,8 @@ import { usePromptHistory } from '@/hooks/usePromptHistory';
 import { TTSPlayer } from './TTSPlayer';
 import { FloatingActionBar } from '../ui/FloatingActionBar';
 import { useContainerScrollDirection } from '@/hooks/useContainerScrollDirection';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export interface PromptDisplayProps {
   prompt: string;
@@ -217,20 +219,20 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
       {/* Code / Prompt Body */}
       <div 
         ref={scrollContainerRef}
-        className="p-4 sm:p-8 bg-zinc-50/50 dark:bg-zinc-950/50 max-h-[600px] overflow-y-auto relative selection:bg-blue-200 dark:selection:bg-blue-900/50 custom-scrollbar overscroll-y-none"
+        onClick={handleDoubleTap}
+        className="p-4 sm:p-8 bg-zinc-50/50 dark:bg-zinc-950/50 max-h-[600px] overflow-y-auto relative selection:bg-blue-200 dark:selection:bg-blue-900/50 custom-scrollbar overscroll-y-none select-text cursor-text markdown-body"
       >
-        <pre 
-          onClick={handleDoubleTap}
-          className={`whitespace-pre-wrap font-mono text-zinc-800 dark:text-zinc-300 select-text cursor-text ${
-            fontSize === 'sm'
-              ? 'text-[12px] md:text-[13px] leading-relaxed'
-              : fontSize === 'lg'
-              ? 'text-base md:text-lg leading-relaxed'
-              : 'text-sm md:text-[15px] leading-relaxed'
-          }`}
-        >
-          <code>{prompt}</code>
-        </pre>
+        <div className={
+          fontSize === 'sm'
+            ? 'text-[12px] md:text-[13px]'
+            : fontSize === 'lg'
+            ? 'text-base md:text-lg'
+            : 'text-sm md:text-[15px]'
+        }>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {prompt}
+          </ReactMarkdown>
+        </div>
       </div>
 
       {/* Action Footer */}
