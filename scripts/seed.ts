@@ -11,7 +11,112 @@ import fs from 'fs';
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 // Define high-yield templates for all subjects
-const masterTemplate = fs.readFileSync(path.resolve(__dirname, '../Master Prompt V2/Medical tutor master prompt template.md'), 'utf-8');
+const templates: Record<string, { id: string; name: string; content: string }> = {
+  pathology: {
+    id: 'pt_path_001',
+    name: 'Initial pathology template',
+    content: `
+## Pathogenesis
+Act as an expert pathologist. Explain the pathogenesis of {{TOPIC}}. Focus on the sequence of events from initial injury to morphological changes.
+
+## Gross Morphology
+Describe the macroscopic appearance of the affected organs in {{TOPIC}}.
+
+## Microscopic Morphology
+Describe the key histological features and findings on light microscopy for {{TOPIC}}.
+
+## Clinical Correlation
+How do the pathological changes in {{TOPIC}} translate into the patient's signs and symptoms?
+
+## Complications
+What are the major pathological and clinical complications of {{TOPIC}}?
+
+## Diagnostic Markers
+List any relevant immunohistochemical stains, genetic markers, or special stains useful for diagnosing {{TOPIC}}.
+
+## Differential Diagnosis
+List the top pathological differential diagnoses for {{TOPIC}} and how to distinguish them microscopically.
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
+  anatomy: {
+    id: 'pt_anat_001',
+    name: 'Initial anatomy template',
+    content: `
+## Anatomical Overview
+Act as an expert anatomist. Provide a comprehensive anatomical overview of {{TOPIC}}. Include its main subdivisions or components.
+
+## Relations and Location
+Describe the anatomical relations, borders, and location of {{TOPIC}} relative to surrounding structures.
+
+## Vascular Supply and Lymphatics
+Detail the arterial supply, venous drainage, and lymphatic drainage of {{TOPIC}}.
+
+## Innervation
+Describe the nerve supply (sensory, motor, and autonomic if applicable) of {{TOPIC}}.
+
+## Histology and Microanatomy
+Detail the microscopic structure, epithelial lining, and cellular composition of {{TOPIC}}.
+
+## Embryology and Development
+Briefly explain the embryological origin and development of {{TOPIC}}, including any key developmental milestones.
+
+## Clinical Anatomy
+Correlate the anatomical features of {{TOPIC}} with common clinical procedures, injuries, or pathologies (e.g., surgical access points, referred pain).
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
+  anatomy: {
+    id: 'pt_anat_001',
+    name: 'Initial anatomy template',
+    content: `
+## Anatomical Overview
+Act as an expert anatomist. Provide a comprehensive anatomical overview of {{TOPIC}}. Include its main subdivisions or components.
+
+## Relations and Location
+Describe the anatomical relations, borders, and location of {{TOPIC}} relative to surrounding structures.
+
+## Vascular Supply and Lymphatics
+Detail the arterial supply, venous drainage, and lymphatic drainage of {{TOPIC}}.
+
+## Innervation
+Describe the nerve supply (sensory, motor, and autonomic if applicable) of {{TOPIC}}.
+
+## Histology and Microanatomy
+Detail the microscopic structure, epithelial lining, and cellular composition of {{TOPIC}}.
+
+## Embryology and Development
+Briefly explain the embryological origin and development of {{TOPIC}}, including any key developmental milestones.
+
+## Clinical Anatomy
+Correlate the anatomical features of {{TOPIC}} with common clinical procedures, injuries, or pathologies (e.g., surgical access points, referred pain).
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
+  physiology: {
+    id: 'pt_phys_001',
+    name: 'Initial physiology template',
+    content: `
+## Physiological Mechanisms
+Act as an expert physiologist. Explain the normal physiological processes and pathways of {{TOPIC}}.
+
+## Cellular and Molecular Functions
+Describe the cellular and molecular mechanisms underlying {{TOPIC}}.
+
+## Regulation and Control
+How is {{TOPIC}} regulated (e.g., feedback loops, neural/hormonal controls) to maintain homeostasis?
+
+## Integration with Other Systems
+Explain how {{TOPIC}} interacts with and affects other organ systems in the body.
+
+## Physiological Response to Stress/Exercise
+Describe how {{TOPIC}} responds or adapts to stressors, exercise, or environmental changes.
+
+## Clinical Correlation
+Explain how pathophysiological disruptions of {{TOPIC}} lead to clinical manifestations.
 
 const templates: Record<string, { id: string; name: string; content: string }> = {
   pathology: { id: 'pt_path_001', name: 'Master tutor template v2.0', content: masterTemplate },
@@ -113,6 +218,13 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
   const db = drizzle(client, { schema });
 
   try {
+    console.log('Ensuring tables exist...');
+    await client.execute('CREATE TABLE IF NOT EXISTS subjects (id TEXT PRIMARY KEY, label TEXT NOT NULL, icon TEXT NOT NULL, sort_order INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL)');
+    await client.execute('CREATE TABLE IF NOT EXISTS prompt_templates (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, template TEXT NOT NULL, version INTEGER NOT NULL, semver TEXT NOT NULL DEFAULT \'1.0.0\', version_major INTEGER NOT NULL DEFAULT 1, version_minor INTEGER NOT NULL DEFAULT 0, version_patch INTEGER NOT NULL DEFAULT 0, checksum TEXT NOT NULL DEFAULT \'\', is_active INTEGER NOT NULL DEFAULT 0, changelog TEXT, created_at INTEGER NOT NULL, is_interactive INTEGER NOT NULL DEFAULT 0, required_variables TEXT NOT NULL DEFAULT \'[]\', FOREIGN KEY (subject_id) REFERENCES subjects(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS template_versions (id TEXT PRIMARY KEY, template_id TEXT NOT NULL, semver TEXT NOT NULL, template TEXT NOT NULL, checksum TEXT NOT NULL, changelog TEXT, parent_semver TEXT, activated_by TEXT NOT NULL, activated_at INTEGER NOT NULL, deactivated_at INTEGER, FOREIGN KEY (template_id) REFERENCES prompt_templates(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS topics_seed (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, topic TEXT NOT NULL, is_high_yield INTEGER NOT NULL DEFAULT 0, FOREIGN KEY (subject_id) REFERENCES subjects(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS prompt_events (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, copied_at INTEGER NOT NULL, copy_method TEXT)');
+
     console.log('Inserting subjects...');
     await db.insert(schema.subjects).values([
       { id: 'pathology', label: 'Pathology', icon: 'microscope', sortOrder: 1, isActive: true },

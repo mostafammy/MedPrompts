@@ -25,9 +25,10 @@ export interface PromptDisplayProps {
   topic: string;
   wordCount: number;
   fromCache: boolean;
+  dir?: string | undefined;
 }
 
-export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _fromCache }: PromptDisplayProps) {
+export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _fromCache, dir }: PromptDisplayProps) {
   const router = useRouter();
   const scrollContainerRef = usePullToClear<HTMLDivElement>(() => {
     soundEngine.playClick();
@@ -95,12 +96,26 @@ export function PromptDisplay({ prompt, subject, topic, wordCount, fromCache: _f
     }
   };
 
+  let initialX = 0;
+  let initialY = 30;
+  let initialScale = 0.98;
+
+  if (dir === 'next') {
+    initialX = 180;
+    initialY = 0;
+    initialScale = 0.99;
+  } else if (dir === 'prev') {
+    initialX = -180;
+    initialY = 0;
+    initialScale = 0.99;
+  }
+
   return (
     <>
     <motion.article 
-      initial={{ opacity: 0, y: 30, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ type: 'spring', stiffness: 250, damping: 25 }}
+      initial={{ opacity: 0, x: initialX, y: initialY, scale: initialScale }}
+      animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 23 }}
       aria-label={`${subject} prompt for ${topic}`} 
       className="w-full max-w-4xl mx-auto mt-12 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-2xl saturate-150 rounded-3xl shadow-2xl shadow-zinc-200/50 dark:shadow-none border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden relative"
     >

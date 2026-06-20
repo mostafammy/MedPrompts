@@ -17,6 +17,11 @@ export const promptTemplates = sqliteTable('prompt_templates', {
   subjectId: text('subject_id').notNull().references(() => subjects.id),
   template: text('template').notNull(),
   version: integer('version').notNull(),
+  semver: text('semver').notNull().default('1.0.0'),
+  versionMajor: integer('version_major').notNull().default(1),
+  versionMinor: integer('version_minor').notNull().default(0),
+  versionPatch: integer('version_patch').notNull().default(0),
+  checksum: text('checksum').notNull().default(''),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(false),
   changelog: text('changelog'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
@@ -26,7 +31,25 @@ export const promptTemplates = sqliteTable('prompt_templates', {
     .notNull()
     .$defaultFn(() => []),
 }, (table) => ({
-  activeSubjectIdx: index('active_subject_idx').on(table.subjectId, table.isActive)
+  activeSubjectIdx: index('active_subject_idx').on(table.subjectId, table.isActive),
+  semverLookupIdx: index('semver_lookup_idx').on(table.subjectId, table.versionMajor, table.versionMinor),
+  checksumIdx: index('checksum_idx').on(table.subjectId, table.checksum),
+}));
+
+export const templateVersions = sqliteTable('template_versions', {
+  id: text('id').primaryKey(),
+  templateId: text('template_id').notNull().references(() => promptTemplates.id),
+  semver: text('semver').notNull(),
+  template: text('template').notNull(),
+  checksum: text('checksum').notNull(),
+  changelog: text('changelog'),
+  parentSemver: text('parent_semver'),
+  activatedBy: text('activated_by').notNull(),
+  activatedAt: integer('activated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  deactivatedAt: integer('deactivated_at', { mode: 'timestamp' }),
+}, (table) => ({
+  historyIdx: index('version_history_idx').on(table.templateId, table.activatedAt),
+  parentLookupIdx: index('version_parent_lookup_idx').on(table.templateId, table.parentSemver),
 }));
 
 export const topicsSeed = sqliteTable('topics_seed', {
@@ -55,5 +78,6 @@ export type PromptTemplate = typeof promptTemplates.$inferSelect & {
   isInteractive: boolean;
   requiredVariables: TemplateVariableDefinition[];
 };
+export type TemplateVersion = typeof templateVersions.$inferSelect;
 export type TopicSeed = typeof topicsSeed.$inferSelect;
 export type PromptEvent = typeof promptEvents.$inferSelect;

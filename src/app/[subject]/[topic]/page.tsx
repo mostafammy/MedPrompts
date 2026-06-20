@@ -15,6 +15,10 @@ import { SubjectGrid } from '@/components/SubjectGrid/SubjectGrid';
 import { SwipeableContainer } from '@/components/SwipeableContainer';
 import { z } from 'zod';
 import { terminologyStandardForSubject } from '@/lib/prompts/medical-tutor-variables';
+import { DatabaseVersionReader } from '@/lib/prompts/version-reader';
+import { DatabaseVersionWriter } from '@/lib/prompts/version-writer';
+import { DatabaseVersionActivator } from '@/lib/prompts/version-activator';
+import { SemanticInvalidationStrategy } from '@/lib/prompts/cache-invalidation-strategy';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +36,10 @@ function getEngine(): PromptEngine {
   const promptCache = createInMemoryCache();
   const normCache = new NormalizerCache(createInMemoryCacheStore());
   const pipeline = new TopicNormalizationPipeline([], normCache);
-  engineInstance = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
+  const versionReader = new DatabaseVersionReader(db);
+  const versionWriter = new DatabaseVersionWriter(db);
+  const versionActivator = new DatabaseVersionActivator(db, promptCache, new SemanticInvalidationStrategy(), plausibleAnalytics);
+  engineInstance = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics, versionReader, versionWriter, versionActivator);
   return engineInstance;
 }
 
@@ -99,6 +106,10 @@ export default async function DynamicPromptPage({
     TERMINOLOGY_STANDARD: terminologyStandardForSubject(subject),
   };
 
+  const queryString = parsedParams.success
+    ? new URLSearchParams(parsedParams.data).toString()
+    : '';
+
   const parsedSubject = SubjectId.parse(subject);
   const parsedSlug = Slug.parse(topic);
 
@@ -130,6 +141,7 @@ export default async function DynamicPromptPage({
 
   const promptText = result.value;
   const wordCount = promptText.split(/\s+/).filter(Boolean).length;
+  const dir = typeof rawSearchParams.dir === 'string' ? rawSearchParams.dir : undefined;
 
   return (
     <main className="min-h-[100dvh] p-4 sm:p-8 md:p-24 pt-12 max-w-7xl mx-auto flex flex-col items-center overflow-x-hidden">
@@ -147,13 +159,14 @@ export default async function DynamicPromptPage({
       <SubjectGrid variant="compact" />
 
       <div className="w-full">
-        <SwipeableContainer subjects={subjects} currentSubjectId={subjectId}>
+        <SwipeableContainer subjects={subjects} currentSubjectId={subjectId} topicSlug={slug} searchParams={queryString}>
           <PromptDisplay
             prompt={promptText}
             subject={subjectId}
             topic={slugToTopic(slug)}
             wordCount={wordCount}
             fromCache={false}
+            dir={dir}
           />
         </SwipeableContainer>
       </div>

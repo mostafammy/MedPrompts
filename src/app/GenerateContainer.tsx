@@ -49,30 +49,36 @@ export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-lg mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <CustomSelect
-          label="Language"
-          value={language}
-          options={OUTPUT_LANGUAGES}
-          onChange={setLanguage}
-          icon={<Icons.Globe className="w-4 h-4" />}
-        />
+      <div className="w-full max-w-lg mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="sm:col-span-1">
+          <CustomSelect
+            label="Language"
+            value={language}
+            options={OUTPUT_LANGUAGES}
+            onChange={setLanguage}
+            icon={<Icons.Globe className="w-4 h-4" />}
+          />
+        </div>
 
-        <CustomSelect
-          label="Analogy Domain"
-          value={analogy}
-          options={ANALOGY_DOMAINS}
-          onChange={setAnalogy}
-          icon={<Icons.Sparkles className="w-4 h-4" />}
-        />
+        <div className="sm:col-span-2">
+          <CustomSelect
+            label="Analogy Domain"
+            value={analogy}
+            options={ANALOGY_DOMAINS}
+            onChange={setAnalogy}
+            icon={<Icons.Sparkles className="w-4 h-4" />}
+          />
+        </div>
 
-        <CustomSelect
-          label="Max Cycles"
-          value={cycles}
-          options={REMEDIATION_CYCLES}
-          onChange={setCycles}
-          icon={<Icons.RotateCw className="w-4 h-4" />}
-        />
+        <div className="sm:col-span-1">
+          <CustomSelect
+            label="Max Cycles"
+            value={cycles}
+            options={REMEDIATION_CYCLES}
+            onChange={setCycles}
+            icon={<Icons.RotateCw className="w-4 h-4" />}
+          />
+        </div>
       </div>
 
       <TopicInput key={subjectId || 'none'} subjectId={subjectId} onGenerate={handleGenerate} />
