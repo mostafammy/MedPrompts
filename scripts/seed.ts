@@ -66,6 +66,34 @@ Correlate the anatomical features of {{TOPIC}} with common clinical procedures, 
 ⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
 `.trim(),
   },
+  anatomy: {
+    id: 'pt_anat_001',
+    name: 'Initial anatomy template',
+    content: `
+## Anatomical Overview
+Act as an expert anatomist. Provide a comprehensive anatomical overview of {{TOPIC}}. Include its main subdivisions or components.
+
+## Relations and Location
+Describe the anatomical relations, borders, and location of {{TOPIC}} relative to surrounding structures.
+
+## Vascular Supply and Lymphatics
+Detail the arterial supply, venous drainage, and lymphatic drainage of {{TOPIC}}.
+
+## Innervation
+Describe the nerve supply (sensory, motor, and autonomic if applicable) of {{TOPIC}}.
+
+## Histology and Microanatomy
+Detail the microscopic structure, epithelial lining, and cellular composition of {{TOPIC}}.
+
+## Embryology and Development
+Briefly explain the embryological origin and development of {{TOPIC}}, including any key developmental milestones.
+
+## Clinical Anatomy
+Correlate the anatomical features of {{TOPIC}} with common clinical procedures, injuries, or pathologies (e.g., surgical access points, referred pain).
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
   physiology: {
     id: 'pt_phys_001',
     name: 'Initial physiology template',
@@ -259,6 +287,13 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
   const db = drizzle(client, { schema });
 
   try {
+    console.log('Ensuring tables exist...');
+    await client.execute('CREATE TABLE IF NOT EXISTS subjects (id TEXT PRIMARY KEY, label TEXT NOT NULL, icon TEXT NOT NULL, sort_order INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL)');
+    await client.execute('CREATE TABLE IF NOT EXISTS prompt_templates (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, template TEXT NOT NULL, version INTEGER NOT NULL, semver TEXT NOT NULL DEFAULT \'1.0.0\', version_major INTEGER NOT NULL DEFAULT 1, version_minor INTEGER NOT NULL DEFAULT 0, version_patch INTEGER NOT NULL DEFAULT 0, checksum TEXT NOT NULL DEFAULT \'\', is_active INTEGER NOT NULL DEFAULT 0, changelog TEXT, created_at INTEGER NOT NULL, is_interactive INTEGER NOT NULL DEFAULT 0, required_variables TEXT NOT NULL DEFAULT \'[]\', FOREIGN KEY (subject_id) REFERENCES subjects(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS template_versions (id TEXT PRIMARY KEY, template_id TEXT NOT NULL, semver TEXT NOT NULL, template TEXT NOT NULL, checksum TEXT NOT NULL, changelog TEXT, parent_semver TEXT, activated_by TEXT NOT NULL, activated_at INTEGER NOT NULL, deactivated_at INTEGER, FOREIGN KEY (template_id) REFERENCES prompt_templates(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS topics_seed (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, topic TEXT NOT NULL, is_high_yield INTEGER NOT NULL DEFAULT 0, FOREIGN KEY (subject_id) REFERENCES subjects(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS prompt_events (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, copied_at INTEGER NOT NULL, copy_method TEXT)');
+
     console.log('Inserting subjects...');
     await db.insert(schema.subjects).values([
       { id: 'pathology', label: 'Pathology', icon: 'microscope', sortOrder: 1, isActive: true },
