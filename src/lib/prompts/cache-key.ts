@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Result, ok, err } from '../types/result';
 import { Slug } from '../types/branded';
+import { SemVer } from './semver';
 
 export function canonicalJson(value: Record<string, string>): string {
   const sorted = Object.keys(value)
@@ -13,9 +14,13 @@ export function canonicalJson(value: Record<string, string>): string {
   return JSON.stringify(sorted);
 }
 
+function semverSlug(sv: SemVer): string {
+  return `v${sv.major}-${sv.minor}-${sv.patch}`;
+}
+
 export function buildPromptCacheSlug(input: {
   topicSlug: Slug;
-  templateVersion: number;
+  semver: SemVer;
   variables: Record<string, string>;
 }): Result<Slug, { code: 'INVALID_CACHE_KEY'; message: string }> {
   const hash = createHash('sha256')
@@ -23,11 +28,10 @@ export function buildPromptCacheSlug(input: {
     .digest('hex')
     .slice(0, 16);
 
-  const suffix = `-t${input.templateVersion}-${hash}`;
-  // Slug.parse enforces a 74-char maximum. Truncate topicSlug to stay within limits.
+  const suffix = `-${semverSlug(input.semver)}-${hash}`;
   const maxPrefixLen = 74 - suffix.length;
   if (maxPrefixLen < 10) {
-    return err({ code: 'INVALID_CACHE_KEY', message: `Template version ${input.templateVersion} makes cache key too long` });
+    return err({ code: 'INVALID_CACHE_KEY', message: `Semver ${input.semver.toString()} makes cache key too long` });
   }
 
   const truncatedSlug = input.topicSlug.length > maxPrefixLen
@@ -40,4 +44,8 @@ export function buildPromptCacheSlug(input: {
     return err({ code: 'INVALID_CACHE_KEY', message: parsedKey.error.message });
   }
   return ok(parsedKey.value);
+}
+
+export function versionPrefix(sv: SemVer): string {
+  return `-v${sv.major}-${sv.minor}-`;
 }
