@@ -7,7 +7,7 @@ export type GenerateRequest = {
   topicSlug: Slug;
   variables: Record<string, string>;
   rawTemplate: string;
-  templateVersion: number;
+  templateSemver: string;
   isInteractive: boolean;
 };
 

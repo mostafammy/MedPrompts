@@ -5,7 +5,7 @@ import { PromptCache } from './cache';
 import { Analytics } from '../analytics';
 import { TopicNormalizationPipeline } from './pipeline';
 import { sanitizeTopic } from './sanitizer';
-import { getActiveTemplate } from './loader';
+import { getActiveTemplateForSubject } from './repository';
 import { Generator, GenerateError } from './generator';
 import { CoreGenerator } from './core-generator';
 import { CachingDecorator } from './caching-decorator';
@@ -13,6 +13,9 @@ import { AnalyticsDecorator } from './analytics-decorator';
 import { slugifyTopic } from './slugifier';
 import { resolveTemplateVariables } from './variable-schema';
 import { terminologyStandardForSubject } from './medical-tutor-variables';
+import { VersionReader } from './version-reader';
+import { VersionWriter } from './version-writer';
+import { VersionActivator } from './version-activator';
 
 export type EngineEnv = {
   hasApiKey: boolean;
@@ -33,10 +36,13 @@ export class PromptEngine {
     private db: Database,
     private promptCache: PromptCache,
     private pipeline: TopicNormalizationPipeline,
-    private analytics: Analytics
+    private analytics: Analytics,
+    private versionReader: VersionReader,
+    private versionWriter: VersionWriter,
+    private versionActivator: VersionActivator
   ) {
     const core = new CoreGenerator();
-    const cached = new CachingDecorator(core, this.promptCache);
+    const cached = new CachingDecorator(core, this.promptCache, this.analytics);
     this.generator = new AnalyticsDecorator(cached, this.analytics);
   }
 
@@ -59,7 +65,7 @@ export class PromptEngine {
       const safeTopic = sanitizedResult.value;
       const topicSlug = slugifyTopic(safeTopic);
 
-      const template = await getActiveTemplate(this.db, subjectId);
+      const template = await this.versionReader.getActive(this.db, subjectId);
       if (!template) {
         return err({ code: 'SUBJECT_NOT_FOUND' });
       }
@@ -80,7 +86,7 @@ export class PromptEngine {
           ...resolvedVariables.value,
         },
         rawTemplate: template.template,
-        templateVersion: template.version,
+        templateSemver: template.semver,
         isInteractive: template.isInteractive ?? false,
       });
 
