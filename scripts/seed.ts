@@ -1,9 +1,11 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
+import { sql } from 'drizzle-orm';
 import * as schema from '../src/lib/db/schema';
 import { slugifyTopic } from '../src/lib/prompts/slugifier';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
@@ -116,84 +118,13 @@ Describe how {{TOPIC}} responds or adapts to stressors, exercise, or environment
 ## Clinical Correlation
 Explain how pathophysiological disruptions of {{TOPIC}} lead to clinical manifestations.
 
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  pharmacology: {
-    id: 'pt_phar_001',
-    name: 'Initial pharmacology template',
-    content: `
-## Drug Class and Mechanism of Action
-Act as an expert pharmacologist. Explain the drug class, chemical structure (if relevant), and molecular mechanism of action of {{TOPIC}}.
-
-## Pharmacokinetics
-Detail the absorption, distribution, metabolism, and excretion (ADME) of {{TOPIC}}.
-
-## Clinical Indications
-What are the FDA-approved and off-label clinical uses of {{TOPIC}}?
-
-## Adverse Effects and Toxicity
-List the common and severe side effects, toxicity profile, and antidote (if applicable) for {{TOPIC}}.
-
-## Contraindications and Drug Interactions
-Describe the absolute and relative contraindications, and major drug-drug or drug-food interactions of {{TOPIC}}.
-
-## Resistance Mechanisms
-If applicable, explain the mechanisms of drug resistance associated with {{TOPIC}}.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  microbiology: {
-    id: 'pt_micr_001',
-    name: 'Initial microbiology template',
-    content: `
-## Classification and Characteristics
-Act as an expert microbiologist. Classify {{TOPIC}} (bacterial, viral, fungal, parasitic) and detail its morphologic and staining characteristics.
-
-## Pathogenicity and Virulence Factors
-Explain how {{TOPIC}} causes disease, including its key virulence factors (toxins, capsules, enzymes).
-
-## Transmission and Epidemiology
-Describe the reservoir, modes of transmission, risk factors, and epidemiology of {{TOPIC}}.
-
-## Clinical Manifestations
-What are the key clinical presentations, syndromes, and diseases caused by {{TOPIC}}?
-
-## Laboratory Diagnosis
-Detail the methods used to identify {{TOPIC}} (e.g., cultures, staining, PCR, serology, special media).
-
-## Prevention and Treatment
-Describe the vaccines, prophylactic measures, and primary antimicrobial treatments for {{TOPIC}}.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  },
-  biochemistry: {
-    id: 'pt_bioc_001',
-    name: 'Initial biochemistry template',
-    content: `
-## Metabolic Pathways and Cycles
-Act as an expert biochemist. Describe the major metabolic pathways, cycles, or biochemical processes involving {{TOPIC}}.
-
-## Key Enzymes and Regulation
-Identify the rate-limiting and key regulatory enzymes, cofactors, and allosteric/hormonal regulators of {{TOPIC}}.
-
-## Molecular Structures and Reactions
-Detail the chemical structures, substrates, products, and thermodynamics of key reactions in {{TOPIC}}.
-
-## Cellular Localization
-Where do the biochemical events of {{TOPIC}} take place within the cell (e.g., mitochondria, cytosol)?
-
-## Clinical/Inborn Errors of Metabolism
-Explain the clinical disorders, genetic mutations, and enzyme deficiencies associated with {{TOPIC}} (e.g., inborn errors of metabolism).
-
-## Diagnostic Tests and Indicators
-Describe biochemically relevant lab tests or markers used to assess {{TOPIC}}.
-
-⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
-`.trim(),
-  }
+const templates: Record<string, { id: string; name: string; content: string }> = {
+  pathology: { id: 'pt_path_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  anatomy: { id: 'pt_anat_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  physiology: { id: 'pt_phys_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  pharmacology: { id: 'pt_phar_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  microbiology: { id: 'pt_micr_001', name: 'Master tutor template v2.0', content: masterTemplate },
+  biochemistry: { id: 'pt_bioc_001', name: 'Master tutor template v2.0', content: masterTemplate },
 };
 
 const topicsSeedData: Record<string, string[]> = {
@@ -305,10 +236,10 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
     ]).onConflictDoUpdate({
       target: schema.subjects.id,
       set: {
-        label: schema.subjects.label,
-        icon: schema.subjects.icon,
-        sortOrder: schema.subjects.sortOrder,
-        isActive: schema.subjects.isActive
+        label: sql`excluded.label`,
+        icon: sql`excluded.icon`,
+        sortOrder: sql`excluded.sort_order`,
+        isActive: sql`excluded.is_active`
       }
     });
 
@@ -318,16 +249,31 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
         id: info.id,
         subjectId,
         template: info.content,
-        version: 1,
+        version: 2,
         isActive: true,
         changelog: info.name,
-        createdAt: new Date()
+        createdAt: new Date(),
+        isInteractive: true,
+        requiredVariables: [
+          { key: 'OUTPUT_LANGUAGE', label: 'Output Language', control: 'select', defaultValue: 'German', options: ['German', 'English', 'Spanish', 'French', 'Arabic'], required: true },
+          { key: 'ANALOGY_DOMAIN', label: 'Analogy Domain', control: 'select', defaultValue: 'Cooking and Culinary Arts', options: ['Cooking and Culinary Arts', 'Construction and Architecture', 'Music and Orchestra', 'Sports and Athletics', 'Transportation and Mechanics'], required: true },
+          { key: 'MAX_REMEDIATION_CYCLES', label: 'Max Remediation Cycles', control: 'select', defaultValue: '2', options: ['1', '2', '3', '4', '5'], required: true },
+          { key: 'TERMINOLOGY_STANDARD', label: 'Terminology Standard', control: 'text', defaultValue: 'Standard', required: true }
+        ]
       }).onConflictDoUpdate({
         target: schema.promptTemplates.id,
         set: {
-          template: schema.promptTemplates.template,
-          isActive: schema.promptTemplates.isActive,
-          changelog: schema.promptTemplates.changelog
+          template: info.content,
+          version: 2,
+          isActive: true,
+          changelog: info.name,
+          isInteractive: true,
+          requiredVariables: [
+            { key: 'OUTPUT_LANGUAGE', label: 'Output Language', control: 'select', defaultValue: 'German', options: ['German', 'English', 'Spanish', 'French', 'Arabic'], required: true },
+            { key: 'ANALOGY_DOMAIN', label: 'Analogy Domain', control: 'select', defaultValue: 'Cooking and Culinary Arts', options: ['Cooking and Culinary Arts', 'Construction and Architecture', 'Music and Orchestra', 'Sports and Athletics', 'Transportation and Mechanics'], required: true },
+            { key: 'MAX_REMEDIATION_CYCLES', label: 'Max Remediation Cycles', control: 'select', defaultValue: '2', options: ['1', '2', '3', '4', '5'], required: true },
+            { key: 'TERMINOLOGY_STANDARD', label: 'Terminology Standard', control: 'text', defaultValue: 'Standard', required: true }
+          ]
         }
       });
     }
@@ -345,8 +291,8 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
         }).onConflictDoUpdate({
           target: [schema.topicsSeed.subjectId, schema.topicsSeed.slug],
           set: {
-            topic: schema.topicsSeed.topic,
-            isHighYield: schema.topicsSeed.isHighYield
+            topic: topic,
+            isHighYield: true
           }
         });
       }
