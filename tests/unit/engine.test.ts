@@ -8,10 +8,14 @@ import { createInMemoryCache } from '../../src/lib/prompts/cache';
 import { NormalizerCache, createInMemoryCacheStore } from '../../src/lib/prompts/normalizer/cache';
 import { noopAnalytics } from '../../src/lib/analytics';
 import { SubjectId, Slug } from '../../src/lib/types/branded';
-import * as loader from '../../src/lib/prompts/loader';
+import { StubVersionReader } from '../../src/lib/prompts/version-reader';
+import { StubVersionWriter } from '../../src/lib/prompts/version-writer';
+import { StubVersionActivator } from '../../src/lib/prompts/version-activator';
+import { ok } from '../../src/lib/types/result';
+import type { PromptTemplate } from '../../src/lib/db/schema';
 
-vi.mock('../../src/lib/prompts/loader', () => ({
-  getActiveTemplate: vi.fn()
+vi.mock('../../src/lib/db/client', () => ({
+  Database: class {},
 }));
 
 beforeEach(() => {
@@ -48,7 +52,7 @@ describe('CoreGenerator', () => {
       topicSlug: 'plexus-brachialis' as Slug,
       variables: { OUTPUT_LANGUAGE: 'German' },
       rawTemplate: validTemplate,
-      templateVersion: 1,
+      templateSemver: '1.0.0',
       isInteractive: false,
     });
     expect(result.ok).toBe(true);
@@ -65,7 +69,7 @@ describe('CoreGenerator', () => {
       topicSlug: 'test' as Slug,
       variables: {},
       rawTemplate: template,
-      templateVersion: 1,
+      templateSemver: '1.0.0',
       isInteractive: false,
     });
     expect(result.ok).toBe(false);
@@ -81,7 +85,7 @@ describe('CoreGenerator', () => {
       topicSlug: 'heart' as Slug,
       variables: { OUTPUT_LANGUAGE: 'German' },
       rawTemplate: interactiveTemplate,
-      templateVersion: 1,
+      templateSemver: '1.0.0',
       isInteractive: true,
     });
     expect(result.ok).toBe(true);
@@ -100,7 +104,7 @@ describe('CachingDecorator', () => {
       topicSlug: 'diabetes' as Slug,
       variables: { OUTPUT_LANGUAGE: 'Spanish' },
       rawTemplate: interactiveTemplate,
-      templateVersion: 1,
+      templateSemver: '1.0.0',
       isInteractive: true,
     });
 
@@ -113,7 +117,7 @@ describe('CachingDecorator', () => {
       topicSlug: 'diabetes' as Slug,
       variables: { OUTPUT_LANGUAGE: 'Spanish' },
       rawTemplate: interactiveTemplate,
-      templateVersion: 1,
+      templateSemver: '1.0.0',
       isInteractive: true,
     });
     expect(spy).not.toHaveBeenCalled();
@@ -133,7 +137,7 @@ describe('AnalyticsDecorator', () => {
       topicSlug: 'heart' as Slug,
       variables: { OUTPUT_LANGUAGE: 'German' },
       rawTemplate: interactiveTemplate,
-      templateVersion: 1,
+      templateSemver: '1.0.0',
       isInteractive: true,
     });
 
@@ -149,13 +153,43 @@ describe('AnalyticsDecorator', () => {
 describe('PromptEngine (integration)', () => {
   const dummyEnv: EngineEnv = { hasApiKey: false, userPlan: 'free' };
 
-  it('should return SUBJECT_NOT_FOUND if no template is active', async () => {
-    vi.mocked(loader.getActiveTemplate).mockResolvedValueOnce(null);
+  function createEngine(
+    db: any,
+    promptCache: ReturnType<typeof createInMemoryCache>,
+    pipeline: TopicNormalizationPipeline,
+    template?: Partial<PromptTemplate>
+  ) {
+    const reader = new StubVersionReader();
+    if (template) {
+      reader.withActive(subjectId, {
+        id: '1',
+        subjectId,
+        template: validTemplate,
+        version: 1,
+        semver: '1.0.0',
+        versionMajor: 1,
+        versionMinor: 0,
+        versionPatch: 0,
+        checksum: '',
+        isActive: true,
+        createdAt: new Date(),
+        changelog: null,
+        isInteractive: false,
+        requiredVariables: [],
+        ...template,
+      } as PromptTemplate);
+    }
+    const writer = new StubVersionWriter(ok({} as PromptTemplate));
+    const activator = new StubVersionActivator();
 
+    return new PromptEngine(db, promptCache, pipeline, noopAnalytics, reader, writer, activator);
+  }
+
+  it('should return SUBJECT_NOT_FOUND if no template is active', async () => {
     const promptCache = createInMemoryCache();
     const normCache = new NormalizerCache(createInMemoryCacheStore());
     const pipeline = new TopicNormalizationPipeline([], normCache);
-    const engine = new PromptEngine({} as any, promptCache, pipeline, noopAnalytics);
+    const engine = createEngine({} as any, promptCache, pipeline);
 
     const result = await engine.generatePrompt(subjectId, 'New Topic', {}, dummyEnv);
     expect(result.ok).toBe(false);
@@ -165,18 +199,13 @@ describe('PromptEngine (integration)', () => {
   });
 
   it('should follow full generation flow and cache result', async () => {
-    vi.mocked(loader.getActiveTemplate).mockResolvedValue({
-      id: '1', subjectId, template: validTemplate, version: 1, isActive: true,
-      createdAt: new Date(), changelog: null, isInteractive: false, requiredVariables: [],
-    });
-
     const promptCache = createInMemoryCache();
     const normCache = new NormalizerCache(createInMemoryCacheStore());
     const pipeline = new TopicNormalizationPipeline([], normCache);
 
     const trackSpy = vi.spyOn(noopAnalytics, 'trackPromptGenerated');
 
-    const engine = new PromptEngine({} as any, promptCache, pipeline, noopAnalytics);
+    const engine = createEngine({} as any, promptCache, pipeline, {});
 
     const result = await engine.generatePrompt(subjectId, 'Myocardial Infarction', {}, dummyEnv);
 
