@@ -6,7 +6,7 @@ import { PromptCache } from './cache';
 import { CacheInvalidationStrategy, InvalidationScope } from './cache-invalidation-strategy';
 import { SemVer } from './semver';
 import { SubjectId } from '../types/branded';
-import { createHash } from 'node:crypto';
+
 
 export type ActivationError =
   | { code: 'NOT_FOUND'; templateId: string }
