@@ -9,9 +9,11 @@ interface SwipeableContainerProps {
   children: React.ReactNode;
   subjects: Subject[];
   currentSubjectId: string;
+  topicSlug: string;
+  searchParams?: string;
 }
 
-export function SwipeableContainer({ children, subjects, currentSubjectId }: SwipeableContainerProps) {
+export function SwipeableContainer({ children, subjects, currentSubjectId, topicSlug, searchParams }: SwipeableContainerProps) {
   const router = useRouter();
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -22,7 +24,7 @@ export function SwipeableContainer({ children, subjects, currentSubjectId }: Swi
       const currentIndex = subjects.findIndex(s => s.id === currentSubjectId);
       if (currentIndex >= 0 && currentIndex < subjects.length - 1) {
         const nextSubject = subjects[currentIndex + 1];
-        if (nextSubject) router.push(`/${nextSubject.id}`);
+        if (nextSubject) router.push(`/${nextSubject.id}/${topicSlug}${searchParams ? `?${searchParams}` : ''}`);
       }
     }
     // Swipe right (previous)
@@ -30,7 +32,7 @@ export function SwipeableContainer({ children, subjects, currentSubjectId }: Swi
       const currentIndex = subjects.findIndex(s => s.id === currentSubjectId);
       if (currentIndex > 0) {
         const prevSubject = subjects[currentIndex - 1];
-        if (prevSubject) router.push(`/${prevSubject.id}`);
+        if (prevSubject) router.push(`/${prevSubject.id}/${topicSlug}${searchParams ? `?${searchParams}` : ''}`);
       }
     }
   };
