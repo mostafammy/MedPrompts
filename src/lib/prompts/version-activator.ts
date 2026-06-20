@@ -150,7 +150,7 @@ export class DatabaseVersionActivator implements VersionActivator {
     }
 
     const subjectId = subjectIdResult as SubjectId;
-    let cacheSuccess = true;
+    let _cacheSuccess = true;
     let deletedCount = 0;
     let totalCount = 0;
 
@@ -176,7 +176,7 @@ export class DatabaseVersionActivator implements VersionActivator {
         } catch (e) {
           retries++;
           if (retries > maxRetries) {
-            cacheSuccess = false;
+            _cacheSuccess = false;
             this.enqueueOrLog(activationScope, subjectId, deletedCount, totalCount, e);
           } else {
             await sleep(1000 * Math.pow(2, retries - 1));
