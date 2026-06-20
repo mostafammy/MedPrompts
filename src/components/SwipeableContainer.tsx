@@ -40,7 +40,7 @@ export function SwipeableContainer({ children, subjects, currentSubjectId, topic
   // Tactile Haptic Trigger ref
   const hasTriggeredHaptic = useRef(false);
 
-  const handleDrag = (event: any, info: PanInfo) => {
+  const handleDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const absOffset = Math.abs(info.offset.x);
     if (absOffset >= swipeThreshold) {
       if (!hasTriggeredHaptic.current) {
