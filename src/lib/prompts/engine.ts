@@ -5,7 +5,7 @@ import { PromptCache } from './cache';
 import { Analytics } from '../analytics';
 import { TopicNormalizationPipeline } from './pipeline';
 import { sanitizeTopic } from './sanitizer';
-import { getActiveTemplateForSubject } from './repository';
+
 import { Generator, GenerateError } from './generator';
 import { CoreGenerator } from './core-generator';
 import { CachingDecorator } from './caching-decorator';
