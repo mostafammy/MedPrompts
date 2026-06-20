@@ -141,6 +141,7 @@ export default async function DynamicPromptPage({
 
   const promptText = result.value;
   const wordCount = promptText.split(/\s+/).filter(Boolean).length;
+  const dir = typeof rawSearchParams.dir === 'string' ? rawSearchParams.dir : undefined;
 
   return (
     <main className="min-h-[100dvh] p-4 sm:p-8 md:p-24 pt-12 max-w-7xl mx-auto flex flex-col items-center overflow-x-hidden">
@@ -165,6 +166,7 @@ export default async function DynamicPromptPage({
             topic={slugToTopic(slug)}
             wordCount={wordCount}
             fromCache={false}
+            dir={dir}
           />
         </SwipeableContainer>
       </div>
