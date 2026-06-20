@@ -7,6 +7,10 @@ import { getDb } from '@/lib/db/get-db';
 import { createInMemoryCache } from '@/lib/prompts/cache';
 import { NormalizerCache, createInMemoryCacheStore } from '@/lib/prompts/normalizer/cache';
 import { plausibleAnalytics } from '@/lib/analytics';
+import { DatabaseVersionReader } from '@/lib/prompts/version-reader';
+import { DatabaseVersionWriter } from '@/lib/prompts/version-writer';
+import { DatabaseVersionActivator } from '@/lib/prompts/version-activator';
+import { SemanticInvalidationStrategy } from '@/lib/prompts/cache-invalidation-strategy';
 
 const GenerateRequestSchema = z.object({
   subjectId: z.string() as unknown as z.ZodType<SubjectId>,
@@ -22,7 +26,10 @@ function getEngine(): PromptEngine {
   const promptCache = createInMemoryCache();
   const normCache = new NormalizerCache(createInMemoryCacheStore());
   const pipeline = new TopicNormalizationPipeline([], normCache);
-  engineInstance = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics);
+  const versionReader = new DatabaseVersionReader(db);
+  const versionWriter = new DatabaseVersionWriter(db);
+  const versionActivator = new DatabaseVersionActivator(db, promptCache, new SemanticInvalidationStrategy(), plausibleAnalytics);
+  engineInstance = new PromptEngine(db, promptCache, pipeline, plausibleAnalytics, versionReader, versionWriter, versionActivator);
   return engineInstance;
 }
 
