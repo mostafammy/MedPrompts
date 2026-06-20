@@ -6,10 +6,22 @@ declare global {
   }
 }
 
+export type VersionActivationEvent = {
+  subjectId: string;
+  oldSemver: string;
+  newSemver: string;
+  bumpType: string;
+  invalidationScope: string;
+  durationMs: number;
+  success: boolean;
+  activatedBy: string;
+};
+
 export interface Analytics {
   trackPromptGenerated(subject: SubjectId, slug: Slug, latencyMs: number): void;
   trackPromptCopied(subject: SubjectId, method: string): void;
   trackSharedUrlVisited(subject: SubjectId, source: string): void;
+  trackVersionActivation(event: VersionActivationEvent): void;
 }
 
 export const plausibleAnalytics: Analytics = {
@@ -20,7 +32,7 @@ export const plausibleAnalytics: Analytics = {
       });
     }
   },
-  
+
   trackPromptCopied(subject: SubjectId, method: string) {
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('Prompt Copied', {
@@ -28,18 +40,25 @@ export const plausibleAnalytics: Analytics = {
       });
     }
   },
-  
+
   trackSharedUrlVisited(subject: SubjectId, source: string) {
     if (typeof window !== 'undefined' && window.plausible) {
       window.plausible('Shared URL Visited', {
         props: { subject, source }
       });
     }
-  }
+  },
+
+  trackVersionActivation(event: VersionActivationEvent) {
+    if (typeof window !== 'undefined' && window.plausible) {
+      window.plausible('Version Activated', { props: event });
+    }
+  },
 };
 
 export const noopAnalytics: Analytics = {
   trackPromptGenerated() {},
   trackPromptCopied() {},
-  trackSharedUrlVisited() {}
+  trackSharedUrlVisited() {},
+  trackVersionActivation() {},
 };
