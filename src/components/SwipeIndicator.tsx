@@ -43,10 +43,10 @@ export function SwipeIndicator({ dragX, direction, targetSubject, isDragging, is
     setIsArmed(latest >= 1);
   });
 
-  let TargetIcon: any = null;
+  let TargetIcon: React.ElementType | null = null;
   if (targetSubject?.icon) {
     const iconName = targetSubject.icon.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
-    TargetIcon = (Icons as any)[iconName] || Icons.CircleHelp;
+    TargetIcon = (Icons as Record<string, React.ElementType>)[iconName] || Icons.CircleHelp;
   }
 
   // Idle breathing animation for discoverability
