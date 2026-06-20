@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { motion, MotionValue, useTransform } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, MotionValue, useTransform, useMotionValueEvent } from 'framer-motion';
+import * as Icons from 'lucide-react';
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { Subject } from './SubjectGrid/SubjectGridClient';
 
@@ -10,185 +11,128 @@ interface SwipeIndicatorProps {
   direction: 'left' | 'right';
   targetSubject: Subject | null;
   isDragging: boolean;
+  isLoading?: boolean;
 }
 
-export function SwipeIndicator({ dragX, direction, targetSubject, isDragging }: SwipeIndicatorProps) {
+export function SwipeIndicator({ dragX, direction, targetSubject, isDragging, isLoading = false }: SwipeIndicatorProps) {
   const THRESHOLD = 80; // px activation threshold
   const isRight = direction === 'right';
 
-  // Map dragX to progress [0, 1] for the threshold gauge
-  // dragX < 0 is Swipe Left (reveals Next subject on the right)
-  // dragX > 0 is Swipe Right (reveals Prev subject on the left)
+  // Map dragX to progress [0, 1]
   const progress = useTransform(dragX, (value) => {
     if (isRight) {
-      // Swiping left (negative dragX)
       const absVal = Math.min(Math.abs(Math.min(value, 0)), THRESHOLD);
       return absVal / THRESHOLD;
     } else {
-      // Swiping right (positive dragX)
       const absVal = Math.min(Math.max(value, 0), THRESHOLD);
       return absVal / THRESHOLD;
     }
   });
 
-  // Calculate SVG stroke offset: circumference for r=14 is 2 * PI * 14 = 87.96
-  const strokeDashoffset = useTransform(progress, [0, 1], [88, 0]);
+  // Elastic pill width: Starts as a perfect circle (48px), stretches elastically to a pill (96px)
+  const width = useTransform(progress, [0, 1], [48, 96]);
+  
+  // Opacity: Fades in smoothly as you pull
+  const opacity = useTransform(progress, [0, 0.3], [0, 1]);
 
-  // Opacity: Gradually fades in as user drags.
-  // If targetSubject is null, cap opacity lower to look disabled/locked.
-  const maxOpacity = targetSubject ? 1.0 : 0.25;
-  const opacity = useTransform(dragX, (value) => {
-    if (isDragging) {
-      if (isRight) {
-        if (value >= 0) return 0;
-        const absVal = Math.min(Math.abs(value), THRESHOLD);
-        return (absVal / THRESHOLD) * maxOpacity;
-      } else {
-        if (value <= 0) return 0;
-        const absVal = Math.min(value, THRESHOLD);
-        return (absVal / THRESHOLD) * maxOpacity;
-      }
-    }
-    return 0;
+  // Translation: Pull inward to visually detach from the edge
+  const translateX = useTransform(progress, [0, 1], [0, isRight ? -24 : 24]);
+
+  const [isArmed, setIsArmed] = useState(false);
+  useMotionValueEvent(progress, 'change', (latest) => {
+    setIsArmed(latest >= 1);
   });
 
-  // Scale: dynamic grow effect
-  const scale = useTransform(progress, [0, 1], [0.9, 1.05]);
+  let TargetIcon: any = null;
+  if (targetSubject?.icon) {
+    const iconName = targetSubject.icon.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+    TargetIcon = (Icons as any)[iconName] || Icons.CircleHelp;
+  }
 
-  // Translation: pull effect inward
-  const translateX = useTransform(progress, (p) => {
-    const pullOffset = p * 12; // pull 12px inward
-    if (isRight) {
-      return -pullOffset; // pull left
-    } else {
-      return pullOffset; // pull right
-    }
-  });
-
-  // Text container width for slide-out reveal (from 0 to 120px)
-  const textWidth = useTransform(progress, [0, 0.45, 1], ['0px', '110px', '130px']);
-  const textOpacity = useTransform(progress, [0.2, 0.5], [0, 1]);
-
-  // Handle active states when threshold is crossed
-  const isArmed = useTransform(progress, (p) => p >= 1);
-
-  // If not dragging, we show a very subtle, elegant breathing hint on desktop/mobile
+  // Idle breathing animation for discoverability
   const idleTransition = {
     repeat: Infinity,
     duration: 3,
-    ease: 'easeInOut',
+    ease: 'easeInOut' as const,
   };
+
+  const iconX = useTransform(progress, [0, 1], [0, isRight ? -14 : 14]);
+  const chevronX = useTransform(progress, [0, 1], [0, isRight ? 14 : -14]);
 
   return (
     <motion.div
       style={{
-        opacity: isDragging ? opacity : 0,
-        scale: isDragging ? scale : 1,
-        x: isDragging ? translateX : 0,
+        opacity: isLoading ? 1 : (isDragging ? opacity : 0),
+        width: isLoading ? 48 : (isDragging ? width : 48),
+        x: isLoading ? (isRight ? -24 : 24) : (isDragging ? translateX : 0),
       }}
       animate={
-        !isDragging
+        !isDragging && !isLoading && targetSubject
           ? {
-              opacity: [0.08, 0.2, 0.08],
-              x: isRight ? [0, -3, 0] : [0, 3, 0],
+              opacity: [0.15, 0.4, 0.15],
+              x: isRight ? [-12, -6, -12] : [12, 6, 12], // Peek inward from the edges
             }
           : {}
       }
-      transition={!isDragging ? idleTransition : { type: 'spring', stiffness: 350, damping: 28 }}
-      className={`absolute top-1/2 -translate-y-1/2 z-40 pointer-events-none hidden md:flex items-center gap-2.5 p-1.5 pr-3 rounded-full 
-        backdrop-blur-xl border shadow-lg transition-all duration-300
-        ${isRight ? 'right-4 md:-right-24 flex-row-reverse pl-3 pr-1.5' : 'left-4 md:-left-24 pl-1.5 pr-3'}
+      transition={!isDragging && !isLoading ? idleTransition : { type: 'spring', stiffness: 350, damping: 25 }}
+      className={`absolute top-1/2 -translate-y-1/2 z-40 pointer-events-none flex items-center justify-center rounded-full 
+        backdrop-blur-3xl border shadow-2xl transition-colors duration-300 h-12 overflow-hidden
+        ${isRight ? 'right-2 sm:right-6 md:-right-24' : 'left-2 sm:left-6 md:-left-24'}
         ${
-          targetSubject
-            ? 'bg-white/80 dark:bg-zinc-900/80 border-zinc-200/60 dark:border-zinc-800/60 text-zinc-800 dark:text-zinc-200 shadow-zinc-200/40 dark:shadow-none'
-            : 'bg-zinc-100/40 dark:bg-zinc-950/40 border-zinc-200/30 dark:border-zinc-800/30 text-zinc-400 dark:text-zinc-650 shadow-none'
+          !targetSubject
+            ? 'bg-zinc-100/40 dark:bg-zinc-900/40 border-zinc-200/30 dark:border-zinc-800/30 text-zinc-400'
+            : isArmed || isLoading
+            ? 'bg-gradient-to-tr from-blue-500 to-indigo-500 border-blue-400/80 shadow-[0_0_20px_rgba(59,130,246,0.5)] text-white'
+            : 'bg-white/80 dark:bg-zinc-800/80 border-zinc-200/60 dark:border-zinc-700/60 text-zinc-800 dark:text-zinc-200 shadow-zinc-200/50 dark:shadow-none'
         }
       `}
     >
-      {/* SVG Circular Progress Ring & Icon */}
-      <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
-        <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-          {/* Background Track */}
-          <circle
-            cx="18"
-            cy="18"
-            r="14"
-            className="text-zinc-200/50 dark:text-zinc-800/30"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            fill="transparent"
-          />
-          {/* Active progress bar */}
-          {targetSubject && (
-            <motion.circle
-              cx="18"
-              cy="18"
-              r="14"
-              style={{ strokeDashoffset }}
-              className="text-blue-600 dark:text-blue-500"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              fill="transparent"
-              strokeDasharray="88"
-              strokeLinecap="round"
+      <div className="relative w-full h-full flex items-center justify-center">
+        {!targetSubject ? (
+          <Lock className="w-5 h-5 opacity-50" />
+        ) : isLoading ? (
+          <div className="relative flex items-center justify-center w-full h-full">
+            {/* Stunning spinner ring wrapping the icon */}
+            <motion.div 
+              animate={{ rotate: 360 }} 
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+              className="absolute inset-1 rounded-full border-[2.5px] border-transparent border-t-white/90 border-r-white/90"
             />
-          )}
-        </svg>
+            <motion.div 
+              animate={{ scale: [0.9, 1.1, 0.9] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
+              className="flex items-center justify-center w-6 h-6 filter drop-shadow-sm text-zinc-800 dark:text-white"
+            >
+              {TargetIcon && <TargetIcon className="w-full h-full" />}
+            </motion.div>
+          </div>
+        ) : (
+          <div className="relative flex items-center justify-center w-full h-full">
+            {/* Center-anchored Icon */}
+            <motion.div 
+              style={{ x: iconX }}
+              className="absolute flex items-center justify-center w-6 h-6 drop-shadow-sm text-zinc-800 dark:text-white"
+              animate={isArmed ? { scale: [1, 1.25, 1] } : {}}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            >
+              {TargetIcon && <TargetIcon className="w-full h-full" />}
+            </motion.div>
 
-        {/* Central Icon */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          {targetSubject ? (
-            isRight ? (
-              <ChevronRight className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-            )
-          ) : (
-            <Lock className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-550" />
-          )}
-        </div>
-
-        {/* Outer Glow Pulsing Ring (shows when armed/crossed threshold) */}
-        {targetSubject && (
-          <motion.div
-            style={{
-              opacity: isArmed ? 1 : 0,
-              scale: isArmed ? [1, 1.15, 1] : 1,
-            }}
-            animate={
-              isDragging
-                ? {}
-                : {
-                    scale: 1,
-                  }
-            }
-            transition={{
-              repeat: Infinity,
-              duration: 1.2,
-              ease: 'easeInOut',
-            }}
-            className="absolute inset-0 rounded-full border border-blue-500/50 dark:border-blue-400/50 shadow-[0_0_8px_rgba(59,130,246,0.5)] dark:shadow-[0_0_8px_rgba(96,165,250,0.4)] pointer-events-none"
-          />
+            {/* Center-anchored Chevron that splits apart */}
+            <motion.div
+              style={{ x: chevronX, opacity: progress, scale: progress }}
+              className="absolute flex items-center justify-center text-zinc-800 dark:text-white"
+            >
+              <motion.div
+                animate={isArmed ? { x: isRight ? [0, 4, 0] : [0, -4, 0] } : {}}
+                transition={isArmed ? { repeat: Infinity, duration: 0.8, ease: 'easeOut' } : {}}
+              >
+                {isRight ? <ChevronRight className="w-6 h-6 stroke-[3]" /> : <ChevronLeft className="w-6 h-6 stroke-[3]" />}
+              </motion.div>
+            </motion.div>
+          </div>
         )}
       </div>
-
-      {/* Target Subject Label & Icon */}
-      <motion.div
-        style={{
-          width: isDragging ? textWidth : 'auto',
-          opacity: isDragging ? textOpacity : 0.8,
-        }}
-        className="overflow-hidden flex items-center gap-1.5 whitespace-nowrap text-[10px] font-extrabold uppercase tracking-wider select-none"
-      >
-        {targetSubject ? (
-          <>
-            <span className="text-sm leading-none">{targetSubject.icon}</span>
-            <span className="truncate max-w-[90px]">{targetSubject.label}</span>
-          </>
-        ) : (
-          <span className="text-[9px] text-zinc-400 dark:text-zinc-500">End of List</span>
-        )}
-      </motion.div>
     </motion.div>
   );
 }
