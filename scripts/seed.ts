@@ -259,6 +259,13 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
   const db = drizzle(client, { schema });
 
   try {
+    console.log('Ensuring tables exist...');
+    await client.execute('CREATE TABLE IF NOT EXISTS subjects (id TEXT PRIMARY KEY, label TEXT NOT NULL, icon TEXT NOT NULL, sort_order INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL)');
+    await client.execute('CREATE TABLE IF NOT EXISTS prompt_templates (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, template TEXT NOT NULL, version INTEGER NOT NULL, semver TEXT NOT NULL DEFAULT \'1.0.0\', version_major INTEGER NOT NULL DEFAULT 1, version_minor INTEGER NOT NULL DEFAULT 0, version_patch INTEGER NOT NULL DEFAULT 0, checksum TEXT NOT NULL DEFAULT \'\', is_active INTEGER NOT NULL DEFAULT 0, changelog TEXT, created_at INTEGER NOT NULL, is_interactive INTEGER NOT NULL DEFAULT 0, required_variables TEXT NOT NULL DEFAULT \'[]\', FOREIGN KEY (subject_id) REFERENCES subjects(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS template_versions (id TEXT PRIMARY KEY, template_id TEXT NOT NULL, semver TEXT NOT NULL, template TEXT NOT NULL, checksum TEXT NOT NULL, changelog TEXT, parent_semver TEXT, activated_by TEXT NOT NULL, activated_at INTEGER NOT NULL, deactivated_at INTEGER, FOREIGN KEY (template_id) REFERENCES prompt_templates(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS topics_seed (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, topic TEXT NOT NULL, is_high_yield INTEGER NOT NULL DEFAULT 0, FOREIGN KEY (subject_id) REFERENCES subjects(id))');
+    await client.execute('CREATE TABLE IF NOT EXISTS prompt_events (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, copied_at INTEGER NOT NULL, copy_method TEXT)');
+
     console.log('Inserting subjects...');
     await db.insert(schema.subjects).values([
       { id: 'pathology', label: 'Pathology', icon: 'microscope', sortOrder: 1, isActive: true },
@@ -318,8 +325,8 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
     }
 
     console.log(`Seeding of ${name} completed successfully.`);
-  } catch (err: any) {
-    console.error(`Error seeding ${name}:`, err.message);
+  } catch (err: unknown) {
+    console.error(`Error seeding ${name}:`, err instanceof Error ? err.message : err);
     throw err;
   } finally {
     await client.close();
@@ -330,7 +337,7 @@ async function run() {
   // 1. Seed Local DB
   try {
     await seedDatabase('file:./local.db', undefined, 'Local SQLite File');
-  } catch (err) {
+  } catch (_err) {
     console.error('Local seeding failed.');
   }
 
@@ -340,7 +347,7 @@ async function run() {
   if (tursoUrl) {
     try {
       await seedDatabase(tursoUrl, tursoToken, 'Turso Cloud Database');
-    } catch (err) {
+    } catch (_err) {
       console.error('Turso Cloud seeding failed.');
     }
   } else {
