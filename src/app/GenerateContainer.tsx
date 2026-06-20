@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { slugifyTopic } from '@/lib/prompts/slugifier';
 import { motion } from 'framer-motion';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { CustomSelect } from '@/components/ui/CustomSelect';
+import * as Icons from 'lucide-react';
 
 const VariableDefaults = {
   OUTPUT_LANGUAGE: 'German',
@@ -47,45 +49,36 @@ export function GenerateContainer({ subjectId }: { subjectId: SubjectId | null }
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-lg mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Language</span>
-          <select
+      <div className="w-full max-w-lg mb-6 grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="sm:col-span-1">
+          <CustomSelect
+            label="Language"
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            {OUTPUT_LANGUAGES.map((l) => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
-        </label>
+            options={OUTPUT_LANGUAGES}
+            onChange={setLanguage}
+            icon={<Icons.Globe className="w-4 h-4" />}
+          />
+        </div>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Analogy Domain</span>
-          <select
+        <div className="sm:col-span-2">
+          <CustomSelect
+            label="Analogy Domain"
             value={analogy}
-            onChange={(e) => setAnalogy(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            {ANALOGY_DOMAINS.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        </label>
+            options={ANALOGY_DOMAINS}
+            onChange={setAnalogy}
+            icon={<Icons.Sparkles className="w-4 h-4" />}
+          />
+        </div>
 
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">Max Cycles</span>
-          <select
+        <div className="sm:col-span-1">
+          <CustomSelect
+            label="Max Cycles"
             value={cycles}
-            onChange={(e) => setCycles(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          >
-            {REMEDIATION_CYCLES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </label>
+            options={REMEDIATION_CYCLES}
+            onChange={setCycles}
+            icon={<Icons.RotateCw className="w-4 h-4" />}
+          />
+        </div>
       </div>
 
       <TopicInput key={subjectId || 'none'} subjectId={subjectId} onGenerate={handleGenerate} />
