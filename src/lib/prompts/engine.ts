@@ -16,6 +16,7 @@ import { terminologyStandardForSubject } from './medical-tutor-variables';
 import { VersionReader } from './version-reader';
 import { VersionWriter } from './version-writer';
 import { VersionActivator } from './version-activator';
+import { stripMetaSections } from './strip-meta-sections';
 
 export type EngineEnv = {
   hasApiKey: boolean;
@@ -91,7 +92,7 @@ export class PromptEngine {
       });
 
       return result.ok
-        ? ok(result.value.output)
+        ? ok(stripMetaSections(result.value.output))
         : err(result.error);
     } catch (e) {
       return err({ code: 'GENERATION_FAILED', details: (e as Error).message });
