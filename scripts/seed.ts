@@ -1,11 +1,9 @@
 import { createClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
-import { sql } from 'drizzle-orm';
 import * as schema from '../src/lib/db/schema';
 import { slugifyTopic } from '../src/lib/prompts/slugifier';
 import * as dotenv from 'dotenv';
 import path from 'path';
-import fs from 'fs';
 
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
@@ -90,13 +88,84 @@ Describe how {{TOPIC}} responds or adapts to stressors, exercise, or environment
 ## Clinical Correlation
 Explain how pathophysiological disruptions of {{TOPIC}} lead to clinical manifestations.
 
-const templates: Record<string, { id: string; name: string; content: string }> = {
-  pathology: { id: 'pt_path_001', name: 'Master tutor template v2.0', content: masterTemplate },
-  anatomy: { id: 'pt_anat_001', name: 'Master tutor template v2.0', content: masterTemplate },
-  physiology: { id: 'pt_phys_001', name: 'Master tutor template v2.0', content: masterTemplate },
-  pharmacology: { id: 'pt_phar_001', name: 'Master tutor template v2.0', content: masterTemplate },
-  microbiology: { id: 'pt_micr_001', name: 'Master tutor template v2.0', content: masterTemplate },
-  biochemistry: { id: 'pt_bioc_001', name: 'Master tutor template v2.0', content: masterTemplate },
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
+  pharmacology: {
+    id: 'pt_phar_001',
+    name: 'Initial pharmacology template',
+    content: `
+## Drug Class and Mechanism of Action
+Act as an expert pharmacologist. Explain the drug class, chemical structure (if relevant), and molecular mechanism of action of {{TOPIC}}.
+
+## Pharmacokinetics
+Detail the absorption, distribution, metabolism, and excretion (ADME) of {{TOPIC}}.
+
+## Clinical Indications
+What are the FDA-approved and off-label clinical uses of {{TOPIC}}?
+
+## Adverse Effects and Toxicity
+List the common and severe side effects, toxicity profile, and antidote (if applicable) for {{TOPIC}}.
+
+## Contraindications and Drug Interactions
+Describe the absolute and relative contraindications, and major drug-drug or drug-food interactions of {{TOPIC}}.
+
+## Resistance Mechanisms
+If applicable, explain the mechanisms of drug resistance associated with {{TOPIC}}.
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
+  microbiology: {
+    id: 'pt_micr_001',
+    name: 'Initial microbiology template',
+    content: `
+## Classification and Characteristics
+Act as an expert microbiologist. Classify {{TOPIC}} (bacterial, viral, fungal, parasitic) and detail its morphologic and staining characteristics.
+
+## Pathogenicity and Virulence Factors
+Explain how {{TOPIC}} causes disease, including its key virulence factors (toxins, capsules, enzymes).
+
+## Transmission and Epidemiology
+Describe the reservoir, modes of transmission, risk factors, and epidemiology of {{TOPIC}}.
+
+## Clinical Manifestations
+What are the key clinical presentations, syndromes, and diseases caused by {{TOPIC}}?
+
+## Laboratory Diagnosis
+Detail the methods used to identify {{TOPIC}} (e.g., cultures, staining, PCR, serology, special media).
+
+## Prevention and Treatment
+Describe the vaccines, prophylactic measures, and primary antimicrobial treatments for {{TOPIC}}.
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  },
+  biochemistry: {
+    id: 'pt_bioc_001',
+    name: 'Initial biochemistry template',
+    content: `
+## Metabolic Pathways and Cycles
+Act as an expert biochemist. Describe the major metabolic pathways, cycles, or biochemical processes involving {{TOPIC}}.
+
+## Key Enzymes and Regulation
+Identify the rate-limiting and key regulatory enzymes, cofactors, and allosteric/hormonal regulators of {{TOPIC}}.
+
+## Molecular Structures and Reactions
+Detail the chemical structures, substrates, products, and thermodynamics of key reactions in {{TOPIC}}.
+
+## Cellular Localization
+Where do the biochemical events of {{TOPIC}} take place within the cell (e.g., mitochondria, cytosol)?
+
+## Clinical/Inborn Errors of Metabolism
+Explain the clinical disorders, genetic mutations, and enzyme deficiencies associated with {{TOPIC}} (e.g., inborn errors of metabolism).
+
+## Diagnostic Tests and Indicators
+Describe biochemically relevant lab tests or markers used to assess {{TOPIC}}.
+
+⚠️ Verify this info. Medical knowledge rapidly evolves, always correlate with recent guidelines.
+`.trim(),
+  }
 };
 
 const topicsSeedData: Record<string, string[]> = {
@@ -190,13 +259,6 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
   const db = drizzle(client, { schema });
 
   try {
-    console.log('Ensuring tables exist...');
-    await client.execute('CREATE TABLE IF NOT EXISTS subjects (id TEXT PRIMARY KEY, label TEXT NOT NULL, icon TEXT NOT NULL, sort_order INTEGER NOT NULL, is_active INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL)');
-    await client.execute('CREATE TABLE IF NOT EXISTS prompt_templates (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, template TEXT NOT NULL, version INTEGER NOT NULL, semver TEXT NOT NULL DEFAULT \'1.0.0\', version_major INTEGER NOT NULL DEFAULT 1, version_minor INTEGER NOT NULL DEFAULT 0, version_patch INTEGER NOT NULL DEFAULT 0, checksum TEXT NOT NULL DEFAULT \'\', is_active INTEGER NOT NULL DEFAULT 0, changelog TEXT, created_at INTEGER NOT NULL, is_interactive INTEGER NOT NULL DEFAULT 0, required_variables TEXT NOT NULL DEFAULT \'[]\', FOREIGN KEY (subject_id) REFERENCES subjects(id))');
-    await client.execute('CREATE TABLE IF NOT EXISTS template_versions (id TEXT PRIMARY KEY, template_id TEXT NOT NULL, semver TEXT NOT NULL, template TEXT NOT NULL, checksum TEXT NOT NULL, changelog TEXT, parent_semver TEXT, activated_by TEXT NOT NULL, activated_at INTEGER NOT NULL, deactivated_at INTEGER, FOREIGN KEY (template_id) REFERENCES prompt_templates(id))');
-    await client.execute('CREATE TABLE IF NOT EXISTS topics_seed (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, topic TEXT NOT NULL, is_high_yield INTEGER NOT NULL DEFAULT 0, FOREIGN KEY (subject_id) REFERENCES subjects(id))');
-    await client.execute('CREATE TABLE IF NOT EXISTS prompt_events (id TEXT PRIMARY KEY, subject_id TEXT NOT NULL, slug TEXT NOT NULL, copied_at INTEGER NOT NULL, copy_method TEXT)');
-
     console.log('Inserting subjects...');
     await db.insert(schema.subjects).values([
       { id: 'pathology', label: 'Pathology', icon: 'microscope', sortOrder: 1, isActive: true },
@@ -208,10 +270,10 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
     ]).onConflictDoUpdate({
       target: schema.subjects.id,
       set: {
-        label: sql`excluded.label`,
-        icon: sql`excluded.icon`,
-        sortOrder: sql`excluded.sort_order`,
-        isActive: sql`excluded.is_active`
+        label: schema.subjects.label,
+        icon: schema.subjects.icon,
+        sortOrder: schema.subjects.sortOrder,
+        isActive: schema.subjects.isActive
       }
     });
 
@@ -221,31 +283,16 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
         id: info.id,
         subjectId,
         template: info.content,
-        version: 2,
+        version: 1,
         isActive: true,
         changelog: info.name,
-        createdAt: new Date(),
-        isInteractive: true,
-        requiredVariables: [
-          { key: 'OUTPUT_LANGUAGE', label: 'Output Language', control: 'select', defaultValue: 'German', options: ['German', 'English', 'Spanish', 'French', 'Arabic'], required: true },
-          { key: 'ANALOGY_DOMAIN', label: 'Analogy Domain', control: 'select', defaultValue: 'Cooking and Culinary Arts', options: ['Cooking and Culinary Arts', 'Construction and Architecture', 'Music and Orchestra', 'Sports and Athletics', 'Transportation and Mechanics'], required: true },
-          { key: 'MAX_REMEDIATION_CYCLES', label: 'Max Remediation Cycles', control: 'select', defaultValue: '2', options: ['1', '2', '3', '4', '5'], required: true },
-          { key: 'TERMINOLOGY_STANDARD', label: 'Terminology Standard', control: 'text', defaultValue: 'Standard', required: true }
-        ]
+        createdAt: new Date()
       }).onConflictDoUpdate({
         target: schema.promptTemplates.id,
         set: {
-          template: info.content,
-          version: 2,
-          isActive: true,
-          changelog: info.name,
-          isInteractive: true,
-          requiredVariables: [
-            { key: 'OUTPUT_LANGUAGE', label: 'Output Language', control: 'select', defaultValue: 'German', options: ['German', 'English', 'Spanish', 'French', 'Arabic'], required: true },
-            { key: 'ANALOGY_DOMAIN', label: 'Analogy Domain', control: 'select', defaultValue: 'Cooking and Culinary Arts', options: ['Cooking and Culinary Arts', 'Construction and Architecture', 'Music and Orchestra', 'Sports and Athletics', 'Transportation and Mechanics'], required: true },
-            { key: 'MAX_REMEDIATION_CYCLES', label: 'Max Remediation Cycles', control: 'select', defaultValue: '2', options: ['1', '2', '3', '4', '5'], required: true },
-            { key: 'TERMINOLOGY_STANDARD', label: 'Terminology Standard', control: 'text', defaultValue: 'Standard', required: true }
-          ]
+          template: schema.promptTemplates.template,
+          isActive: schema.promptTemplates.isActive,
+          changelog: schema.promptTemplates.changelog
         }
       });
     }
@@ -263,8 +310,8 @@ async function seedDatabase(url: string, authToken?: string, name = 'Database') 
         }).onConflictDoUpdate({
           target: [schema.topicsSeed.subjectId, schema.topicsSeed.slug],
           set: {
-            topic: topic,
-            isHighYield: true
+            topic: schema.topicsSeed.topic,
+            isHighYield: schema.topicsSeed.isHighYield
           }
         });
       }
