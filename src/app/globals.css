@@ -146,6 +146,127 @@ select option {
   color: #e4e4e7;
 }
 
+/* Markdown rendered body */
+.markdown-body h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  margin-top: 1.5rem;
+  color: inherit;
+  letter-spacing: -0.01em;
+}
+.markdown-body h1:first-child {
+  margin-top: 0;
+}
+.markdown-body h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  margin-top: 1.25rem;
+  color: inherit;
+}
+.markdown-body h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+  color: inherit;
+}
+.markdown-body p {
+  margin-bottom: 0.75rem;
+  line-height: 1.7;
+}
+.markdown-body ul,
+.markdown-body ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+.markdown-body li {
+  margin-bottom: 0.35rem;
+  line-height: 1.6;
+}
+.markdown-body li > ul,
+.markdown-body li > ol {
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+}
+.markdown-body strong {
+  font-weight: 600;
+}
+.markdown-body em {
+  font-style: italic;
+}
+.markdown-body code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.875em;
+  background: rgba(0,0,0,0.06);
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+}
+.dark .markdown-body code {
+  background: rgba(255,255,255,0.08);
+}
+.markdown-body pre {
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.04);
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.dark .markdown-body pre {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.06);
+}
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.8rem;
+}
+.markdown-body table {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.markdown-body th,
+.markdown-body td {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  text-align: left;
+  vertical-align: top;
+}
+.dark .markdown-body th,
+.dark .markdown-body td {
+  border-color: rgba(255,255,255,0.1);
+}
+.markdown-body th {
+  font-weight: 600;
+  background: rgba(0,0,0,0.03);
+}
+.dark .markdown-body th {
+  background: rgba(255,255,255,0.04);
+}
+.markdown-body blockquote {
+  border-left: 3px solid rgba(0,0,0,0.15);
+  padding-left: 1rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.85;
+  font-style: italic;
+}
+.dark .markdown-body blockquote {
+  border-left-color: rgba(255,255,255,0.2);
+}
+.markdown-body hr {
+  margin: 1.25rem 0;
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+.dark .markdown-body hr {
+  border-top-color: rgba(255,255,255,0.08);
+}
+
 /* Soft scrollbar for code elements and custom scrollbars */
 pre::-webkit-scrollbar,
 .custom-scrollbar::-webkit-scrollbar {
