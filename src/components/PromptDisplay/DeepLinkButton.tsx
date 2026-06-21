@@ -32,15 +32,21 @@ export function DeepLinkButton({ textToCopy, subjectId, targetApp, label, icon, 
     await copyToClipboard(textToCopy);
     soundEngine.playSuccess();
     haptics.success();
-    toast.success(`Copied! Opening ${label}...`);
+    
+    const isTooLong = textToCopy.length > 1500;
+    if (isTooLong) {
+      toast.success(`Copied! Opening ${label}... (Paste the prompt in the chat input)`);
+    } else {
+      toast.success(`Copied! Opening ${label}...`);
+    }
     
     // Track plausible event
     plausibleAnalytics.trackPromptCopied(subjectId, targetApp);
 
-    // Open target application in new tab with the prompt prefilled in the query parameter ?q
-    const url = targetApp === 'chatgpt' 
-      ? `https://chatgpt.com/?q=${encodeURIComponent(textToCopy)}` 
-      : `https://gemini.google.com/?q=${encodeURIComponent(textToCopy)}`;
+    // Open target application. If the prompt is too long, open the base URL to prevent HTTP 431 (Header Too Large)
+    const baseUrl = targetApp === 'chatgpt' ? 'https://chatgpt.com' : 'https://gemini.google.com';
+    const queryUrl = `${baseUrl}/?q=${encodeURIComponent(textToCopy)}`;
+    const url = queryUrl.length > 2000 ? baseUrl : queryUrl;
     
     try {
       window.open(url, '_blank');
