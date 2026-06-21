@@ -20,7 +20,7 @@
     "bundle:check": "node scripts/check-bundle-size.js",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "prompts:ingest": "npx tsx scripts/ingest-prompts.ts"
+    "prompts:ingest": "tsx scripts/ingest-prompts.ts"
   },
   "dependencies": {
     "@ai-sdk/cerebras": "^2.0.55",
@@ -63,6 +63,7 @@
     "fast-check": "^4.8.0",
     "playwright": "^1.60.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5",
     "vitest": "^4.1.8"
   }
