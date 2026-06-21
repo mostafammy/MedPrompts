@@ -33,20 +33,36 @@ export function DeepLinkButton({ textToCopy, subjectId, targetApp, label, icon, 
     soundEngine.playSuccess();
     haptics.success();
     
-    const isTooLong = textToCopy.length > 1500;
-    if (isTooLong) {
-      toast.success(`Copied! Opening ${label}... (Paste the prompt in the chat input)`);
-    } else {
-      toast.success(`Copied! Opening ${label}...`);
-    }
-    
     // Track plausible event
     plausibleAnalytics.trackPromptCopied(subjectId, targetApp);
 
-    // Open target application. If the prompt is too long, open the base URL to prevent HTTP 431 (Header Too Large)
     const baseUrl = targetApp === 'chatgpt' ? 'https://chatgpt.com' : 'https://gemini.google.com';
     const queryUrl = `${baseUrl}/?q=${encodeURIComponent(textToCopy)}`;
-    const url = queryUrl.length > 2000 ? baseUrl : queryUrl;
+    
+    // Detect mobile platform (which supports deep linking into native apps without URL limits)
+    const isMobile =
+      /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
+    let url = queryUrl;
+    
+    if (queryUrl.length > 2000) {
+      if (isMobile) {
+        url = queryUrl;
+        toast.success(`Copied! Opening ${label}...`);
+      } else {
+        if (targetApp === 'chatgpt') {
+          const sharedUrl = `${window.location.origin}/api/prompt-share${window.location.pathname}${window.location.search}`;
+          url = `${baseUrl}/?q=${encodeURIComponent(`Please fetch and adopt the prompt instructions from this URL to start our session: ${sharedUrl}`)}`;
+          toast.success(`Opening ${label} (ChatGPT will fetch your prompt)...`);
+        } else {
+          url = baseUrl;
+          toast.success(`Copied! Opening ${label}... (Paste the prompt in the chat input)`);
+        }
+      }
+    } else {
+      toast.success(`Copied! Opening ${label}...`);
+    }
     
     try {
       window.open(url, '_blank');
