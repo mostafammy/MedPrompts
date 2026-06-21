@@ -1,0 +1,37 @@
+{
+  "semver": "3.0.0",
+  "isInteractive": true,
+  "changelog": "Removed word limits, added emoji usage and thoroughness requirements",
+  "requiredVariables": [
+    {
+      "key": "OUTPUT_LANGUAGE",
+      "label": "Language",
+      "control": "select",
+      "defaultValue": "German",
+      "options": ["German", "English", "Spanish", "French", "Arabic"],
+      "required": true
+    },
+    {
+      "key": "ANALOGY_DOMAIN",
+      "label": "Analogy Domain",
+      "control": "select",
+      "defaultValue": "Cooking and Culinary Arts",
+      "options": [
+        "Cooking and Culinary Arts",
+        "Construction and Architecture",
+        "Music and Orchestra",
+        "Sports and Athletics",
+        "Transportation and Mechanics"
+      ],
+      "required": true
+    },
+    {
+      "key": "MAX_REMEDIATION_CYCLES",
+      "label": "Max Remediation Cycles",
+      "control": "select",
+      "defaultValue": "2",
+      "options": ["1", "2", "3", "4", "5"],
+      "required": true
+    }
+  ]
+}

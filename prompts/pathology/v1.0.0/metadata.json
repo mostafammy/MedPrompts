@@ -1,0 +1,6 @@
+{
+  "semver": "1.0.0",
+  "isInteractive": false,
+  "changelog": "Initial pathology template",
+  "requiredVariables": []
+}
