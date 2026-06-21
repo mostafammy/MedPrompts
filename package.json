@@ -19,7 +19,8 @@
     "test:live": "npx tsx scripts/test-live-ai.ts",
     "bundle:check": "node scripts/check-bundle-size.js",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "prompts:ingest": "npx tsx scripts/ingest-prompts.ts"
   },
   "dependencies": {
     "@ai-sdk/cerebras": "^2.0.55",
