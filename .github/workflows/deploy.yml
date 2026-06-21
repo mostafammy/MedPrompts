@@ -48,6 +48,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Ingest and Activate Prompt Templates
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: pnpm run prompts:ingest
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+
       - name: Validate wrangler config (no placeholder KV IDs)
         run: |
           if [ ! -f wrangler.jsonc ]; then
