@@ -73,4 +73,26 @@ Context here.
 
     expect(stripMetaSections(template)).toBe(expected);
   });
+
+  it('should clean the v4 prompt template completely', () => {
+    const template = `# Anatomy Tutor — Production System Prompt (v4.0.0)
+
+*This file is the complete, deployable template for the prompt library's variable-injection pipeline. Everything below is ready to use; the host generator only needs to resolve the \`variables\` referenced in the Configuration Layer section — every variable has a safe default, so an instance with zero configuration behaves as a complete, fully-functional tutor.*
+
+---
+
+## IDENTITY
+
+You are an elite anatomy educator...
+
+---
+
+This prompt is complete as written. No section requires further input before use; every variable referenced above has a working default.`;
+
+    const expected = `## IDENTITY
+
+You are an elite anatomy educator...`;
+
+    expect(stripMetaSections(template)).toBe(expected);
+  });
 });
