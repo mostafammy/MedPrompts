@@ -2,9 +2,18 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { SubjectId } from '@/lib/types/branded';
-import { SubjectGridClient, Subject } from '@/components/SubjectGrid/SubjectGridClient';
+import { SubjectGridClient } from '@/components/SubjectGrid/SubjectGridClient';
 import { GenerateContainer } from './GenerateContainer';
 import { usePromptHistory } from '@/hooks/usePromptHistory';
+import { TemplateVariableDefinition } from '@/lib/prompts/variable-schema';
+
+export interface SubjectWithVariables {
+  id: string;
+  label: string;
+  icon: string;
+  semver: string | null;
+  requiredVariables: TemplateVariableDefinition[];
+}
 import { SwipeableItem } from '@/components/ui/SwipeableItem';
 import * as Icons from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,7 +22,7 @@ import { haptics } from '@/lib/haptics';
 import { soundEngine } from '@/lib/audio';
 
 
-export function HomePageClient({ subjects }: { subjects: Subject[] }) {
+export function HomePageClient({ subjects }: { subjects: SubjectWithVariables[] }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<SubjectId | null>(null);
   const { history, bookmarks, isLoaded, removeHistoryItem, restoreHistoryItem, removeBookmark, restoreBookmark, toggleBookmark, isBookmarked } = usePromptHistory();
@@ -77,7 +86,7 @@ export function HomePageClient({ subjects }: { subjects: Subject[] }) {
             </h2>
           </div>
         )}
-        <GenerateContainer subjectId={selectedId} />
+        <GenerateContainer subjectId={selectedId} subjects={subjects} />
       </section>
 
       {/* Saved & Recent Prompts Dashboard */}
