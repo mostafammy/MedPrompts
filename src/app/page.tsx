@@ -16,9 +16,27 @@ export default async function HomePage() {
   
   let subjects;
   try {
-    subjects = await db.query.subjects.findMany({
+    const rawSubjects = await db.query.subjects.findMany({
       where: eq(schema.subjects.isActive, true),
       orderBy: schema.subjects.sortOrder,
+    });
+
+    const activeTemplates = await db.query.promptTemplates.findMany({
+      where: eq(schema.promptTemplates.isActive, true),
+    });
+
+    subjects = rawSubjects.map((subj) => {
+      const activeTemplate = activeTemplates.find((temp) => temp.subjectId === subj.id);
+      return {
+        id: subj.id,
+        label: subj.label,
+        icon: subj.icon,
+        sortOrder: subj.sortOrder,
+        isActive: subj.isActive,
+        createdAt: subj.createdAt,
+        semver: activeTemplate ? activeTemplate.semver : null,
+        requiredVariables: activeTemplate ? (activeTemplate.requiredVariables ?? []) : [],
+      };
     });
   } catch (err: unknown) {
     const errorMessage = err instanceof Error ? err.message : String(err);
