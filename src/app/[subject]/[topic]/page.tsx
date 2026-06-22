@@ -99,12 +99,20 @@ export default async function DynamicPromptPage({
   const rawSearchParams = await searchParams;
 
   const parsedParams = SearchParamsSchema.safeParse(rawSearchParams);
-  const variables = {
+  const variables: Record<string, string> = {
     OUTPUT_LANGUAGE: parsedParams.success ? parsedParams.data.lang : 'German',
     ANALOGY_DOMAIN: parsedParams.success ? parsedParams.data.analogy : 'Cooking and Culinary Arts',
     MAX_REMEDIATION_CYCLES: parsedParams.success ? parsedParams.data.cycles : '2',
     TERMINOLOGY_STANDARD: terminologyStandardForSubject(subject),
   };
+
+  // Dynamically map camelCase query parameters to UPPER_CASE template variables
+  Object.entries(rawSearchParams).forEach(([key, val]) => {
+    if (typeof val === 'string') {
+      const upperKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
+      variables[upperKey] = val;
+    }
+  });
 
   const queryString = parsedParams.success
     ? new URLSearchParams(parsedParams.data).toString()
