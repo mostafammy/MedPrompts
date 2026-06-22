@@ -1,0 +1,112 @@
+{
+  "semver": "4.0.0",
+  "isInteractive": true,
+  "changelog": "Complete redesign superseding the prior v4.0.0 ('Calm Mastery' MedPrompt-style edition). This version is a from-scratch Anatomy Tutor architecture: region-as-map + layer-based teaching, relationship-first structure introductions, the Structure-Function-Clinical triad, a continuous-flow interaction model with retrieval practice as the only pause point (no procedural ready/continue gating), reconstruction-based assessment, and a landmark/clinical/etymology-driven Memory Engine. Following a second-pass production-readiness review, this version additionally integrates: a 12-variable runtime configuration layer (zero raw booleans, every flag is an enum with a neutral default so an unconfigured instance behaves exactly like the base design); a Mental Rotation Engine operationalizing four concrete visualization/rotation prompt archetypes; an Exam Optimization Layer with format-specific rehearsal for Written, Oral-Viva, and Practical-OSPE assessment; tiered Knowledge Graph linking (free within-session linking, optional host-dependent cross-session linking); Retention Artifacts (compressed recap + structured, taggable Recall Cues) extending the Memory Engine for spaced retrieval; on-demand Expert Lenses (Surgical Corridor, Vascular/Lymphatic Tracing, Compartment/Fascial-Plane reasoning); two new emoji tags (cross-sectional/imaging, surgical-approach); and one explicit precedence clarification resolving the only identified instruction conflict (Exam Mode's structured rhythm vs. the default no-gating rule). Five originally-proposed feature flags were evaluated and rejected outright (ENABLE_RETRIEVAL_PRACTICE, ENABLE_MENTAL_ROTATION, a pure ENABLE_CLINICAL_ANCHORS off-switch, and two redundant duplicate flags) because they would let a misconfigured deployment disable the system's core pedagogical mechanisms with no substitute; CLINICAL_CONTEXT was added in place of the clinical-anchors flag to reshape anchors for non-medicine audiences instead of removing them.",
+  "requiredVariables": [
+    {
+      "key": "TOPIC",
+      "label": "Topic",
+      "control": "text",
+      "defaultValue": "",
+      "required": false,
+      "note": "If empty, the tutor opens the session by asking conversationally."
+    },
+    {
+      "key": "OUTPUT_LANGUAGE",
+      "label": "Output Language",
+      "control": "select",
+      "defaultValue": "Auto",
+      "options": ["Auto", "English", "German", "Spanish", "French", "Arabic"],
+      "required": false
+    },
+    {
+      "key": "ANALOGY_DOMAIN",
+      "label": "Analogy Domain",
+      "control": "select",
+      "defaultValue": "Auto",
+      "options": [
+        "Auto",
+        "Cooking and Culinary Arts",
+        "Construction and Architecture",
+        "Music and Orchestra",
+        "Sports and Athletics",
+        "Transportation and Mechanics"
+      ],
+      "required": false
+    },
+    {
+      "key": "LEARNER_LEVEL",
+      "label": "Learner Level",
+      "control": "select",
+      "defaultValue": "Infer",
+      "options": ["Infer", "Preclinical-Early", "Preclinical-Late", "Clinical", "Advanced"],
+      "required": false
+    },
+    {
+      "key": "CLINICAL_DEPTH",
+      "label": "Clinical Depth",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Minimal", "Standard", "Heavy"],
+      "required": false
+    },
+    {
+      "key": "CLINICAL_CONTEXT",
+      "label": "Clinical Context",
+      "control": "select",
+      "defaultValue": "Medicine",
+      "options": ["Medicine", "Nursing", "Allied-Health", "Pre-Health", "General-Education"],
+      "required": false
+    },
+    {
+      "key": "VISUALIZATION_INTENSITY",
+      "label": "Visualization Intensity",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Minimal", "Standard", "Intense"],
+      "required": false
+    },
+    {
+      "key": "SPATIAL_FRAMING_MODE",
+      "label": "Spatial Framing Mode",
+      "control": "select",
+      "defaultValue": "Visual",
+      "options": ["Visual", "Multimodal"],
+      "required": false,
+      "note": "Multimodal swaps picture/see language for trace/position/sequence language — an accessibility option for learners who don't process via mental imagery."
+    },
+    {
+      "key": "MEMORY_INTENSITY",
+      "label": "Memory Intensity",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Light", "Standard", "Rich"],
+      "required": false
+    },
+    {
+      "key": "QUESTION_FREQUENCY",
+      "label": "Question Frequency",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Sparse", "Standard", "Frequent"],
+      "required": false
+    },
+    {
+      "key": "EXAM_STYLE",
+      "label": "Exam Style",
+      "control": "select",
+      "defaultValue": "General",
+      "options": ["General", "Written", "Oral-Viva", "Practical-OSPE"],
+      "required": false
+    },
+    {
+      "key": "KNOWLEDGE_GRAPH_MODE",
+      "label": "Knowledge Graph Mode",
+      "control": "select",
+      "defaultValue": "Session-Only",
+      "options": ["Off", "Session-Only", "Persistent"],
+      "required": false,
+      "note": "Persistent requires the host to supply prior-session topic context; degrades to Session-Only if unavailable."
+    }
+  ]
+}
