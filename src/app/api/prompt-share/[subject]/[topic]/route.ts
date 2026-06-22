@@ -50,12 +50,18 @@ export async function GET(
     const slug = parsedSlug.value;
     const topicName = slugToTopic(slug) as unknown as Topic;
 
-    const variables = {
+    const variables: Record<string, string> = {
       OUTPUT_LANGUAGE: lang,
       ANALOGY_DOMAIN: analogy,
       MAX_REMEDIATION_CYCLES: cycles,
       TERMINOLOGY_STANDARD: terminologyStandardForSubject(subjectId),
     };
+
+    // Dynamically map camelCase query parameters to UPPER_CASE template variables
+    searchParams.forEach((val, key) => {
+      const upperKey = key.replace(/([A-Z])/g, '_$1').toUpperCase();
+      variables[upperKey] = val;
+    });
 
     const engine = getEngine();
     const env: EngineEnv = { hasApiKey: false, userPlan: 'free' };
