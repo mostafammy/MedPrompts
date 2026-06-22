@@ -14,6 +14,7 @@ import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 export interface TopicInputProps {
   subjectId: SubjectId | null;
   onGenerate: (topic: string) => void;
+  children?: React.ReactNode;
 }
 
 const TRENDING_TOPICS: Record<string, string[]> = {
@@ -25,7 +26,7 @@ const TRENDING_TOPICS: Record<string, string[]> = {
   biochemistry: ['Glycolysis', 'Krebs Cycle', 'Enzymes'],
 };
 
-export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
+export function TopicInput({ subjectId, onGenerate, children }: TopicInputProps) {
   const router = useRouter();
   const [inputValue, setInputValue] = useState('');
   const [hint, setHint] = useState<string | null>(null);
@@ -387,6 +388,8 @@ export function TopicInput({ subjectId, onGenerate }: TopicInputProps) {
             </motion.div>
           )}
         </AnimatePresence>
+
+          {children}
 
           <motion.button
             whileTap={{ scale: (inputValue.trim() === '' || isSubmitting) ? 1 : 0.98 }}
