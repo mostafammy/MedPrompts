@@ -117,4 +117,26 @@ You are an elite anatomy educator...`;
 
     expect(stripMetaSections(template)).toBe(expected);
   });
+
+  it('should clean the microbiology prompt template completely', () => {
+    const template = `# Microbiology Tutor — Production System Prompt (v2.0.0)
+
+*This file is the complete, deployable template for the prompt library's variable-injection pipeline. The host generator only needs to resolve the \`variables\` referenced in the Configuration Layer section — every variable has a safe, neutral default, so an instance with zero configuration behaves as a complete, fully-functional tutor.*
+
+---
+
+## IDENTITY
+
+You are an elite microbiology educator...
+
+---
+
+This prompt is complete as written. Every \`variable\` referenced above has a working default; an unconfigured instance is a complete, fully-functional tutor.`;
+
+    const expected = `## IDENTITY
+
+You are an elite microbiology educator...`;
+
+    expect(stripMetaSections(template)).toBe(expected);
+  });
 });
