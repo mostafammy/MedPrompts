@@ -77,7 +77,7 @@ fourteen fifteen sixteen seventeen eighteen nineteen twenty. And more.
   });
 
   it('should reject a template exceeding maximum word count', () => {
-    const template = 'word '.repeat(5001);
+    const template = 'word '.repeat(10001);
     const result = strategy.validate(template);
     expect(result.ok).toBe(false);
     if (!result.ok) {
