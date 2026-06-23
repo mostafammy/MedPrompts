@@ -1,0 +1,121 @@
+{
+  "semver": "4.1.0",
+  "isInteractive": true,
+  "changelog": "Production-readiness audit and revision of v4.0.0, preserving its architecture and teaching philosophy while converting several core behaviors from recommendations into enforceable, measurable requirements. Adds a 13th configuration variable, TEACHING_DEPTH (Survey / Standard / Comprehensive / Masterclass), which sets an expected word-count band for each major explanation and is explicitly stated to take precedence over generic brevity instructions, while remaining subordinate to a learner's own live request to go faster or shorter. Adds five new operational sections: Teaching Depth Engine (the band definitions and precedence rule), Depth-First Teaching Policy (the five learner-facing outcomes that must be reachable before an explanation counts as done — locate, explain relationships, predict function, predict clinical consequence, reconstruct from memory), Spatial Compliance Check (an explicit four-step location-before-naming sequence operationalizing the existing 'every structure gets an address before a name' rule), Anatomical Completeness Check (a nine-point internal self-audit run before closing out a region, mapped one-to-one onto existing prompt mechanisms), and Masterclass Mode (a qualitatively distinct senior-professor register for TEACHING_DEPTH = Masterclass, not merely 'Standard but longer'). Converts the existing Mental Rotation Engine from an unquantified recommendation into a measurable density floor (Mental Rotation Minimum: roughly one visualization moment per ~500 words at Standard intensity, scaled by VISUALIZATION_INTENSITY) framed explicitly as adaptive rather than mechanical. Strengthens Retention Artifacts with an explicit additive-only clause: teaching depth is never shortened to make room for the closing recap or Recall Cues. Adds a consolidated Precedence and Conflict Resolution section replacing the single inline footnote from v4.0.0, now covering four resolved tensions: TEACHING_DEPTH vs. brevity, default no-gating vs. Exam Mode's structured rhythm (the original v4.0.0 clarification, preserved), TEACHING_DEPTH's word bands vs. Exam Mode's authentically short rehearsal exchanges (newly identified during this revision), and internal completeness/compliance checks vs. learner-visible prose. Clarifies, in both Teaching Depth Engine and Adaptive Depth, that TEACHING_DEPTH (thoroughness/length) and LEARNER_LEVEL (technical complexity) are orthogonal axes that combine independently — a gap identified during the consistency review that could otherwise have caused the two mechanisms to be conflated or to fight each other. No new boolean flags were introduced; TEACHING_DEPTH follows the existing zero-raw-boolean, neutral-default architecture established in v4.0.0's configuration layer.",
+  "requiredVariables": [
+    {
+      "key": "TOPIC",
+      "label": "Topic",
+      "control": "text",
+      "defaultValue": "",
+      "required": false,
+      "note": "If empty, the tutor opens the session by asking conversationally."
+    },
+    {
+      "key": "OUTPUT_LANGUAGE",
+      "label": "Output Language",
+      "control": "select",
+      "defaultValue": "Auto",
+      "options": ["Auto", "English", "German", "Spanish", "French", "Arabic"],
+      "required": false
+    },
+    {
+      "key": "ANALOGY_DOMAIN",
+      "label": "Analogy Domain",
+      "control": "select",
+      "defaultValue": "Auto",
+      "options": [
+        "Auto",
+        "Cooking and Culinary Arts",
+        "Construction and Architecture",
+        "Music and Orchestra",
+        "Sports and Athletics",
+        "Transportation and Mechanics"
+      ],
+      "required": false
+    },
+    {
+      "key": "LEARNER_LEVEL",
+      "label": "Learner Level",
+      "control": "select",
+      "defaultValue": "Infer",
+      "options": ["Infer", "Preclinical-Early", "Preclinical-Late", "Clinical", "Advanced"],
+      "required": false
+    },
+    {
+      "key": "TEACHING_DEPTH",
+      "label": "Teaching Depth",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Survey", "Standard", "Comprehensive", "Masterclass"],
+      "required": false,
+      "note": "Sets the expected word-count band and pedagogical thoroughness for each major explanation. These are educational depth targets, not hard quotas, and take precedence over generic brevity instructions — but not over a learner's own live request to go faster or shorter. Orthogonal to LEARNER_LEVEL: this controls how much ground gets covered, not how technical the language is."
+    },
+    {
+      "key": "CLINICAL_DEPTH",
+      "label": "Clinical Depth",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Minimal", "Standard", "Heavy"],
+      "required": false
+    },
+    {
+      "key": "CLINICAL_CONTEXT",
+      "label": "Clinical Context",
+      "control": "select",
+      "defaultValue": "Medicine",
+      "options": ["Medicine", "Nursing", "Allied-Health", "Pre-Health", "General-Education"],
+      "required": false
+    },
+    {
+      "key": "VISUALIZATION_INTENSITY",
+      "label": "Visualization Intensity",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Minimal", "Standard", "Intense"],
+      "required": false
+    },
+    {
+      "key": "SPATIAL_FRAMING_MODE",
+      "label": "Spatial Framing Mode",
+      "control": "select",
+      "defaultValue": "Visual",
+      "options": ["Visual", "Multimodal"],
+      "required": false,
+      "note": "Multimodal swaps picture/see language for trace/position/sequence language — an accessibility option for learners who don't process via mental imagery."
+    },
+    {
+      "key": "MEMORY_INTENSITY",
+      "label": "Memory Intensity",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Light", "Standard", "Rich"],
+      "required": false
+    },
+    {
+      "key": "QUESTION_FREQUENCY",
+      "label": "Question Frequency",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Sparse", "Standard", "Frequent"],
+      "required": false
+    },
+    {
+      "key": "EXAM_STYLE",
+      "label": "Exam Style",
+      "control": "select",
+      "defaultValue": "General",
+      "options": ["General", "Written", "Oral-Viva", "Practical-OSPE"],
+      "required": false
+    },
+    {
+      "key": "KNOWLEDGE_GRAPH_MODE",
+      "label": "Knowledge Graph Mode",
+      "control": "select",
+      "defaultValue": "Session-Only",
+      "options": ["Off", "Session-Only", "Persistent"],
+      "required": false,
+      "note": "Persistent requires the host to supply prior-session topic context; degrades to Session-Only if unavailable."
+    }
+  ]
+}
