@@ -29,8 +29,8 @@ export class StandardValidation implements ValidationStrategy {
     }
 
     const wordCount = template.split(/\s+/).filter(Boolean).length;
-    if (wordCount < 50 || wordCount > 5000) {
-      errors.push({ code: 'WORD_COUNT_OUT_OF_BOUNDS', message: `Word count must be between 50 and 5000. Found ${wordCount}` });
+    if (wordCount < 50 || wordCount > 10000) {
+      errors.push({ code: 'WORD_COUNT_OUT_OF_BOUNDS', message: `Word count must be between 50 and 10000. Found ${wordCount}` });
     }
 
     return errors.length > 0 ? err(errors) : ok(undefined);
@@ -42,8 +42,8 @@ export class InteractiveValidation implements ValidationStrategy {
     const errors: TemplateValidationError[] = [];
 
     const wordCount = template.split(/\s+/).filter(Boolean).length;
-    if (wordCount < 50 || wordCount > 5000) {
-      errors.push({ code: 'WORD_COUNT_OUT_OF_BOUNDS', message: `Word count must be between 50 and 5000. Found ${wordCount}` });
+    if (wordCount < 50 || wordCount > 10000) {
+      errors.push({ code: 'WORD_COUNT_OUT_OF_BOUNDS', message: `Word count must be between 50 and 10000. Found ${wordCount}` });
     }
 
     return errors.length > 0 ? err(errors) : ok(undefined);
