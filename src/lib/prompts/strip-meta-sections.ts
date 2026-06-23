@@ -6,6 +6,7 @@ export function stripMetaSections(markdown: string): string {
     // 2. Remove the title header
     .replace(/^# MEDICAL TUTOR — MASTER PROMPT TEMPLATE[^\n]*\n+/, '')
     .replace(/^# Anatomy Tutor — Production System Prompt[^\n]*\n+/, '')
+    .replace(/^# Microbiology Tutor — Production System Prompt[^\n]*\n+/, '')
     // 3. Remove the library usage block
     .replace(/> \*\*Library usage:[\s\S]*?\n+/, '')
     .replace(/\*This file is the complete, deployable template[\s\S]*?\*\s*\n+---\n+/, '')
