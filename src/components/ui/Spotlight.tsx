@@ -53,7 +53,7 @@ export function Spotlight({
       onBlur={handleBlur}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative overflow-hidden ${className}`}
+      className={`relative ${className.includes('overflow-') ? '' : 'overflow-hidden'} ${className}`}
     >
       <div
         className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 z-0"
