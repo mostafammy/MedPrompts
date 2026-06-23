@@ -252,7 +252,7 @@ export function TopicInput({ subjectId, onGenerate, children }: TopicInputProps)
             </button>
           </div>
         </div>
-        <Spotlight className="rounded-[2rem] rounded-b-none sm:rounded-[2rem] h-full w-full">
+        <Spotlight className="rounded-[2rem] rounded-b-none sm:rounded-[2rem] h-full w-full overflow-visible">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6 relative z-10">
             <div className="flex flex-col gap-1.5 sm:gap-2">
               <label htmlFor="topic-input" className="hidden sm:block text-sm sm:text-base font-semibold text-zinc-700 dark:text-zinc-300 ml-1 sm:ml-2">
