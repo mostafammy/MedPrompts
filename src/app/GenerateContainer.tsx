@@ -71,7 +71,14 @@ export function GenerateContainer({
   const [isPending, startTransition] = useTransition();
   const [selectedValues, setSelectedValues] = useState<Record<string, string>>({});
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'core' | 'clinical' | 'cognitive'>('core');
+
+  // Reset expansion state when subject changes
+  useEffect(() => {
+    setIsExpanded(false);
+    setIsFullyExpanded(false);
+  }, [subjectId]);
 
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -250,6 +257,9 @@ export function GenerateContainer({
                 onClick={() => {
                   soundEngine.playClick();
                   haptics.tap();
+                  if (isExpanded) {
+                    setIsFullyExpanded(false);
+                  }
                   setIsExpanded(!isExpanded);
                 }}
                 className="flex items-center gap-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors cursor-pointer select-none"
@@ -292,7 +302,12 @@ export function GenerateContainer({
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
-                  className="overflow-hidden mt-4"
+                  onAnimationComplete={() => {
+                    if (isExpanded) {
+                      setIsFullyExpanded(true);
+                    }
+                  }}
+                  className={`mt-4 ${isFullyExpanded ? 'overflow-visible' : 'overflow-hidden'}`}
                 >
                   {variables.length <= 3 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-2">
