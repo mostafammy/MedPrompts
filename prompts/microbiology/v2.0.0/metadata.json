@@ -1,0 +1,122 @@
+{
+  "semver": "2.0.0",
+  "isInteractive": true,
+  "changelog": "Initial production release of the Microbiology Tutor. Architecture mirrors the prompt library's established design language (region/organism-as-map teaching, no-gating continuous flow, reconstruction-based assessment, additive retention artifacts, internal completeness self-audit) while introducing microbiology-specific mechanisms: an eight-question Organism-as-Strategy map replacing the anatomy library's region/layer skeleton, a Pathogenesis-First Sequence (mechanism before syndrome) replacing spatial-compliance ordering, a Diagnostic Reasoning Engine operationalizing the specimen-to-susceptibility lab pipeline with a mandatory clinical-significance closing step, a Compare/Contrast Engine addressing microbiology's dominant failure mode (unresolved look-alike organisms) with density scaled to TEACHING_DEPTH rather than a dedicated variable, and a two-part Safety Boundary adding a Biosecurity Boundary alongside the standard clinical-advice boundary. Ten configuration variables, zero raw booleans, neutral defaults throughout. No variable exists, or will be added, that weakens the Biosecurity Boundary; it is treated as a structural constant rather than a configurable dial.",
+  "requiredVariables": [
+    {
+      "key": "TOPIC",
+      "label": "Topic",
+      "control": "text",
+      "defaultValue": "",
+      "required": false,
+      "note": "If empty, the tutor opens the session by asking conversationally."
+    },
+    {
+      "key": "OUTPUT_LANGUAGE",
+      "label": "Output Language",
+      "control": "select",
+      "defaultValue": "Auto",
+      "options": [
+        "Auto",
+        "English",
+        "German",
+        "Spanish",
+        "French",
+        "Arabic",
+        "Italian",
+        "Portuguese",
+        "Russian",
+        "Chinese",
+        "Japanese",
+        "Korean",
+        "Turkish",
+        "Hindi",
+        "Dutch",
+        "Swedish",
+        "Polish",
+        "Greek"
+      ],
+      "required": false
+    },
+    {
+      "key": "LEARNER_LEVEL",
+      "label": "Learner Level",
+      "control": "select",
+      "defaultValue": "Infer",
+      "options": ["Infer", "Novice", "Intermediate", "Advanced"],
+      "required": false,
+      "note": "Controls technical complexity and vocabulary, not thoroughness. Orthogonal to TEACHING_DEPTH."
+    },
+    {
+      "key": "TEACHING_DEPTH",
+      "label": "Teaching Depth",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Survey", "Standard", "Comprehensive", "Masterclass"],
+      "required": false,
+      "note": "Sets the expected word-count band and pedagogical thoroughness for each major explanation. Educational depth targets, not hard quotas. Takes precedence over generic brevity instructions, but not over a learner's own live request to go faster or shorter."
+    },
+    {
+      "key": "CLINICAL_CONTEXT",
+      "label": "Clinical Context",
+      "control": "select",
+      "defaultValue": "Medicine",
+      "options": ["Medicine", "Nursing", "Allied-Health", "Pre-Health", "General-Education"],
+      "required": false,
+      "note": "Reshapes which clinical/practical scenarios are emphasized. The mechanism-to-disease tie itself is never removed."
+    },
+    {
+      "key": "EXAM_STYLE",
+      "label": "Exam Style",
+      "control": "select",
+      "defaultValue": "General",
+      "options": ["General", "Written", "Oral-Viva", "Practical-Lab", "Case-Based"],
+      "required": false
+    },
+    {
+      "key": "QUESTION_FREQUENCY",
+      "label": "Question Frequency",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Sparse", "Standard", "Frequent"],
+      "required": false,
+      "note": "Frequency of retrieval-practice moments. Never fully absent regardless of setting."
+    },
+    {
+      "key": "MEMORY_INTENSITY",
+      "label": "Memory Intensity",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Light", "Standard", "Rich"],
+      "required": false
+    },
+    {
+      "key": "DIAGNOSTIC_DEPTH",
+      "label": "Diagnostic Depth",
+      "control": "select",
+      "defaultValue": "Standard",
+      "options": ["Minimal", "Standard", "Heavy"],
+      "required": false,
+      "note": "Controls granularity of the lab diagnostic pipeline (exact media, exact biochemical reactions, exact molecular targets). The pipeline and its clinical-significance closing step are never skipped, regardless of setting."
+    },
+    {
+      "key": "MICRO_DOMAIN_FOCUS",
+      "label": "Microbiology Domain Focus",
+      "control": "select",
+      "defaultValue": "Auto",
+      "options": [
+        "Auto",
+        "Bacteriology",
+        "Virology",
+        "Mycology",
+        "Parasitology",
+        "Antimicrobial-Resistance",
+        "Lab-Diagnostics",
+        "Infection-Prevention",
+        "Immunology-of-Infection"
+      ],
+      "required": false,
+      "note": "Default framing/examples for ambiguous or cross-cutting topics. Auto lets the topic itself dictate. Never overrides a topic's actual subdomain."
+    }
+  ]
+}
